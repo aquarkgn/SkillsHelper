@@ -10,6 +10,11 @@ const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'huhaa-verify-'));
 const oldHome = process.env.HUHAA_HOME;
 process.env.HUHAA_HOME = path.join(tempRoot, 'home');
 
+const testFiles = [
+  'service/packages/scanner/test/scanner.test.mjs',
+  'service/packages/server/test/server.test.mjs',
+];
+
 function run(name, args) {
   console.log(`\n[verify] $ ${name} ${args.join(' ')}`);
   const res = spawnSync(name, args, {
@@ -28,7 +33,7 @@ function write(file, text) {
 async function main() {
   try {
     run('npm', ['run', 'build:web']);
-    run('node', ['--test', 'service/packages/scanner/test/*.test.mjs', 'service/packages/server/test/*.test.mjs']);
+    run('node', ['--test', ...testFiles]);
 
     const skillRoot = path.join(tempRoot, 'skills');
     write(path.join(skillRoot, 'demo', 'verify-skill', 'SKILL.md'), `---
