@@ -36,7 +36,7 @@
     "init": "node service/bin/huhaa-myskills.mjs init",
     "purge": "node service/bin/huhaa-myskills.mjs purge",
     "dev": "node service/bin/huhaa-myskills.mjs dev",
-    "build:web": "npm --prefix service/packages/web run build",
+    "build:web": "node service/scripts/build-web.mjs",
     "prepare": "npm run build:web",
     "test": "node --test service/packages/scanner/test/*.test.mjs service/packages/server/test/*.test.mjs",
     "verify": "node service/scripts/verify.mjs"
