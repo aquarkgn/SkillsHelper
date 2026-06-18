@@ -11,7 +11,6 @@
 ## [Unreleased]
 
 ### Planned
-- **v0.1.3** (TBD): Obsidian Vault 与 Claude.md 支持 → [计划](./docs/todo/v0.1.3.md)
 - **v0.1.4** (TBD): 分组与筛选增强 → [计划](./docs/todo/v0.1.4.md)
 - **v0.1.5** (TBD): 导出与分享 → [计划](./docs/todo/v0.1.5.md)
 - **v0.1.6** (TBD): 增量扫描与缓存 → [计划](./docs/todo/v0.1.6.md)
@@ -20,6 +19,24 @@
 - **v0.1.9** (TBD): 完成度冲刺 → [计划](./docs/todo/v0.1.9.md)
 
 详见 [版本计划总汇](./docs/releases/)
+
+---
+
+## [v0.1.3] - 2026-06-18
+
+全球 20+ 编辑器支持 | [详细说明](./docs/releases/v0.1.3.md)
+
+### Added
+- ✅ 扩展编辑器支持：从 6 个增至 20+ 个
+- ✅ 新增编辑器支持：VS Code Insiders、Zed、Vim、Emacs、Sublime 4、TextMate、BBEdit、Atom、Kate、Gedit、JetBrains IDEs、Openclaw、Herems
+- ✅ 优化编辑器检测逻辑，支持多个版本
+- ✅ 改进交互界面，支持 1-based 编号和更好的格式化
+- ✅ 完整的 macOS 和 Linux 平台支持
+
+### Changed
+- 更新版本号从 0.1.2 → 0.1.3
+- 改进 `sync-skills.sh` 脚本的易读性和可维护性
+- 优化编辑器检测流程
 
 ---
 
@@ -39,8 +56,6 @@
 
 ### Changed
 - 更新版本计划，v0.1.2-v0.1.9 标记为 TBD
-
----
 
 ---
 
@@ -94,6 +109,8 @@ npm 全局安装支持 | [详细说明](./docs/releases/v0.1.1.md)
 
 ---
 
-[Unreleased]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.3...HEAD
+[v0.1.3]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.2...v0.1.3
+[v0.1.2]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.0...v0.1.1
 [v0.1.0]: https://github.com/aquarkgn/HuHaa-MySkills/releases/tag/v0.1.0

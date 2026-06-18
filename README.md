@@ -15,10 +15,16 @@ curl -fsSL https://raw.githubusercontent.com/aquarkgn/HuHaa-MySkills/main/instal
 **做了什么？**
 1. 检查系统要求（Node.js 20+）
 2. npm 全局安装 HuHaa-MySkills
-3. 自动扫描已安装的编辑器（Cursor、VS Code、Helix、Neovim、Sublime、Windsurf）
+3. 自动扫描已安装的编辑器（全球 20+ 款编辑器和开发工具）
 4. 显示交互菜单，让你选择要同步的编辑器
 5. 自动同步技能配置
 6. 启动本地服务 `http://localhost:11520`
+
+**支持的编辑器和工具：**
+- **代码编辑器** — Cursor、VS Code、VS Code Insiders、Windsurf、Zed、Sublime Text、TextMate
+- **终端编辑器** — Neovim、Vim、Emacs、Helix
+- **其他编辑器** — Atom、Kate、Gedit、BBEdit、JetBrains IDEs
+- **新兴工具** — Openclaw、Herems
 
 **就这么简单！** 无需 git clone，无需手动配置，一条命令搞定。
 
@@ -65,7 +71,7 @@ HuHaa-MySkills 自动扫描并统一展示：
 - **一键复制** - 复制路径、相对路径、原文本、调用 prompt
 - **编辑器集成** - 在 Cursor / VS Code 中一键打开
 - **热更新** - 文件变更自动刷新界面
-- **智能同步** - 自动同步技能到各个编辑器配置（v0.1.2+）
+- **智能同步** - 自动同步技能到 20+ 个编辑器配置（v0.1.3+）
 - **本地优先** - 零上传，所有数据在本地，无云依赖
 
 ---

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ###############################################################################
-# HuHaa-MySkills 远程安装与技能同步入口 (v0.1.2)
+# HuHaa-MySkills 远程安装与技能同步入口 (v0.1.3)
 #
 # 用法：
 #   curl -fsSL https://raw.githubusercontent.com/aquarkgn/HuHaa-MySkills/main/install-and-sync.sh | bash
@@ -160,7 +160,7 @@ npm_install() {
 # 主函数
 main() {
   echo -e "\n${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
-  echo -e "${CYAN}║     HuHaa-MySkills v0.1.2 - 编辑器技能自动同步        ║${NC}"
+  echo -e "${CYAN}║     HuHaa-MySkills v0.1.3 - 编辑器技能自动同步        ║${NC}"
   echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}\n"
 
   parse_args "$@"
