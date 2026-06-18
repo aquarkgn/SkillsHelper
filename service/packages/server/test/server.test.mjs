@@ -54,7 +54,7 @@ test('server exposes health, list, detail, stats, and reload state without raw i
     ok: true,
     port: 0,
     items: 1,
-    version: '0.1.1',
+    version: '0.1.4',
     phase: 'P6',
   });
 
