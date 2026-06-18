@@ -11,7 +11,6 @@
 ## [Unreleased]
 
 ### Planned
-- **v0.1.2** (TBD): [Hermes 技能集成 + 搜索优化](./docs/releases/v0.1.2.md) → [计划](./docs/todo/v0.1.2.md)
 - **v0.1.3** (TBD): Obsidian Vault 与 Claude.md 支持 → [计划](./docs/todo/v0.1.3.md)
 - **v0.1.4** (TBD): 分组与筛选增强 → [计划](./docs/todo/v0.1.4.md)
 - **v0.1.5** (TBD): 导出与分享 → [计划](./docs/todo/v0.1.5.md)
@@ -21,6 +20,27 @@
 - **v0.1.9** (TBD): 完成度冲刺 → [计划](./docs/todo/v0.1.9.md)
 
 详见 [版本计划总汇](./docs/releases/)
+
+---
+
+## [v0.1.2] - 2026-06-18
+
+编辑器技能自动同步 | [详细说明](./docs/releases/v0.1.2.md)
+
+### Added
+- ✅ 编辑器技能自动同步脚本 (`service/scripts/sync-skills.sh`)
+- ✅ 支持 6 种编辑器 (Cursor、VS Code、Helix、Neovim、Sublime、Windsurf)
+- ✅ 交互式多选界面（全选、部分选择）
+- ✅ curl 远程安装入口脚本 (`install-and-sync.sh`)
+- ✅ 跨平台支持 (macOS, Linux, WSL)
+- ✅ bash 3.2+ 兼容性
+- ✅ 完整的使用文档 (`docs/SYNC-SKILLS.md`)
+- ✅ npm 命令支持 (`npm run sync`, `npm run sync:remote`)
+
+### Changed
+- 更新版本计划，v0.1.2-v0.1.9 标记为 TBD
+
+---
 
 ---
 
