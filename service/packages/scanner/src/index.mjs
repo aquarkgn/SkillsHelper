@@ -66,6 +66,33 @@ const ADAPTERS = {
     globs: normalizeGlobs(cfg, ['docs/RUNBOOK-*.md', 'AGENTS.md', 'CLAUDE.md', '.cursorrules', '.cursor/rules/**/*.{md,mdc}']),
     limits,
   }),
+  'skills': async (cfg, limits) => scanFileDocs({
+    source: 'skills',
+    editor: 'Skills Hub',
+    kind: 'skill',
+    files: cfg.files || [],
+    roots: cfg.roots || [],
+    globs: normalizeGlobs(cfg, ['*.md', '*/SKILL.md', '**/SKILL.md']),
+    limits,
+  }),
+  'mcp': async (cfg, limits) => scanFileDocs({
+    source: 'mcp',
+    editor: 'MCP Hub',
+    kind: 'mcp-tool',
+    files: cfg.files || [],
+    roots: cfg.roots || [],
+    globs: normalizeGlobs(cfg, ['*.md', '*.json', '*.yaml', '*.yml', '**/manifest.*']),
+    limits,
+  }),
+  'skill': async (cfg, limits) => scanFileDocs({
+    source: 'skill',
+    editor: 'Skill Hub',
+    kind: 'skill',
+    files: cfg.files || [],
+    roots: cfg.roots || [],
+    globs: normalizeGlobs(cfg, ['*.md', '*/SKILL.md', '**/SKILL.md']),
+    limits,
+  }),
   // Future: obsidian
 };
 
@@ -135,6 +162,11 @@ function defaultWatchGlobs(name) {
     case 'hermes':
     case 'claude-code':
       return ['**/SKILL.md'];
+    case 'skills':
+    case 'skill':
+      return ['*.md', '*/SKILL.md', '**/SKILL.md'];
+    case 'mcp':
+      return ['*.md', '*.json', '*.yaml', '*.yml', '**/manifest.*'];
     case 'hermes-plugin':
       return ['**/{plugin.yaml,plugin.yml,plugin.json,manifest.json,package.json,README.md,readme.md}'];
     case 'project-runbook':

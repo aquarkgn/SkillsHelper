@@ -11,14 +11,30 @@
 ## [Unreleased]
 
 ### Planned
-- **v0.1.4** (TBD): 分组与筛选增强 → [计划](./docs/todo/v0.1.4.md)
-- **v0.1.5** (TBD): 导出与分享 → [计划](./docs/todo/v0.1.5.md)
-- **v0.1.6** (TBD): 增量扫描与缓存 → [计划](./docs/todo/v0.1.6.md)
-- **v0.1.7** (TBD): 跨平台完整支持 → [计划](./docs/todo/v0.1.7.md)
-- **v0.1.8** (TBD): 开发者工具 → [计划](./docs/todo/v0.1.8.md)
-- **v0.1.9** (TBD): 完成度冲刺 → [计划](./docs/todo/v0.1.9.md)
+- **v0.1.5** (TBD): 分组与筛选增强 → [计划](./docs/todo/v0.1.5.md)
+- **v0.1.6** (TBD): 导出与分享 → [计划](./docs/todo/v0.1.6.md)
+- **v0.1.7** (TBD): 增量扫描与缓存 → [计划](./docs/todo/v0.1.7.md)
+- **v0.1.8** (TBD): 跨平台完整支持 → [计划](./docs/todo/v0.1.8.md)
+- **v0.1.9** (TBD): 开发者工具 → [计划](./docs/todo/v0.1.9.md)
 
 详见 [版本计划总汇](./docs/releases/)
+
+---
+
+## [v0.1.4] - 2026-06-18
+
+多源扫描增强 | [详细说明](./docs/releases/v0.1.4.md)
+
+### Added
+- ✅ 添加 `~/skills` 目录扫描支持
+- ✅ 添加 `~/mcp` 目录扫描支持
+- ✅ 添加 `~/skill` 目录扫描支持
+- ✅ 支持 Markdown、JSON、YAML 配置文件
+- ✅ 自动识别和解析技能文件结构
+
+### Changed
+- 更新 sources.example.yaml，新增三个扫描源
+- 扩展扫描器适配器，支持通用目录格式
 
 ---
 
@@ -109,7 +125,8 @@ npm 全局安装支持 | [详细说明](./docs/releases/v0.1.1.md)
 
 ---
 
-[Unreleased]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.3...HEAD
+[Unreleased]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.4...HEAD
+[v0.1.4]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.3...v0.1.4
 [v0.1.3]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.2...v0.1.3
 [v0.1.2]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.1...v0.1.2
 [v0.1.1]: https://github.com/aquarkgn/HuHaa-MySkills/compare/v0.1.0...v0.1.1

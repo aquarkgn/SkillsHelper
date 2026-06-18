@@ -68,6 +68,37 @@ sources:
       - .cursorrules
       - .cursor/rules/**/*.{md,mdc}
 
+  skills:
+    enabled: true
+    roots:
+      - ~/skills
+      - ~/Skills
+    globs:
+      - '*.md'
+      - '*/SKILL.md'
+      - '**/SKILL.md'
+
+  mcp:
+    enabled: true
+    roots:
+      - ~/mcp
+      - ~/MCP
+    globs:
+      - '*.md'
+      - '*.json'
+      - '*.yaml'
+      - '*.yml'
+      - '**/manifest.*'
+
+  skill:
+    enabled: true
+    roots:
+      - ~/skill
+    globs:
+      - '*.md'
+      - '*/SKILL.md'
+      - '**/SKILL.md'
+
   obsidian:
     enabled: false
     roots: []
