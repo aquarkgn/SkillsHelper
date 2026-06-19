@@ -3,9 +3,11 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 
-const repoRoot = path.resolve(import.meta.dirname, '..');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.resolve(__dirname, '..');
 const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'huhaa-verify-'));
 const oldHome = process.env.HUHAA_HOME;
 process.env.HUHAA_HOME = path.join(tempRoot, 'home');
@@ -56,7 +58,7 @@ limits:
   maxFileBytes: 1048576
 `);
 
-    const { startServer } = await import('./packages/server/src/index.mjs');
+    const { startServer } = await import(path.join(repoRoot, 'packages/server/src/index.mjs'));
     const { app } = await startServer({ port: 0 });
     const address = app.server.address();
     const port = address.port;
