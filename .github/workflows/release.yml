@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
 
     steps:
       - name: Checkout code
@@ -23,6 +24,21 @@ jobs:
           VERSION=${GITHUB_REF#refs/tags/}
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web assets
+        run: npm run build:web
+
+      - name: Prepare for npm publish
+        run: node service/scripts/prepare-publish.mjs
+
       - name: Get release notes
         id: release_notes
         run: |
@@ -30,6 +46,14 @@ jobs:
           # Extract release notes from CHANGELOG.md for this version
           awk "/^## \[${VERSION#v}\]/,/^## \[/{if(/^## \[/ && !/^## \[${VERSION#v}\]/) exit; print}" CHANGELOG.md | head -n -1 > RELEASE_NOTES.md
           cat RELEASE_NOTES.md
+
+      - name: Publish to npm
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Restore package.json
+        run: node service/scripts/restore-publish.mjs
 
       - name: Create Release
         uses: softprops/action-gh-release@v1

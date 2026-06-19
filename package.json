@@ -13,6 +13,9 @@
     "url": "https://github.com/aquarkgn/HuHaa-MySkills/issues"
   },
   "type": "module",
+  "workspaces": [
+    "service/packages/*"
+  ],
   "engines": {
     "node": ">=20.0.0"
   },
@@ -22,9 +25,7 @@
   "files": [
     "service/bin/",
     "service/config/",
-    "service/packages/scanner/package.json",
     "service/packages/scanner/src/",
-    "service/packages/server/package.json",
     "service/packages/server/src/",
     "service/packages/web/dist/",
     "service/scripts/",
@@ -48,15 +49,15 @@
     "verify": "node service/scripts/verify.mjs"
   },
   "dependencies": {
-    "@huhaa/scanner": "file:service/packages/scanner",
-    "@huhaa/server": "file:service/packages/server",
+    "@huhaa/scanner": "*",
+    "@huhaa/server": "*",
     "chokidar": "^4.0.3",
     "fast-glob": "^3.3.2",
     "fastify": "^5.0.0",
     "yaml": "^2.6.0"
   },
   "devDependencies": {
-    "@huhaa/web": "file:service/packages/web",
+    "@huhaa/web": "*",
     "@vitejs/plugin-vue": "^5.2.1",
     "fuse.js": "^7.0.0",
     "markdown-it": "^14.1.0",

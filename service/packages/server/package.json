@@ -10,6 +10,6 @@
   "dependencies": {
     "fastify": "^5.0.0",
     "chokidar": "^4.0.3",
-    "@huhaa/scanner": "file:../scanner"
+    "@huhaa/scanner": "*"
   }
 }
