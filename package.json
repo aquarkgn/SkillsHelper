@@ -29,8 +29,6 @@
     "LICENSE"
   ],
   "scripts": {
-    "prepublishOnly": "node scripts/prepare-publish.mjs",
-    "postpublish": "node scripts/restore-publish.mjs",
     "start": "node bin/huhaa-myskills.mjs start",
     "scan": "node bin/huhaa-myskills.mjs scan",
     "stats": "node bin/huhaa-myskills.mjs stats",
@@ -41,7 +39,8 @@
     "sync": "bash scripts/sync-skills.sh",
     "build:web": "node scripts/build-web.mjs",
     "test": "node --test packages/scanner/test/*.test.mjs packages/server/test/*.test.mjs",
-    "verify": "node scripts/verify.mjs"
+    "verify": "node scripts/verify.mjs",
+    "release": "npm version patch && git push --follow-tags"
   },
   "dependencies": {
     "chokidar": "^4.0.3",
