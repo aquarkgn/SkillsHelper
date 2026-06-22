@@ -36,6 +36,7 @@
     "init": "node bin/huhaa-myskills.mjs init",
     "purge": "node bin/huhaa-myskills.mjs purge",
     "dev": "node bin/huhaa-myskills.mjs dev",
+    "dev-bg": "bash start-dev.sh",
     "sync": "node bin/huhaa-myskills.mjs sync",
     "build:web": "node scripts/build-web.mjs",
     "test": "node --test packages/scanner/test/*.test.mjs packages/server/test/*.test.mjs",

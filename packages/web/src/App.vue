@@ -186,9 +186,6 @@ function formatBytes(n) {
       <div v-if="store.stats" class="stats-card">
         <div class="stat-main">{{ store.stats.total }}</div>
         <div class="stat-label">{{ t('skillsLoaded') }}</div>
-        <div class="source-line" v-for="e in store.editors" :key="e.name">
-          <span>{{ e.name }}</span><strong>{{ e.count }}</strong>
-        </div>
       </div>
 
       <div class="selected-editor-card" v-if="store.filters.editor">
