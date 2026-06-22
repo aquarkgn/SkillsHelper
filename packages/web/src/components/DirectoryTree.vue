@@ -1,9 +1,10 @@
 <script setup>
-import { computed, reactive } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { useSkillsStore } from '../stores/skills.js';
 
 const store = useSkillsStore();
 const expandedPaths = reactive(new Set());
+const selectedPath = ref(null);
 
 const directoryTree = computed(() => {
   const tree = new Map();
@@ -37,6 +38,10 @@ function togglePath(path) {
   } else {
     expandedPaths.add(path);
   }
+}
+
+function selectPath(path) {
+  selectedPath.value = selectedPath.value === path ? null : path;
 }
 
 function countSkills(tree) {
@@ -112,8 +117,10 @@ function getSkillPaddingLeft(depth) {
         <button
           class="tree-dir"
           :style="{ paddingLeft: getPaddingLeft(dir.depth) }"
-          :class="{ expanded: dir.expanded }"
-          @click="togglePath(dir.path)"
+          :class="{ expanded: dir.expanded, selected: dir.path === selectedPath }"
+          @click="selectPath(dir.path)"
+          @dblclick="togglePath(dir.path)"
+          :title="`单击选择，双击展开`"
         >
           <span class="tree-arrow">{{ dir.expanded ? '▼' : '▶' }}</span>
           <span class="tree-icon">📁</span>
@@ -173,6 +180,12 @@ function getSkillPaddingLeft(depth) {
 
 .tree-dir:hover {
   background: #f0f0f0;
+}
+
+.tree-dir.selected {
+  background: #e8f4f8;
+  color: #0d5a7c;
+  font-weight: 500;
 }
 
 .tree-arrow {
