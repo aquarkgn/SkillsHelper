@@ -431,33 +431,101 @@ sync_to_claude() {
 }
 
 main() {
-  echo -e "\n${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
-  echo -e "${CYAN}║          HuHaa-MySkills 编辑器技能同步 v0.1.5         ║${NC}"
-  echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}\n"
+  local selection="$1"
+  local editor_name="$2"
+  local is_auto_mode=false
 
-  log_info "扫描已安装的编辑器...\n"
+  # 如果通过 --editor 参数指定编辑器名称
+  if [[ "$selection" == "--editor" && -n "$editor_name" ]]; then
+    selection="$editor_name"
+    is_auto_mode=true
+  # 如果通过环境变量指定编辑器
+  elif [[ -n "${HUHAA_EDITOR:-}" ]]; then
+    selection="$HUHAA_EDITOR"
+    is_auto_mode=true
+  # 如果通过参数指定了选择，进入自动模式
+  elif [[ -n "$selection" && "$selection" != "" && "$selection" != "0" ]]; then
+    is_auto_mode=true
+  fi
+
+  if [[ "$is_auto_mode" == false ]]; then
+    echo -e "\n${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║          HuHaa-MySkills 编辑器技能同步 v0.1.5         ║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}\n"
+
+    log_info "扫描已安装的编辑器...\n"
+
+    editors=$(detect_editors)
+
+    if [[ -z "$editors" ]]; then
+      log_error "未发现支持的编辑器"
+      exit 1
+    fi
+
+    count=$(echo "$editors" | wc -l)
+    log_success "发现 $count 个编辑器"
+
+    show_editors "$editors"
+    read -p "请输入选择 (0/1,2,...或q): " selection
+
+    [[ "$selection" == "q" ]] && exit 0
+  fi
+
+  huhaa_root=$(find_huhaa_root) || exit 1
+
+  if [[ "$is_auto_mode" == false ]]; then
+    log_info "同步根目录: $huhaa_root\n"
+
+    echo -e "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
+    echo -e "${CYAN}║             开始同步编辑器技能              ║${NC}"
+    echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}\n"
+  fi
 
   editors=$(detect_editors)
 
-  if [[ -z "$editors" ]]; then
-    log_error "未发现支持的编辑器"
-    exit 1
+  # 处理编辑器名称（如 cursor, vscode 等）
+  if [[ "$is_auto_mode" == true && "$selection" != "0" ]]; then
+    # 将编辑器名称转换为可处理的格式
+    local editor_name="$selection"
+    local editor_path=""
+
+    # 从 editors 列表中找到对应的路径
+    editor_path=$(echo "$editors" | grep "|$editor_name|" | cut -d'|' -f3)
+
+    if [[ -n "$editor_path" ]]; then
+      case "$editor_name" in
+        cursor) sync_to_cursor "$editor_path" "$huhaa_root" ;;
+        vscode) sync_to_vscode "$editor_path" "$huhaa_root" ;;
+        vscode-insiders) sync_to_vscode_insiders "$editor_path" "$huhaa_root" ;;
+        windsurf) sync_to_windsurf "$editor_path" "$huhaa_root" ;;
+        zed) sync_to_zed "$editor_path" "$huhaa_root" ;;
+        helix) sync_to_helix "$editor_path" "$huhaa_root" ;;
+        neovim) sync_to_neovim "$editor_path" "$huhaa_root" ;;
+        vim) sync_to_vim "$editor_path" "$huhaa_root" ;;
+        emacs) sync_to_emacs "$editor_path" "$huhaa_root" ;;
+        sublime) sync_to_sublime "$editor_path" "$huhaa_root" ;;
+        sublime4) sync_to_sublime4 "$editor_path" "$huhaa_root" ;;
+        textmate) sync_to_textmate "$editor_path" "$huhaa_root" ;;
+        bbedit) sync_to_bbedit "$editor_path" "$huhaa_root" ;;
+        atom) sync_to_atom "$editor_path" "$huhaa_root" ;;
+        kate) sync_to_kate "$editor_path" "$huhaa_root" ;;
+        gedit) sync_to_gedit "$editor_path" "$huhaa_root" ;;
+        jetbrains) sync_to_jetbrains "$editor_path" "$huhaa_root" ;;
+        openclaw) sync_to_openclaw "$editor_path" "$huhaa_root" ;;
+        herems) sync_to_herems "$editor_path" "$huhaa_root" ;;
+        trae) sync_to_trae "$editor_path" "$huhaa_root" ;;
+        trae-cn) sync_to_trae_cn "$editor_path" "$huhaa_root" ;;
+        codex) sync_to_codex "$editor_path" "$huhaa_root" ;;
+        claude) sync_to_claude "$editor_path" "$huhaa_root" ;;
+      esac
+      echo
+      echo -e "${GREEN}✨ 技能同步完成！${NC}\n"
+      return 0
+    else
+      log_error "未找到编辑器: $editor_name"
+      exit 1
+    fi
   fi
-
-  count=$(echo "$editors" | wc -l)
-  log_success "发现 $count 个编辑器"
-
-  show_editors "$editors"
-  read -p "请输入选择 (0/1,2,...或q): " selection
-
-  [[ "$selection" == "q" ]] && exit 0
-
-  huhaa_root=$(find_huhaa_root) || exit 1
-  log_info "同步根目录: $huhaa_root\n"
-
-  echo -e "${CYAN}╔════════════════════════════════════════════════════════╗${NC}"
-  echo -e "${CYAN}║             开始同步编辑器技能              ║${NC}"
-  echo -e "${CYAN}╚════════════════════════════════════════════════════════╝${NC}\n"
 
   if [[ "$selection" == "0" ]]; then
     echo "$editors" | while IFS='|' read -r idx name path; do

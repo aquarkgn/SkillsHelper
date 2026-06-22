@@ -360,13 +360,50 @@ async function syncToEditor(skills, editor) {
 }
 
 async function interactiveSync(skills) {
+  const readline = await import('node:readline');
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  const question = (prompt) => new Promise(resolve => rl.question(prompt, resolve));
+
+  console.log(`\n[sync] found ${skills.length} skills`);
   console.log('\nSupported editors:');
   console.log('  [1] cursor      [2] vscode     [3] windsurf');
   console.log('  [4] zed        [5] neovim     [6] helix');
   console.log('  [7] sublime    [8] vim        [9] emacs');
   console.log('  [0] all editors');
-  console.log('\nUse HUHAA_SYNC env to sync without prompt:');
-  console.log('  HUHAA_SYNC=cursor,vscode huhaa-myskills sync');
+  console.log('  [q] quit\n');
+
+  const editorMap = {
+    '1': 'cursor', '2': 'vscode', '3': 'windsurf',
+    '4': 'zed', '5': 'neovim', '6': 'helix',
+    '7': 'sublime', '8': 'vim', '9': 'emacs'
+  };
+
+  const input = await question('Select editors (0/1/2/... or q): ');
+  rl.close();
+
+  if (input === 'q' || input === 'Q') {
+    console.log('[sync] cancelled');
+    return;
+  }
+
+  let editors = [];
+  if (input === '0') {
+    editors = Object.values(editorMap);
+  } else {
+    const selected = input.split(/[,\s]+/).filter(s => s);
+    editors = selected.map(s => editorMap[s]).filter(Boolean);
+  }
+
+  if (editors.length === 0) {
+    console.error('[sync] no valid editors selected');
+    return;
+  }
+
+  await syncToEditors(skills, editors);
 }
 
 // ---------------- helpers ----------------
