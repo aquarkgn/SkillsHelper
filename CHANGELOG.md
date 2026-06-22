@@ -21,6 +21,31 @@
 
 ---
 
+## [0.2.5] - 2026-06-22
+
+编辑器技能同步完整功能 | 3 项核心修复
+
+### Fixed
+- ✅ 修复 npm run sync 无法推送技能到编辑器的问题
+  - 增强所有编辑器的同步函数，实现实际文件复制
+  - 为不同编辑器采用适配的文件名（.cursorrules, huhaa_rules.md 等）
+  
+- ✅ 修复 huhaa-myskills sync 命令未实现的问题
+  - 完全实现 interactiveSync() 函数，支持交互式编辑器选择
+  - 增强 sync-skills.sh 参数处理，支持 --editor 参数
+  - 支持环境变量 HUHAA_SYNC 和 HUHAA_EDITOR
+
+### Added
+- ✅ 创建项目规则文件 (.cursorrules)
+- ✅ 完整的同步功能使用指南 (SYNC-FIX-GUIDE.md)
+- ✅ 支持命令行直接指定编辑器：bash sync-skills.sh --editor cursor
+
+### Changes
+- 编辑器同步脚本支持多种调用方式（交互、命令行参数、环境变量）
+- 改进错误处理和日志输出
+
+---
+
 ## [v0.1.4] - 2026-06-18
 
 多源扫描增强 | [详细说明](./docs/releases/v0.1.4.md)
