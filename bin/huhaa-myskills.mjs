@@ -72,7 +72,7 @@ Usage:
   huhaa-myskills <command> [options]
 
 Commands:
-  start     Scan + start server + open browser (default)
+  start     Scan + start server + open browser (runs in background by default)
   scan      Scan only, dump IR JSON to stdout
   stats     Scan + print human-readable summary (counts / brands / errors / samples)
   duplicates Scan + print duplicate diagnostics by name/content/path
@@ -82,8 +82,9 @@ Commands:
   dev       Dev mode (Vite + nodemon)
 
 Options:
-  -v, --version  Show version
-  -h, --help     Show this message
+  -v, --version       Show version
+  -h, --help          Show this message
+  -f, --foreground    Keep running in foreground (for debugging)
 
 Env:
   HUHAA_HOME      override user data dir (default: ~/.config/huhaa-myskills)
@@ -94,6 +95,7 @@ Paths:
   config   ${configFile()}
   cache    ${cacheFile()}
   state    ${stateFile()}
+  logs     ${path.join(homeDir(), 'huhaa.log')}
 `);
 }
 
@@ -268,6 +270,7 @@ function printDupGroup(title, groups, limit) {
 
 async function cmdStart() {
   await ensureConfigOrInit();
+  const isForeground = process.argv.includes('--foreground') || process.argv.includes('-f');
   const preferred = parseInt(process.env.PORT || '11520', 10);
   const port = await pickPort(preferred, 10);
   if (!port) {
@@ -275,16 +278,79 @@ async function cmdStart() {
     process.exit(1);
   }
   if (port !== preferred) {
-    console.error(`[start] port ${preferred} busy, using ${port} instead.`);
+    console.warn(`[start] port ${preferred} busy, using ${port} instead.`);
   }
 
+  const homeDirectory = homeDir();
+  const logFile = path.join(homeDirectory, 'huhaa.log');
+
+  // 后台模式：fork 子进程
+  if (!isForeground) {
+    return startBackgroundServer(port, logFile, homeDirectory);
+  }
+
+  // 前台模式：直接启动
+  await runServer(port, logFile, homeDirectory);
+}
+
+async function startBackgroundServer(port, logFile, homeDirectory) {
+  // 检查是否已有运行的实例
+  try {
+    const stateData = JSON.parse(fs.readFileSync(stateFile(), 'utf8'));
+    if (stateData.pid && isProcessRunning(stateData.pid)) {
+      console.log(`✓ HuHaa-MySkills already running on http://localhost:${stateData.port}`);
+      console.log(`📝 Logs: ${logFile}`);
+      return;
+    }
+  } catch {
+    // 状态文件不存在或无效，继续启动
+  }
+
+  // 打开日志文件用于输出重定向
+  const logFd = fs.openSync(logFile, 'a');
+
+  // Spawn 子进程
+  const child = spawn(process.execPath, [process.argv[1], 'start', '--foreground'], {
+    detached: true,
+    stdio: ['ignore', logFd, logFd],
+    env: {
+      ...process.env,
+      PORT: port.toString()
+    }
+  });
+
+  child.unref();
+
+  // 等待子进程启动，检查端口是否开放
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  // 关闭日志文件描述符（子进程已继承）
+  fs.closeSync(logFd);
+
+  console.log(`✓ HuHaa-MySkills running in background at http://localhost:${port}`);
+  console.log(`📝 Logs: ${logFile}`);
+  console.log(`💡 To view logs: tail -f ${logFile}`);
+  console.log(`💡 To stop: pkill -f "huhaa-myskills start"`);
+}
+
+function isProcessRunning(pid) {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function runServer(port, logFile, homeDirectory) {
   writeJson(stateFile(), { port, pid: process.pid, startedAt: new Date().toISOString() });
 
   const { startServer } = await import(path.join(PKGS_ROOT, 'server/src/index.mjs'));
   await startServer({ port });
 
   console.log(`\n  HuHaa-MySkills running:  http://localhost:${port}\n`);
-  console.log(`  data dir: ${homeDir()}`);
+  console.log(`  data dir: ${homeDirectory}`);
+  console.log(`  logs: ${logFile}`);
   console.log(`  Ctrl+C to stop.\n`);
 
   openBrowser(`http://localhost:${port}`);

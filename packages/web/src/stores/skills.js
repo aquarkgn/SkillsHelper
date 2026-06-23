@@ -23,6 +23,10 @@ export const useSkillsStore = defineStore('skills', {
       brand: '',
     },
     notice: '',
+    // 目录树相关状态
+    directoryTree: null,
+    selectedPaths: new Set(),
+    expandedPaths: new Set(),
   }),
 
   getters: {
@@ -61,6 +65,15 @@ export const useSkillsStore = defineStore('skills', {
       if (source) arr = arr.filter(x => x.source === source);
       if (product) arr = arr.filter(x => x.product === product);
       if (brand) arr = arr.filter(x => x.brand === brand);
+
+      // 目录路径过滤
+      if (state.selectedPaths.size > 0) {
+        arr = arr.filter(x => {
+          return Array.from(state.selectedPaths).some(path =>
+            x.paths?.abs?.startsWith(path)
+          );
+        });
+      }
 
       const parsed = parseQuery(state.query);
       arr = applyStructuredFilters(arr, parsed.filters);
@@ -113,6 +126,8 @@ export const useSkillsStore = defineStore('skills', {
     applySnapshot(skills, stats) {
       this.skills = skills;
       this.stats = stats;
+      // 构建目录树
+      this.buildDirectory();
     },
     async refreshSnapshot() {
       const currentId = this.selectedId;
@@ -206,6 +221,43 @@ export const useSkillsStore = defineStore('skills', {
         if (this.notice === msg) this.notice = '';
       }, 1600);
     },
+    // 目录树相关 actions
+    buildDirectory() {
+      this.directoryTree = buildDirectoryTree(this.skills);
+    },
+    togglePath(path) {
+      if (this.expandedPaths.has(path)) {
+        this.expandedPaths.delete(path);
+      } else {
+        this.expandedPaths.add(path);
+      }
+    },
+    expandAllPaths() {
+      function walk(node) {
+        this.expandedPaths.add(node.path);
+        if (node.children) {
+          for (const child of node.children.values()) {
+            walk.call(this, child);
+          }
+        }
+      }
+      if (this.directoryTree) {
+        walk.call(this, this.directoryTree);
+      }
+    },
+    collapseAllPaths() {
+      this.expandedPaths.clear();
+    },
+    toggleDirectoryPath(path) {
+      if (this.selectedPaths.has(path)) {
+        this.selectedPaths.delete(path);
+      } else {
+        this.selectedPaths.add(path);
+      }
+    },
+    clearDirectoryPaths() {
+      this.selectedPaths.clear();
+    },
   },
 });
 
@@ -284,4 +336,79 @@ function sortItems(items, sortKey) {
     default:
       return arr.sort((a, b) => `${text(a.editor || a.source)}\u0000${text(a.name)}`.localeCompare(`${text(b.editor || b.source)}\u0000${text(b.name)}`, 'zh-CN'));
   }
+}
+
+/**
+ * 构建目录树
+ */
+function buildDirectoryTree(skills) {
+  const root = {
+    path: '/',
+    name: '/',
+    children: new Map(),
+    skills: [],
+    depth: 0,
+  };
+
+  for (const skill of skills) {
+    const absPath = skill.paths?.abs;
+    if (!absPath) continue;
+
+    const parts = absPath.split('/').filter(Boolean);
+    if (parts.length < 1) continue;
+
+    let current = root;
+
+    for (let i = 0; i < parts.length - 1; i++) {
+      const part = parts[i];
+      const pathSoFar = '/' + parts.slice(0, i + 1).join('/');
+
+      if (!current.children.has(part)) {
+        current.children.set(part, {
+          path: pathSoFar,
+          name: part,
+          children: new Map(),
+          skills: [],
+          depth: i + 1,
+        });
+      }
+
+      current = current.children.get(part);
+    }
+
+    current.skills.push(skill);
+  }
+
+  return root;
+}
+
+/**
+ * 获取顶级目录
+ */
+function getTopLevelDirectories(tree) {
+  const dirs = [];
+  const seen = new Set();
+
+  function walk(node) {
+    if (!node.children) return;
+    for (const [name, child] of node.children) {
+      if (!seen.has(child.path)) {
+        seen.add(child.path);
+        dirs.push(child);
+      }
+      if (child.depth <= 2) {
+        walk(child);
+      }
+    }
+  }
+
+  walk(tree);
+  return dirs;
+}
+
+/**
+ * 计算路径下的技能数量
+ */
+function countSkillsInPath(path, skills) {
+  return skills.filter(s => s.paths?.abs?.startsWith(path)).length;
 }
