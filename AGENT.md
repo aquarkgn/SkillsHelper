@@ -74,7 +74,7 @@
 
 ## 📖 完整规范
 
-所有细节查看：**[docs/GITHUB_FRONTEND_STANDARDS.md](docs/GITHUB_FRONTEND_STANDARDS.md)**
+所有细节查看：**[docs/Frontend-Engineering.md](docs/Frontend-Engineering.md)**
 
 权限边界、工作流、决策矩阵等完整内容。
 

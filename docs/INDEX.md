@@ -14,7 +14,7 @@
 
 ## 📋 核心规范（必读）
 
-- **[GITHUB_FRONTEND_STANDARDS.md](GITHUB_FRONTEND_STANDARDS.md)** — 通用前端项目管理规范
+- **[Frontend-Engineering.md](Frontend-Engineering.md)** — 通用前端项目管理规范
   - 技术栈选型、版本管理、目录结构
   - 编码规范、提交规范、测试规范
   - Git 工作流、CI/CD、安全、性能基准
@@ -40,16 +40,16 @@
 
 ### 开发者
 1. 阅读 [CLAUDE.md](../CLAUDE.md) 和 [AGENT.md](../AGENT.md)
-2. 查看 [GITHUB_FRONTEND_STANDARDS.md](GITHUB_FRONTEND_STANDARDS.md)
+2. 查看 [Frontend-Engineering.md](Frontend-Engineering.md)
 3. 遇到问题参考对应章节
 
 ### 新项目
-1. 参考 [GITHUB_FRONTEND_STANDARDS.md](GITHUB_FRONTEND_STANDARDS.md)
+1. 参考 [Frontend-Engineering.md](Frontend-Engineering.md)
 2. 复制 CLAUDE.md + AGENT.md 到项目
 3. 按「初始化步骤」配置环境
 
 ### 代码审查
-1. 对照 [GITHUB_FRONTEND_STANDARDS.md](GITHUB_FRONTEND_STANDARDS.md)
+1. 对照 [Frontend-Engineering.md](Frontend-Engineering.md)
 2. 使用 `/code-review` 自动化检查
 3. 重点关注：类型安全、测试覆盖、安全隐患
 

@@ -7,7 +7,7 @@
 ## 🎯 核心原则
 
 1. **全中文沟通** — 对话、提交信息、注释都用中文
-2. **一致性优先** — 遵循 `docs/GITHUB_FRONTEND_STANDARDS.md`
+2. **一致性优先** — 遵循 `docs/Frontend-Engineering.md`
 3. **质量第一** — TypeScript strict、测试覆盖 >= 80%、代码审查通过
 4. **工程纪律** — 单一职责、最小改动、推送前 `/code-review`
 5. **文档优先** — 所有决策写入代码、文档或提交信息
@@ -17,7 +17,7 @@
 ## 📚 规范查阅
 
 **快速问题 → 本文件**  
-**详细规范 → `docs/GITHUB_FRONTEND_STANDARDS.md`**  
+**详细规范 → `docs/Frontend-Engineering.md`**  
 **全部导航 → `docs/INDEX.md`**
 
 ---
@@ -63,7 +63,7 @@ refactor(types): 统一 API 类型定义
 
 ## 📖 完整规范
 
-所有规范细节查看：**[docs/GITHUB_FRONTEND_STANDARDS.md](docs/GITHUB_FRONTEND_STANDARDS.md)**
+所有规范细节查看：**[docs/Frontend-Engineering.md](docs/Frontend-Engineering.md)**
 
 包括：
 - 技术栈、版本管理、目录结构
