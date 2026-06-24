@@ -21,6 +21,7 @@
   },
   "files": [
     "bin/",
+    "build/",
     "config/",
     "packages/",
     "scripts/",
@@ -36,11 +37,11 @@
     "init": "node bin/huhaa-myskills.mjs init",
     "purge": "node bin/huhaa-myskills.mjs purge",
     "dev": "node bin/huhaa-myskills.mjs dev",
-    "dev-bg": "bash start-dev.sh",
+    "dev-bg": "bash scripts/start-dev.sh",
     "sync": "node bin/huhaa-myskills.mjs sync",
-    "build:web": "node scripts/build-web.mjs",
+    "build:web": "node build/build-web.mjs",
     "test": "node --test packages/scanner/test/*.test.mjs packages/server/test/*.test.mjs",
-    "verify": "node scripts/verify.mjs",
+    "verify": "node build/verify.mjs",
     "release": "npm version patch && git push --follow-tags"
   },
   "dependencies": {

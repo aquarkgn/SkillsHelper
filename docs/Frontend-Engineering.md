@@ -135,7 +135,8 @@ my-project/
 │   ├── ENGINEERING_STANDARDS.md
 │   ├── API.md
 │   └── ARCHITECTURE.md
-├── scripts/                 # 构建和部署脚本
+├── scripts/                 # Shell 脚本（.sh）
+├── build/                   # 构建脚本（.js、.mjs）
 ├── .env.example             # 环境变量模板
 ├── .env.local              # （忽略，本地私密）
 ├── .eslintrc.json          # ESLint 配置
@@ -162,7 +163,8 @@ constants/    → 常量和枚举
 styles/       → 全局样式、主题变量
 tests/        → 单元测试、集成测试
 docs/         → 工程文档、架构设计
-scripts/      → 构建和部署工具脚本
+scripts/      → Shell 脚本（.sh）— 构建、部署、自动化脚本
+build/        → 构建脚本（.js、.mjs、.ts）— npm run 调用的 build/verify/check 工具
 public/       → 静态资源
 ```
 
