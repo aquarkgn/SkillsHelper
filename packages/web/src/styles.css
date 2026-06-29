@@ -924,21 +924,6 @@ mark {
   flex-direction: column;
 }
 
-@media (max-width: 1024px) {
-  .detail-modal {
-    flex: 0 0 70vw;
-  }
-}
-
-@media (max-width: 768px) {
-  .detail-modal {
-    flex: 0 0 100vw;
-  }
-  .modal-backdrop {
-    align-items: flex-end;
-  }
-}
-
 @keyframes backdropFadeIn {
   from {
     opacity: 0;
@@ -956,5 +941,329 @@ mark {
   to {
     opacity: 1;
     transform: translateX(0);
+  }
+}
+
+/* ===== 响应式设计 - 5 个断点 ===== */
+
+/* 断点 0: 超小屏 (375px - 479px) - 手机 */
+@media (max-width: 479px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main-area {
+    grid-column: 1 / -1;
+  }
+
+  .topbar {
+    flex: 0 0 50px;
+    padding: 8px 12px;
+  }
+
+  .search-box input {
+    font-size: 14px;
+  }
+
+  .filter-chips-row {
+    min-height: 32px;
+    padding: 6px 12px;
+  }
+
+  .chip {
+    padding: 2px 6px;
+    font-size: 11px;
+  }
+
+  .chip-remove {
+    font-size: 12px;
+  }
+
+  .list-collapse-btn {
+    font-size: 12px;
+  }
+
+  .detail-modal {
+    flex: 0 0 100vw;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .modal-backdrop {
+    align-items: flex-end;
+  }
+
+  .detail-header {
+    padding: 12px;
+  }
+
+  .detail-header h2 {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .detail-actions {
+    grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+    gap: 4px;
+    padding: 6px 8px;
+  }
+
+  .action-btn {
+    padding: 4px 6px;
+    font-size: 11px;
+  }
+
+  .skill-card-mini {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .skill-card-mini .src,
+  .skill-card-mini .kind {
+    font-size: 10px;
+  }
+}
+
+/* 断点 1: 小屏 (480px - 767px) - 小手机 */
+@media (max-width: 767px) {
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main-area {
+    grid-column: 1 / -1;
+  }
+
+  .topbar {
+    flex: 0 0 55px;
+    padding: 10px 14px;
+  }
+
+  .filter-chips-row {
+    min-height: 36px;
+    padding: 6px 14px;
+  }
+
+  .detail-modal {
+    flex: 0 0 100vw;
+    border-left: none;
+    border-top: 1px solid #e5e7eb;
+  }
+
+  .modal-backdrop {
+    align-items: flex-end;
+  }
+
+  .detail-header {
+    padding: 12px;
+    gap: 8px;
+  }
+
+  .detail-header h2 {
+    font-size: 18px;
+  }
+
+  .detail-actions {
+    grid-template-columns: repeat(auto-fit, minmax(70px, 1fr));
+  }
+
+  .badge-row {
+    gap: 4px;
+  }
+
+  .badge {
+    font-size: 10px;
+    padding: 1px 4px;
+  }
+}
+
+/* 断点 2: 中屏 (768px - 1023px) - 平板 */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .shell {
+    grid-template-columns: 200px 1fr;
+  }
+
+  .sidebar {
+    display: flex;
+    min-width: 200px;
+    max-width: 200px;
+  }
+
+  .main-area {
+    grid-column: 2 / 3;
+  }
+
+  .topbar {
+    flex: 0 0 55px;
+  }
+
+  .filter-chips-row {
+    min-height: 36px;
+  }
+
+  .detail-modal {
+    flex: 0 0 70vw;
+    max-width: 600px;
+  }
+
+  .modal-backdrop {
+    align-items: flex-start;
+  }
+
+  .detail-header {
+    padding: 12px;
+  }
+
+  .detail-header h2 {
+    font-size: 18px;
+  }
+
+  .detail-actions {
+    grid-template-columns: repeat(auto-fit, minmax(75px, 1fr));
+  }
+
+  .list-section {
+    min-height: 100px;
+  }
+
+  .skill-card-mini {
+    padding: 8px;
+    font-size: 12px;
+  }
+
+  .usage-prompt {
+    font-size: 12px;
+  }
+
+  .detail-scroll {
+    padding: 12px;
+  }
+
+  .usage-head span {
+    font-size: 12px;
+  }
+}
+
+/* 断点 3: 大屏 (1024px - 1199px) - 笔记本 */
+@media (min-width: 1024px) and (max-width: 1199px) {
+  .shell {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .sidebar {
+    min-width: 240px;
+    max-width: 240px;
+  }
+
+  .detail-modal {
+    flex: 0 0 45vw;
+    max-width: 750px;
+  }
+
+  .topbar {
+    flex: 0 0 60px;
+  }
+
+  .filter-chips-row {
+    min-height: 40px;
+  }
+
+  .list-section {
+    min-height: 120px;
+  }
+
+  .detail-header {
+    padding: 14px;
+  }
+
+  .detail-header h2 {
+    font-size: 20px;
+  }
+
+  .detail-actions {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 6px;
+  }
+
+  .skill-card-mini {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .usage-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .detail-scroll {
+    padding: 14px;
+  }
+}
+
+/* 断点 4: 超大屏 (1200px+) - 台式机 */
+@media (min-width: 1200px) {
+  .shell {
+    grid-template-columns: 240px 1fr;
+  }
+
+  .sidebar {
+    min-width: 240px;
+    max-width: 240px;
+  }
+
+  .detail-modal {
+    flex: 0 0 50vw;
+    max-width: 900px;
+  }
+
+  .topbar {
+    flex: 0 0 60px;
+  }
+
+  .filter-chips-row {
+    min-height: 40px;
+  }
+
+  .list-section {
+    min-height: 140px;
+  }
+
+  .detail-header {
+    padding: 16px;
+  }
+
+  .detail-header h2 {
+    font-size: 20px;
+  }
+
+  .detail-actions {
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 6px;
+  }
+
+  .skill-card-mini {
+    padding: 8px;
+    font-size: 13px;
+  }
+
+  .usage-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+  }
+
+  .detail-scroll {
+    padding: 16px;
+  }
+
+  .markdown {
+    line-height: 1.6;
   }
 }
