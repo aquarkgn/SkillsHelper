@@ -1,0 +1,157 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║           📋 HuHaa-MySkills 页面改版 — 详细实施计划已生成                    ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📁 已生成文件
+
+  1. .claude/IMPLEMENTATION_PLAN.md (12.5 KB)
+     └─ 完整分 5 个 Phase 的实施计划
+        • Phase 1: CSS 基础改动 (30 min)
+        • Phase 2: Filter Chips 显示 (45 min)
+        • Phase 3: Detail Modal 浮层化 (60 min)
+        • Phase 4: 响应式设计 (90 min)
+        • Phase 5: 卡片网格优化 (60 min)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 5 个执行阶段（285 min = ~4.75 hours）
+
+Phase 1: CSS 基础改动 (30 min)
+├─ 改: grid-template-columns: 200px 1fr → 240px 1fr
+├─ 改: .sidebar min/max-width: 200px → 240px
+└─ 验证: Sidebar 宽度生效
+
+Phase 2: Filter Chips 显示 (45 min)
+├─ 新增: filter-chips-row (40px 高)
+├─ 新增: removeFilter() 方法
+├─ 新增: Chips 样式 (.chip, .chip-remove)
+└─ 验证: 搜索/过滤后显示 chips
+
+Phase 3: Detail Modal 浮层化 (60 min)
+├─ 移除: .detail-section 固定布局
+├─ 新增: Teleport + Modal HTML
+├─ 新增: Modal CSS (.detail-modal-overlay, .detail-modal)
+├─ 新增: 关闭按钮 + 动画
+└─ 验证: 点击卡片浮层显示，可关闭
+
+Phase 4: 响应式设计 (90 min)
+├─ 添加: @media (max-width: 1023px) Tablet 样式
+├─ 添加: @media (max-width: 767px) Mobile 样式
+├─ 添加: @media (min-width: 1921px) UltraWide 样式
+├─ 调整: 卡片宽度根据断点变化 (200→150→100)
+└─ 验证: 3 种尺寸响应式完整
+
+Phase 5: 卡片网格优化 (60 min)
+├─ 标准化: .skill-card-mini 200×140px
+├─ 新增: grid-template-columns: repeat(auto-fill, 200px)
+├─ 新增: Hover 效果 + Selected 状态
+├─ 新增: 文本截断 (.skill-card-mini-desc: -webkit-line-clamp: 2)
+└─ 验证: 卡片显示 24 个/屏
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 文件修改清单
+
+src/styles.css
+├─ L19:      grid-template-columns 改宽度
+├─ L35-36:   .sidebar 改宽度
+├─ L末尾:    新增 Filter Chips CSS (35 行)
+├─ L末尾:    新增 Detail Modal CSS (60 行)
+├─ L末尾:    新增响应式媒体查询 (150+ 行)
+└─ L末尾:    新增卡片网格优化 (80 行)
+
+src/App.vue
+├─ L236 后:  新增 removeFilter() 方法
+├─ L321 后:  新增 Filter Chips HTML (10 行)
+├─ L380:     改 Detail Section 为浮层 Modal
+├─ L466 后:  新增 Detail Modal Teleport (30 行)
+└─ 总计:     +100 行代码
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+⏱️ 时间预算
+
+  Phase 1: 30 min    (CSS 基础)
+  Phase 2: 45 min    (Chips HTML + 方法)
+  Phase 3: 60 min    (Modal 浮层)
+  Phase 4: 90 min    (响应式 5 断点)
+  Phase 5: 60 min    (卡片网格)
+  ────────────────────
+  小计:   285 min    (4.75 小时)
+
+  测试:     45 min    (单元 + 集成 + 兼容性)
+  提交:     15 min    (Code Review + PR)
+  ────────────────────
+  总计:    345 min    (5.75 小时)
+
+  ⚡ 优化: 可与 Phase 4/5 并行 → 约 3-4 小时
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🧪 测试清单
+
+单元测试 (15 min)
+├─ Sidebar 宽度检查
+├─ Filter Chips 显示检查
+├─ Detail Modal 可见性检查
+└─ 响应式 5 断点检查
+
+集成测试 (20 min)
+├─ 搜索 + 过滤 + Chips 流程
+├─ Modal 关闭交互 (点击、Escape)
+├─ 宽度变化时自适应
+└─ 数据和过滤链接
+
+兼容性测试 (10 min)
+├─ Chrome 最新版
+├─ Firefox 最新版
+└─ Safari 最新版
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 验收标准
+
+功能:
+✓ Sidebar 240px
+✓ List 1680px
+✓ Filter Chips 可见且可移除
+✓ Detail Panel 浮层显示
+✓ 一屏 24 个卡片 (Desktop)
+✓ 响应式 5 断点
+
+性能:
+✓ 首屏 < 2s
+✓ 搜索 < 100ms
+✓ 无布局抖动
+
+代码质量:
+✓ TypeScript strict
+✓ ESLint 无警告
+✓ 无 console.error
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 下一步
+
+方案已确认 ✓
+Demo 已审查 ✓
+实施计划已生成 ✓
+
+➜ 准备开始 Phase 1?
+   是否开始执行实施计划？
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📍 计划文档位置
+
+.claude/IMPLEMENTATION_PLAN.md
+
+可通过以下方式查看:
+• 在 IDE 中打开
+• 或: cat .claude/IMPLEMENTATION_PLAN.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
