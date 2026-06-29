@@ -12,17 +12,17 @@ html, body, #app { height: 100%; margin: 0; }
 button, input { font: inherit; }
 button { cursor: pointer; }
 
-/* ===== MAIN SHELL LAYOUT - 新架构：左侧 200px + 右侧占余下全部 ===== */
+/* ===== MAIN SHELL LAYOUT - 新架构：左侧 240px + 右侧占余下全部 ===== */
 .shell {
   height: 100vh;
   display: grid;
-  grid-template-columns: 200px 1fr;
+  grid-template-columns: 240px 1fr;
   grid-template-rows: 1fr;
   overflow: hidden;
   gap: 0;
 }
 
-/* LEFT SIDEBAR - 固定 200px 筛选栏 */
+/* LEFT SIDEBAR - 固定 240px 筛选栏 */
 .sidebar {
   grid-column: 1 / 2;
   grid-row: 1 / 2;
@@ -32,8 +32,8 @@ button { cursor: pointer; }
   padding: 0;
   display: flex;
   flex-direction: column;
-  min-width: 200px;
-  max-width: 200px;
+  min-width: 240px;
+  max-width: 240px;
 }
 
 .sidebar-content {
