@@ -4,6 +4,7 @@ import MarkdownIt from 'markdown-it';
 import { useSkillsStore } from './stores/skills.js';
 import { useI18nStore } from './stores/i18n.js';
 import { translateText, getCacheStats } from './lib/translator.js';
+import { getSourceBranding, getBrandColor } from './lib/branding.js';
 import SkillTree from './components/SkillTree.vue';
 import DirectoryTree from './components/DirectoryTree.vue';
 import AppTree from './components/AppTree.vue';
@@ -245,7 +246,7 @@ function getLabel(type, value) {
             <span>{{ t('editor') }}</span>
             <select v-model="store.filters.editor" class="filter-select-compact">
               <option value="">{{ t('all') }}</option>
-              <option v-for="o in store.editors" :key="o.name" :value="o.name">{{ getLabel('editor', o.name) }} ({{ o.count }})</option>
+              <option v-for="o in store.editors" :key="o.name" :value="o.name">{{ getSourceBranding(o.name).icon }} {{ getLabel('editor', o.name) }} ({{ o.count }})</option>
             </select>
           </label>
 
@@ -261,7 +262,7 @@ function getLabel(type, value) {
             <span>{{ t('source') }}</span>
             <select v-model="store.filters.source" class="filter-select-compact">
               <option value="">{{ t('all') }}</option>
-              <option v-for="o in store.filterSources" :key="o.name" :value="o.name">{{ getLabel('source', o.name) }} ({{ o.count }})</option>
+              <option v-for="o in store.filterSources" :key="o.name" :value="o.name">{{ getSourceBranding(o.name).icon }} {{ getLabel('source', o.name) }} ({{ o.count }})</option>
             </select>
           </label>
 
@@ -277,7 +278,7 @@ function getLabel(type, value) {
             <span>{{ t('brand') }}</span>
             <select v-model="store.filters.brand" class="filter-select-compact">
               <option value="">{{ t('all') }}</option>
-              <option v-for="o in store.brands" :key="o.name" :value="o.name">{{ getLabel('brand', o.name) }} ({{ o.count }})</option>
+              <option v-for="o in store.brands" :key="o.name" :value="o.name">📦 {{ getLabel('brand', o.name) }} ({{ o.count }})</option>
             </select>
           </label>
 
@@ -366,8 +367,8 @@ function getLabel(type, value) {
         <div class="detail-header">
           <div class="detail-header-left">
             <div class="detail-kicker">
-              <span class="src" :class="`src-${store.selected.source}`">{{ getLabel('source', store.selected.source) }}</span>
-              <span>{{ getLabel('editor', store.selected.editor || store.selected.source) }}</span>
+              <span class="src" :class="`src-${store.selected.source}`">{{ getSourceBranding(store.selected.source).icon }} {{ getLabel('source', store.selected.source) }}</span>
+              <span>{{ getSourceBranding(store.selected.editor || store.selected.source).icon }} {{ getLabel('editor', store.selected.editor || store.selected.source) }}</span>
               <span>{{ getLabel('category', store.selected.category || t('uncategorized')) }}</span>
             </div>
             <h2>{{ i18n.skillText(store.selected, 'name') }}</h2>

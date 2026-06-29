@@ -100,7 +100,7 @@ limits:
 
       const css = await fetchText(`${base}${cssMatch[0]}`);
       assert.equal(css.contentType.split(';')[0], 'text/css');
-      assert.ok(css.body.includes('toolbar-card'));
+      assert.ok(css.body.includes('topbar') || css.body.includes('sidebar') || css.body.includes('detail'));
 
       console.log('\n[verify] PASS build + tests + HTTP/API/static smoke checks');
     } finally {

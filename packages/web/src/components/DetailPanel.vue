@@ -1,6 +1,7 @@
 <script setup>
 import { useSkillsStore } from '../stores/skills.js';
 import { useI18nStore } from '../stores/i18n.js';
+import { getSourceBranding, getBrandColor } from '../lib/branding.js';
 
 const props = defineProps({
   detailHtml: String,
@@ -14,6 +15,19 @@ const emit = defineEmits(['close']);
 const store = useSkillsStore();
 const i18n = useI18nStore();
 const t = i18n.t;
+
+function getLabel(type, value) {
+  if (!store.stats?.labels || !value) return value;
+  const labels = store.stats.labels;
+  switch(type) {
+    case 'source': return labels.sources?.[value] || value;
+    case 'editor': return labels.editors?.[value] || value;
+    case 'kind': return labels.kinds?.[value] || value;
+    case 'category': return labels.categories?.[value] || value;
+    case 'brand': return labels.brands?.[value] || value;
+    default: return value;
+  }
+}
 
 function handleEscape(e) {
   if (e.key === 'Escape') {
@@ -33,9 +47,9 @@ function handleEscape(e) {
       <div class="detail-head">
         <div>
           <div class="detail-kicker">
-            <span class="src" :class="`src-${store.selected.source}`">{{ store.selected.source }}</span>
-            <span>{{ store.selected.editor || store.selected.source }}</span>
-            <span>{{ store.selected.category || t('uncategorized') }}</span>
+            <span class="src" :class="`src-${store.selected.source}`">{{ getSourceBranding(store.selected.source).icon }} {{ getLabel('source', store.selected.source) }}</span>
+            <span>{{ getSourceBranding(store.selected.editor || store.selected.source).icon }} {{ getLabel('editor', store.selected.editor || store.selected.source) }}</span>
+            <span>{{ getLabel('category', store.selected.category || t('uncategorized')) }}</span>
           </div>
           <h2>{{ i18n.skillText(store.selected, 'name') }}</h2>
           <div class="badge-row">
