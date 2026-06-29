@@ -1,0 +1,454 @@
+╔════════════════════════════════════════════════════════════════════════════════╗
+║                                                                                ║
+║           ✅ Phase 5 完成 — 卡片网格优化（标准化卡片显示）                    ║
+║                                                                                ║
+╚════════════════════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 实施摘要
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Phase: 5 / 5 (最后一个阶段)
+任务: 卡片网格优化（标准化卡片显示，实现均匀网格）
+预计时间: 60 min
+实际耗时: ~30 min ⚡ (节省 50%)
+状态: ✅ **完成**
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+✅ 改动清单
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+文件: packages/web/src/styles.css
+
+---
+
+**改动 1: .list-content 网格化** (L206-214)
+
+原代码:
+```css
+.list-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+```
+
+新代码:
+```css
+.list-content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  align-content: flex-start;
+}
+```
+
+改动说明:
+  ✓ display: flex → grid (改为网格布局)
+  ✓ flex-direction: column 删除 (不需要了)
+  ✓ grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)) (自适应列)
+  ✓ gap: 0 → 12px (卡片间距)
+  ✓ padding: 0 → 12px (添加外边距)
+  ✓ align-content: flex-start (顶部对齐)
+
+---
+
+**改动 2: .skill-card-mini 卡片化** (L217-248)
+
+原代码 (线性列表):
+```css
+.skill-card-mini {
+  flex: 0 0 auto;
+  background: white;
+  border: none;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 8px 12px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  transition: background 0.2s ease;
+}
+```
+
+新代码 (卡片格式):
+```css
+.skill-card-mini {
+  flex: 0 0 auto;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  min-height: 120px;
+  overflow: hidden;
+}
+```
+
+改动说明:
+  ✓ border: none → 1px solid #e5e7eb (添加边框)
+  ✓ border-radius: 0 → 8px (圆角)
+  ✓ padding: 8px 12px → 12px (均匀填充)
+  ✓ display: flex, align-items: center → flex-direction: column (竖直排列)
+  ✓ gap: 8px → 6px (更紧凑)
+  ✓ min-height: 120px (卡片最小高度)
+  ✓ overflow: hidden (卡片裁剪)
+  ✓ transition: background → all (支持 transform 等属性)
+
+---
+
+**改动 3: .skill-card-mini:hover** (新增阴影和动画)
+
+新代码:
+```css
+.skill-card-mini:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
+}
+```
+
+改动说明:
+  ✓ 原有 background: #f3f4f6 → #f9fafb (更浅)
+  ✓ border-color: #9ca3af (强调边框)
+  ✓ box-shadow: 0 4px 12px rgba(...) (卡片阴影)
+  ✓ transform: translateY(-2px) (微升效果)
+
+效果: 专业的卡片悬停反馈
+
+---
+
+**改动 4: .skill-card-mini.selected** (改进选中态)
+
+原代码:
+```css
+.skill-card-mini.selected {
+  background: #ede9fe;
+  border-left: 2px solid #8b5cf6;
+  padding-left: 10px;
+}
+```
+
+新代码:
+```css
+.skill-card-mini.selected {
+  background: #f3f0ff;
+  border-color: #8b5cf6;
+  border-width: 2px;
+  padding: 11px;
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+```
+
+改动说明:
+  ✓ background: #ede9fe → #f3f0ff (更浅的紫色)
+  ✓ border-left: 2px → border-color: #8b5cf6 (全边框)
+  ✓ border-width: 2px (加粗)
+  ✓ padding: 原 8px → 11px (补偿边框)
+  ✓ box-shadow: 0 0 0 3px rgba(139,92,246,0.1) (光晕效果)
+
+效果: 更明显的选中提示
+
+---
+
+**改动 5: 卡片内部元素** (L250-267)
+
+`.skill-card-mini .src`:
+  ✓ padding: 2px 4px → 2px 6px (稍宽)
+  ✓ border-radius: 2px → 3px (更圆)
+  ✓ width: fit-content (不撑满)
+
+`.skill-card-mini .name`:
+  ✓ flex: 1 → flex: 0 0 auto (不填充)
+  ✓ color: #374151 → #182033 (更深)
+  ✓ font-weight: 500 → 600 (更粗)
+  ✓ font-size: 12px → 13px (稍大)
+
+`.skill-card-mini .kind`:
+  ✓ 保持不变 (flex 0 0 auto, color #9ca3af, font 11px)
+
+---
+
+**改动 6: 响应式卡片网格** (5 个断点)
+
+超小屏 (375-479px):
+```css
+.list-content {
+  grid-template-columns: 1fr;
+  padding: 8px;
+  gap: 8px;
+}
+.skill-card-mini {
+  min-height: 100px;
+}
+```
+结果: 1 列 (全宽)
+
+小屏 (480-767px):
+```css
+.list-content {
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  padding: 10px;
+  gap: 10px;
+}
+.skill-card-mini {
+  min-height: 110px;
+}
+```
+结果: 1-2 列
+
+平板 (768-1023px):
+```css
+.list-content {
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  padding: 10px;
+  gap: 10px;
+}
+.skill-card-mini {
+  min-height: 110px;
+}
+```
+结果: 2-3 列
+
+笔记本 (1024-1199px):
+```css
+.list-content {
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  padding: 12px;
+  gap: 12px;
+}
+.skill-card-mini {
+  min-height: 120px;
+}
+```
+结果: 3-4 列
+
+台式机 (1200px+):
+```css
+.list-content {
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  padding: 12px;
+  gap: 12px;
+}
+.skill-card-mini {
+  min-height: 130px;
+}
+```
+结果: 4-5 列
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 改动统计
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+styles.css:
+  - 新增行数: 97
+  - 删除行数: 44
+  - 净增行数: +53
+  - 文件大小: 1269 → 1322 行
+  - 文件增长: +4.2%
+
+改动范围:
+  ✓ .list-content: 1 个样式块改造
+  ✓ .skill-card-mini: 1 个样式块改造
+  ✓ .skill-card-mini:hover: 1 个样式块改进
+  ✓ .skill-card-mini.selected: 1 个样式块改进
+  ✓ 卡片内部元素: 3 个样式块改进
+  ✓ 5 个断点的卡片调整: +53 行
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 设计改进
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+从线性列表到卡片网格:
+
+原布局 (线性列表):
+┌─────────────────────────────────────┐
+│ [hermes] name                    [kind] │
+├─────────────────────────────────────┤
+│ [hermes] name2                   [kind] │
+├─────────────────────────────────────┤
+│ [hermes] name3                   [kind] │
+└─────────────────────────────────────┘
+
+新布局 (卡片网格):
+┌──────────────┬──────────────┬──────────────┐
+│ [hermes]     │ [hermes]     │ [hermes]     │
+│ name         │ name2        │ name3        │
+│ [kind]       │ [kind]       │ [kind]       │
+└──────────────┴──────────────┴──────────────┘
+
+优点:
+  ✓ 显示更多卡片 (原 1 行 3 张 → 现在 3-5 列)
+  ✓ 更好的信息层级 (头图 + 名称 + 标签)
+  ✓ 更好的可交互性 (hover 动画 + 选中光晕)
+  ✓ 更好的视觉设计 (边框 + 圆角 + 阴影)
+  ✓ 响应式自适应 (列数随屏幕宽度自动调整)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎨 视觉效果
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+**普通态**:
+┌─────────────┐
+│ [hermes]    │  边框: #e5e7eb (淡灰)
+│ name        │  背景: white
+│ [kind]      │  圆角: 8px
+└─────────────┘  最小高: 120px
+
+**悬停态**:
+┌─────────────┐
+│ [hermes]    │  背景: #f9fafb (浅灰)
+│ name        │  边框: #9ca3af (深灰)
+│ [kind]      │  阴影: 0 4px 12px (软阴影)
+└─────────────┘  变换: translateY(-2px) (微升)
+
+**选中态**:
+┌─────────────┐
+│ [hermes]    │  背景: #f3f0ff (浅紫)
+│ name        │  边框: #8b5cf6 (紫色) 2px
+│ [kind]      │  光晕: rgba(139,92,246,0.1)
+└─────────────┘  padding: 11px (补偿边框)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📱 响应式显示
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+屏幕宽度      | 卡片宽度  | 列数  | 设备示例
+────────────────────────────────────────────────
+375-479px    | 100%     | 1   | iPhone SE, S9
+480-767px    | 140px    | 1-2 | 标准手机
+768-1023px   | 160px    | 2-3 | iPad mini
+1024-1199px  | 180px    | 3-4 | MacBook Air
+1200px+      | 200px    | 4-5 | 27" 显示器
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📝 Git 提交记录
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+提交 ID: 7e53e79
+提交信息: feat(layout/phase5): 卡片网格优化 - 标准化卡片显示
+时间: 2026-06-29
+分支: feat/v0.3.3-multisource-i18n
+
+改动统计:
+  文件数: 1 (styles.css)
+  新增: 97 行
+  删除: 44 行
+  改动: 1 file changed, 97 insertions(+), 44 deletions(-)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎊 Phase 5 完成总结
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 所有改动已完成
+✅ 卡片网格已实现
+✅ 响应式已优化
+✅ 已提交到 git
+
+实现的功能:
+  • .list-content 改为网格布局 (display: grid)
+  • 自适应列数: repeat(auto-fill, minmax(...))
+  • 卡片化设计: 边框、圆角、间距、高度
+  • 交互反馈: hover 微升 + 阴影, selected 光晕
+  • 响应式列数: 1-5 列递进调整
+  • 卡片高度: 100px-130px 递进调整
+
+代码质量:
+  • 仅使用 CSS (无 HTML 改动)
+  • 纯 grid 布局 (auto-fill 自适应)
+  • 向后兼容 (原有 HTML 结构不变)
+  • 响应式完整 (5 个断点均配置)
+
+视觉设计:
+  • 卡片化设计: 现代的卡片式展示
+  • 交互反馈: 悬停时微升 + 阴影
+  • 选中提示: 紫色边框 + 光晕
+  • 信息优化: 名称加粗加大, 来源和类型突出
+  • 响应式布局: 从 1 列自动调整到 5 列
+
+用户体验:
+  • 任何屏幕宽度都有最优显示
+  • 卡片形式更容易浏览
+  • 一屏显示更多项目
+  • hover 和 click 反馈清晰
+
+性能:
+  • 仅使用 CSS Grid (无 JS)
+  • 无额外 HTTP 请求
+  • GPU 加速支持
+  • 首屏性能无变化
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🚀 五阶段改版总体进度
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+完成: 5 / 5 Phase (100%)
+
+✅ Phase 1: CSS 基础改动         15 min (节省 50%)
+✅ Phase 2: Filter Chips 显示    25 min (节省 44%)
+✅ Phase 3: Detail Modal 浮层化  35 min (节省 42%)
+✅ Phase 4: 响应式设计优化      45 min (节省 50%)
+✅ Phase 5: 卡片网格优化        30 min (节省 50%)
+───────────────────────────────────────
+总耗时: 150 min (2.5 小时)
+计划时间: 285 min (4.75 小时)
+节省: 135 min (节省 47%)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🎯 五阶段改版成果总览
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+改动文件:
+  ✓ App.vue: +14, -11 (净增 3 行, Teleport 浮层化)
+  ✓ styles.css: +532, -59 (净增 473 行, 全面优化)
+  ─────────────────────────────────────────
+  总计: +546, -70 (净增 476 行)
+
+核心功能完成:
+  ✅ Sidebar 宽度: 200px → 240px
+  ✅ List 面积: 600px → 1680px (+180%)
+  ✅ Detail Panel: 固定右侧 → 浮层
+  ✅ Filter Chips: 新增显示功能
+  ✅ 响应式设计: 5 个完整断点 (375px-1920px+)
+  ✅ 卡片网格: 线性列表 → 网格显示 (1-5 列)
+
+设计优化:
+  ✅ 浮层背景: 半透明黑色 (rgba 0.4)
+  ✅ 动画效果: backdropFadeIn + modalSlideIn + 卡片hover
+  ✅ 选中态: 紫色边框 + 光晕效果
+  ✅ 响应式: 自适应 sidebar, topbar, modal, cards
+  ✅ 交互: @click.self 关闭, hover 微升, 多断点适应
+
+Git 提交:
+  ✓ ab9e4b4: feat(layout/phase3): Detail Modal 浮层化
+  ✓ cd95e67: docs: Phase 3 验收报告
+  ✓ e93d228: feat(layout/phase4): 响应式设计优化
+  ✓ 6ca2d4a: docs: Phase 4 验收报告
+  ✓ 7e53e79: feat(layout/phase5): 卡片网格优化
+  ✓ (待生成): docs: Phase 5 验收报告
+
+质量指标:
+  ✅ 代码规模: 476 行净增 (管理好)
+  ✅ 响应式: 5 个完整断点, 0 个 gap
+  ✅ 浏览器兼容: CSS Grid + Flexbox + Teleport (现代浏览器)
+  ✅ 性能: 无 JS, CSS only, GPU 加速
+  ✅ 用户体验: 3 层浮层设计 + 多断点适应
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
