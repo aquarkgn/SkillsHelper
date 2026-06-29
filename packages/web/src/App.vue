@@ -320,6 +320,17 @@ function getLabel(type, value) {
         </div>
       </header>
 
+      <!-- FILTER CHIPS - 显示活跃过滤条件 -->
+      <div class="filter-chips-row" v-if="activeFilterChips.length">
+        <div class="chips-container">
+          <span v-for="chip in activeFilterChips" :key="`${chip.key}-${chip.value}`" class="chip">
+            <span class="chip-label">{{ chip.label }}:</span>
+            <span class="chip-value">{{ chip.value }}</span>
+            <button class="chip-remove" @click="clearFilterChip(chip.key)" :aria-label="`移除 ${chip.label} 过滤`">×</button>
+          </span>
+        </div>
+      </div>
+
       <!-- LIST SECTION - 上方 120px 固定（可 scroll） -->
       <section class="list-section" :class="{ collapsed: listCollapsed }">
         <div class="list-header">
