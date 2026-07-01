@@ -1134,6 +1134,53 @@ HuHaa-MySkills/
 
 ---
 
+## VI.7 发布流程（npm 发布，唯一权威方式）
+
+**发布完全由 GitHub Actions 自动完成，本地不执行 `npm publish`。**
+
+### 触发方式
+
+```bash
+# 1. 在 main 分支 bump 版本号并推送（脚本已封装）
+npm run release          # = npm version patch && git push
+
+# 2. 推送到 main 后，.github/workflows/release.yml 自动：
+#    读 package.json 版本 → 若远程无对应 tag → 构建 → npm publish → 打 tag → 建 GitHub Release
+```
+
+### 关键设计（release.yml）
+
+- **触发条件**：`push` 到 `main` 分支（不是 tag 触发）
+- **幂等**：先检查远程是否已存在 `v<version>` tag，存在则整体跳过，重复推送 main 不会重复发布
+- **顺序**：`npm publish` 成功 **之后** 才创建 tag。publish 失败不会遗留僵尸 tag，修复后重推即可重试
+- **发布说明**：`generate_release_notes: true` 自动生成，不依赖 CHANGELOG.md
+
+### 凭证配置（NPM_TOKEN，一次性）
+
+发布身份由 GitHub 仓库 Secret `NPM_TOKEN` 提供，对应 npm 账号 `huhaaonline`（包 owner）。
+
+```bash
+# token 失效/轮换时，用有 publish 权限的 Automation token 更新 secret：
+gh secret set NPM_TOKEN --body '<npm token>'
+
+# 验证 token 有效且身份正确：
+printf '//registry.npmjs.org/:_authToken=%s\n' '<token>' > /tmp/v.npmrc
+npm whoami --userconfig /tmp/v.npmrc      # 应输出 huhaaonline
+rm -f /tmp/v.npmrc
+```
+
+**故障对照**：CI 中 `npm publish` 报 `E404 PUT .../huhaa-myskills` = token 已注入但身份无该包写权限（npm 用 404 伪装 403），即 `NPM_TOKEN` 失效或非 owner，需按上面重配。
+
+### 发布后验证
+
+```bash
+gh run watch                                    # CI 全绿
+npm view huhaa-myskills version                 # 应为新版本
+npm install -g huhaa-myskills@latest && huhaa-myskills -v
+```
+
+---
+
 # 七、相关资源
 
 - **[Vite 官方文档](https://vite.dev)**
