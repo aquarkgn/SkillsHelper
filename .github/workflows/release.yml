@@ -2,8 +2,7 @@ name: Release
 
 on:
   push:
-    tags:
-      - 'v*'
+    branches: [main]
 
 jobs:
   release:
@@ -18,47 +17,60 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Get version
+      - name: 读取 package.json 版本
         id: version
         run: |
-          VERSION=${GITHUB_REF#refs/tags/}
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          NPM_VERSION=$(node -p "require('./package.json').version")
+          echo "npm_version=$NPM_VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$NPM_VERSION" >> $GITHUB_OUTPUT
+
+      - name: 检查 tag 是否已存在
+        id: tag_check
+        run: |
+          if git ls-remote --tags origin "refs/tags/${{ steps.version.outputs.tag }}" | grep -q .; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.version.outputs.tag }} 已存在，跳过发布"
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "Tag ${{ steps.version.outputs.tag }} 不存在，开始发布"
+          fi
 
       - name: Setup Node.js
+        if: steps.tag_check.outputs.exists == 'false'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
           registry-url: 'https://registry.npmjs.org'
 
-      - name: Install dependencies
+      - name: 安装依赖
+        if: steps.tag_check.outputs.exists == 'false'
         run: npm ci
 
-      - name: Build web assets
+      - name: 构建 web 静态资源
+        if: steps.tag_check.outputs.exists == 'false'
         run: npm run build:web
 
-      - name: Get release notes
-        id: release_notes
+      - name: 创建并推送 tag
+        if: steps.tag_check.outputs.exists == 'false'
         run: |
-          VERSION=${{ steps.version.outputs.version }}
-          # Extract release notes from CHANGELOG.md for this version
-          awk "/^## \[${VERSION#v}\]/,/^## \[/{if(/^## \[/ && !/^## \[${VERSION#v}\]/) exit; print}" CHANGELOG.md | head -n -1 > RELEASE_NOTES.md
-          cat RELEASE_NOTES.md
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag ${{ steps.version.outputs.tag }}
+          git push origin ${{ steps.version.outputs.tag }}
 
-      - name: Publish to npm
+      - name: 发布到 npm
+        if: steps.tag_check.outputs.exists == 'false'
         run: npm publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Create Release
+      - name: 创建 GitHub Release
+        if: steps.tag_check.outputs.exists == 'false'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ steps.version.outputs.version }}
-          body_path: RELEASE_NOTES.md
+          tag_name: ${{ steps.version.outputs.tag }}
+          generate_release_notes: true
           draft: false
           prerelease: false
-          files: |
-            README.md
-            CHANGELOG.md
-            LICENSE
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

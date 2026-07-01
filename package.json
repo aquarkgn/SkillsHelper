@@ -48,7 +48,7 @@
     "prepack": "node build/build-web.mjs",
     "test": "node --test packages/scanner/test/*.test.mjs packages/server/test/*.test.mjs",
     "verify": "node build/verify.mjs",
-    "release": "npm version patch && git push --follow-tags"
+    "release": "npm version patch && git push"
   },
   "dependencies": {
     "chokidar": "^4.0.3",
