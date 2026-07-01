@@ -50,6 +50,12 @@ jobs:
         if: steps.tag_check.outputs.exists == 'false'
         run: npm run build:web
 
+      - name: 发布到 npm
+        if: steps.tag_check.outputs.exists == 'false'
+        run: npm publish --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
       - name: 创建并推送 tag
         if: steps.tag_check.outputs.exists == 'false'
         run: |
@@ -57,12 +63,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag ${{ steps.version.outputs.tag }}
           git push origin ${{ steps.version.outputs.tag }}
-
-      - name: 发布到 npm
-        if: steps.tag_check.outputs.exists == 'false'
-        run: npm publish --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: 创建 GitHub Release
         if: steps.tag_check.outputs.exists == 'false'
