@@ -4,12 +4,13 @@ import { Topbar, type ModuleKey } from '@/components/layout/Topbar'
 import { DashboardView } from '@/components/views/DashboardView'
 import { SkillsView } from '@/components/views/SkillsView'
 import { SettingsView } from '@/components/views/SettingsView'
+import { OtherSkillsView } from '@/components/views/OtherSkillsView'
 import { ComingSoon } from '@/components/ComingSoon'
 import { useLiveReload } from '@/hooks/useLiveReload'
 import { fetchSkills, fetchStats, reload } from '@/lib/api'
 import type { SkillItem, Stats } from '@/types'
 
-export type View = 'dashboard' | 'skills' | 'settings'
+export type View = 'dashboard' | 'skills' | 'otherSkills' | 'settings'
 
 export interface UIState {
   module: ModuleKey
@@ -18,12 +19,15 @@ export interface UIState {
   kindFilter: string | null
   query: string
   selectedId: string | null
+  otherSkillsQuery: string
 }
 
 export type Action =
   | { type: 'module'; module: ModuleKey }
   | { type: 'dashboard' }
   | { type: 'settings' }
+  | { type: 'otherSkills' }
+  | { type: 'otherSkillsQuery'; query: string }
   | { type: 'editor'; key: string | null }
   | { type: 'query'; query: string }
   | { type: 'kind'; kind: string | null }
@@ -36,6 +40,7 @@ export const initialState: UIState = {
   kindFilter: null,
   query: '',
   selectedId: null,
+  otherSkillsQuery: '',
 }
 
 export function reducer(state: UIState, action: Action): UIState {
@@ -46,6 +51,10 @@ export function reducer(state: UIState, action: Action): UIState {
       return { ...state, view: 'dashboard' }
     case 'settings':
       return { ...state, view: 'settings' }
+    case 'otherSkills':
+      return { ...state, view: 'otherSkills' }
+    case 'otherSkillsQuery':
+      return { ...state, otherSkillsQuery: action.query }
     case 'editor':
       // 切换来源：进入技能视图，重置 kind/选中
       return { ...state, view: 'skills', editorFilter: action.key, kindFilter: null, selectedId: null }
@@ -121,6 +130,15 @@ export default function App() {
       )
     }
     if (ui.view === 'dashboard') return <DashboardView stats={stats} items={items} />
+    if (ui.view === 'otherSkills')
+      return (
+        <OtherSkillsView
+          query={ui.otherSkillsQuery}
+          onQuery={(q) => dispatch({ type: 'otherSkillsQuery', query: q })}
+          selectedId={ui.selectedId}
+          onSelect={(id) => dispatch({ type: 'select', id })}
+        />
+      )
     if (ui.view === 'settings') return <SettingsView />
     return (
       <SkillsView
@@ -150,6 +168,7 @@ export default function App() {
         stats={stats}
         onDashboard={() => dispatch({ type: 'dashboard' })}
         onSettings={() => dispatch({ type: 'settings' })}
+        onOtherSkills={() => dispatch({ type: 'otherSkills' })}
         onEditor={(key) => dispatch({ type: 'editor', key })}
       />
       <main className="main-pane">{renderMain()}</main>
