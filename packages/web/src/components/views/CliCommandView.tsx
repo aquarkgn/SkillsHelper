@@ -219,7 +219,7 @@ function Subcommands({
   const activeSubcommand = visibleSubcommands.find((subcommand) => subcommand.name === activeName)
 
   return (
-    <div className="border-t border-border px-4 py-3">
+    <div className="border-b border-border bg-muted/20 px-4 py-3">
       <div className="mb-3 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="flex items-center gap-2 text-caption font-semibold text-muted-foreground">
           <Command size={14} />
@@ -420,6 +420,13 @@ export function CliCommandView({ selectedBrand }: CliCommandViewProps) {
                 </div>
               </div>
 
+              <Subcommands
+                brand={command.brand}
+                subcommands={command.subcommands ?? []}
+                selectedName={selectedSubcommands[command.brand]}
+                onSelect={(subcommandName) => selectSubcommand(command.brand, subcommandName)}
+              />
+
               {command.groups.length > 0 && (
                 <div className="divide-y divide-border">
                   {command.groups.map((group) => {
@@ -479,13 +486,6 @@ export function CliCommandView({ selectedBrand }: CliCommandViewProps) {
                   })}
                 </div>
               )}
-
-              <Subcommands
-                brand={command.brand}
-                subcommands={command.subcommands ?? []}
-                selectedName={selectedSubcommands[command.brand]}
-                onSelect={(subcommandName) => selectSubcommand(command.brand, subcommandName)}
-              />
             </section>
           ))}
         </div>

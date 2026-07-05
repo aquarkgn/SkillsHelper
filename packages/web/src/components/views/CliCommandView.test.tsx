@@ -83,14 +83,19 @@ describe('CliCommandView', () => {
     expect(within(section).getByText('--install-extension')).toBeInTheDocument()
   })
 
-  it('子命令以 tab 显示在命令卡片底部，点击后展示帮助详情', () => {
+  it('子命令以 tab 显示在命令卡片头部，点击后展示帮助详情', () => {
     render(<CliCommandView selectedBrand="codex" />)
 
     const section = screen.getByRole('heading', { name: 'codex' }).closest('section')
     expect(section).toBeInTheDocument()
     if (!section) return
 
-    expect(within(section).getByRole('tablist', { name: /codex 子命令/ })).toBeInTheDocument()
+    const tablist = within(section).getByRole('tablist', { name: /codex 子命令/ })
+    expect(tablist).toBeInTheDocument()
+    const firstFlagGroupButton = within(section).getAllByRole('button')[0]
+    expect(
+      Boolean(tablist.compareDocumentPosition(firstFlagGroupButton) & Node.DOCUMENT_POSITION_FOLLOWING),
+    ).toBe(true)
     expect(within(section).getByText(/选择一个子命令查看帮助详情/)).toBeInTheDocument()
 
     fireEvent.click(within(section).getAllByRole('tab').find((tab) => tab.textContent?.trim().startsWith('exec') && !tab.textContent.includes('exec-server'))!)
@@ -112,7 +117,6 @@ describe('CliCommandView', () => {
     expect(within(section).getByText('logout', { selector: 'div' })).toBeInTheDocument()
     expect(within(section).getByText(/暂未采集详细帮助/)).toBeInTheDocument()
   })
-
 
   it('gstack list 子命令可通过 tab 查看帮助详情', () => {
     render(<CliCommandView selectedBrand="gstack" />)
