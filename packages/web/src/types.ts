@@ -91,6 +91,7 @@ export interface CliCommandSubcommand {
 
 export interface CliCommand {
   brand: string
+  iconBrand?: string
   version?: string
   summary_zh: string
   groups: CliCommandGroup[]

@@ -200,7 +200,7 @@ export function CliCommandView({ selectedBrand }: CliCommandViewProps) {
             <section key={command.brand} className="overflow-hidden rounded-md border border-border bg-card">
               <div className="flex flex-col gap-3 border-b border-border p-4 sm:flex-row sm:items-start sm:justify-between">
                 <div className="flex min-w-0 items-start gap-3">
-                  <CommandIcon brand={command.brand} />
+                  <CommandIcon brand={command.brand} iconBrand={command.iconBrand} />
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <h2 className="font-mono text-h4 font-semibold text-foreground">{command.brand}</h2>

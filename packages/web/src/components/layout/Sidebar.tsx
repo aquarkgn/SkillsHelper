@@ -4,6 +4,7 @@ import { cn } from '@/lib/cn'
 import { getEditorMeta, isNoneEditor } from '@/lib/editors'
 import { COMMAND_BRAND_SUMMARIES } from '@/lib/commands'
 import { CommandIcon } from '@/components/views/CommandIcon'
+import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon'
 import type { Stats } from '@/types'
 
 interface SidebarProps {
@@ -90,17 +91,17 @@ export function Sidebar({
 
           {editors.map(([key, count]) => {
             const meta = getEditorMeta(key)
-            const Icon = meta.icon
             const active = view === 'skills' && editorFilter === key
             return (
               <button key={key} onClick={() => onEditor(key)} className={rowCls(active)}>
                 <span className="flex min-w-0 items-center gap-2">
-                  <span
-                    className="grid h-5 w-5 shrink-0 place-items-center rounded"
-                    style={{ backgroundColor: meta.color + '1A', color: meta.color }}
-                  >
-                    <Icon size={13} />
-                  </span>
+                  <OfficialBrandIcon
+                    brand={meta.iconBrand}
+                    size={20}
+                    label={meta.label}
+                    className="rounded"
+                    fallbackClassName="text-muted-foreground"
+                  />
                   <span className="truncate">{meta.label}</span>
                 </span>
                 <span className="text-caption opacity-80">{count}</span>
@@ -154,7 +155,7 @@ export function Sidebar({
                 className={rowCls(active)}
               >
                 <span className="flex min-w-0 items-center gap-2">
-                  <CommandIcon brand={summary.brand} size={20} />
+                  <CommandIcon brand={summary.brand} iconBrand={summary.iconBrand} size={20} />
                   <span className="truncate font-mono">{summary.brand}</span>
                 </span>
                 <span

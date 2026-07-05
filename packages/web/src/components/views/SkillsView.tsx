@@ -8,92 +8,28 @@ import { cn } from '@/lib/cn'
 import { isNoneEditor, itemEditorKey } from '@/lib/editors'
 import { kindLabel, displayDescription } from '@/lib/i18n'
 import { getSkillIcons } from '@/hooks/getSkillIcons'
-import { isIconBlacklisted, markIconMissing } from '@/lib/iconBlacklist'
-import { getBrandIconComponent } from '@/lib/brandIcons'
+import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon'
 import type { SkillItem } from '@/types'
 
 /**
- * 技能图标组件（R6 真实应用图标）
- * 优先展示真实应用图标，加载失败自动回退到 lucide 品牌图标。
- * 对标 Pearcleaner 的真实应用图标展示逻辑。
- *
- * 优化：
- * - 黑名单：已知无图标的 brand 直接用 lucide，不发 img 请求（避免 404 闪烁）
- * - 加载动画：img 加载期间显示半透明 lucide 品牌图标，加载完成替换
+ * 技能官方图标组件。
+ * 优先使用后端列表返回的 iconUrl；没有时按 Tier 1 的 brand/editorBrand 请求 /api/icons。
+ * 失败时统一显示中性占位，不再使用 lucide 品牌图标或 emoji 伪装官方 icon。
  */
 function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
-  const [hasError, setHasError] = useState(false)
-  const [loaded, setLoaded] = useState(false)
   const icons = getSkillIcons(item)
   const iconBrand = item.brand || item.editorBrand
-  const iconBlacklisted = Boolean(iconBrand && isIconBlacklisted(iconBrand))
-  const apiIconUrl =
-    iconBrand && icons.isTier1 && !iconBlacklisted
-      ? `/api/icons/${encodeURIComponent(iconBrand)}?size=${size}`
-      : null
-  const iconUrl = iconBlacklisted ? null : item.iconUrl || apiIconUrl
-  // brand 变化时重置加载状态：同 id 的技能 brand 改变（如扫描更新）时，
-  // iconUrl 变化需重新加载，此时 loaded 仍为旧值会导致 placeholder 不显示。
-  useEffect(() => {
-    setLoaded(false)
-    setHasError(false)
-  }, [iconUrl, iconBrand])
+  const officialBrand = icons.isTier1 ? iconBrand : null
 
-  // 获取 lucide 品牌图标组件（用作 placeholder）
-  const BrandIcon = iconBrand && icons.isTier1 ? getBrandIconComponent(iconBrand) : null
-  const placeholderSize = Math.round(size * 0.85)
-
-  if (iconUrl && !hasError) {
-    return (
-      <span
-        className="relative inline-flex shrink-0 items-center justify-center"
-        style={{ width: size, height: size }}
-      >
-        {!loaded && BrandIcon && (
-          <span
-            className="absolute inset-0 flex items-center justify-center opacity-50 animate-pulse"
-          >
-            <BrandIcon size={placeholderSize} />
-          </span>
-        )}
-        <img
-          src={iconUrl}
-          alt=""
-          width={size}
-          height={size}
-          loading="lazy"
-          onLoad={() => setLoaded(true)}
-          onError={() => {
-            if (iconBrand) markIconMissing(iconBrand)
-            setHasError(true)
-          }}
-          className="shrink-0 rounded-sm object-contain"
-          style={{ width: size, height: size }}
-        />
-      </span>
-    )
-  }
-
-  // Fallback: 直接显示 lucide 品牌图标
-  if (BrandIcon) {
-    return (
-      <span
-        className="inline-flex shrink-0 items-center justify-center"
-        style={{ width: size, height: size }}
-      >
-        <BrandIcon size={size} />
-      </span>
-    )
-  }
-
-  // 终极 fallback: emoji
   return (
-    <span
-      className="inline-flex shrink-0 items-center justify-center"
-      style={{ width: size, height: size, fontSize: size * 0.85 }}
-    >
-      {icons.brandIcon}
-    </span>
+    <OfficialBrandIcon
+      brand={officialBrand}
+      src={item.iconUrl}
+      size={size}
+      label={item.title || item.name}
+      className="bg-transparent"
+      fallbackClassName="bg-muted"
+    />
   )
 }
 
@@ -217,7 +153,7 @@ export function SkillsView({
                   )}
                 >
                   <CardHeader>
-                    {/* R6：真实应用图标（对标 Pearcleaner），加载失败自动回退 emoji */}
+                    {/* 官方 icon：加载失败显示中性占位，不伪装品牌图标 */}
                     <CardTitle className="flex items-center gap-2">
                       <SkillIcon item={it} size={24} />
                       <span>

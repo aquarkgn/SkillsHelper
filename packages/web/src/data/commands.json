@@ -395,7 +395,8 @@
         "name": "update|upgrade",
         "desc_zh": "检查并安装更新。"
       }
-    ]
+    ],
+    "iconBrand": "claude"
   },
   {
     "brand": "code",
@@ -659,7 +660,8 @@
         "name": "tunnel",
         "desc_zh": "通过安全 tunnel 让当前机器可被 vscode.dev 或其他机器访问。"
       }
-    ]
+    ],
+    "iconBrand": "vscode"
   },
   {
     "brand": "codex",
@@ -909,7 +911,8 @@
         "name": "help",
         "desc_zh": "打印本消息或指定子命令帮助。"
       }
-    ]
+    ],
+    "iconBrand": "codex"
   },
   {
     "brand": "gstach",
@@ -1016,7 +1019,8 @@
         "name": "disable",
         "desc_zh": "在当前项目禁用指定 skill。"
       }
-    ]
+    ],
+    "iconBrand": "gstach"
   },
   {
     "brand": "hermes",
@@ -1341,6 +1345,7 @@
         "name": "prompt-size",
         "desc_zh": "显示 system prompt 和 tool schemas 的字节拆分。"
       }
-    ]
+    ],
+    "iconBrand": "hermes"
   }
 ]

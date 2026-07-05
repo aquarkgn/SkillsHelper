@@ -602,19 +602,18 @@ localStorage.setItem('theme', next)
 | 三区布局类（sidebar/topbar/detail/main-pane） | `packages/web/src/index.css`（`@layer components`） |
 | 主题切换 | `packages/web/src/hooks/useTheme.ts` |
 | editor 色映射 | `packages/web/src/lib/editors.ts` |
-| CLI 命令品牌静态 logo + emoji 兜底 | `packages/web/src/lib/brandLogos.ts` + `packages/web/src/lib/brandEmoji.ts`；资源 `packages/web/src/assets/brand-logos/*.svg` |
-| Skill 模块真实 .app 图标 | `packages/scanner/src/icon/icon-extractor.mjs`（后端 `/api/icons/:brand`） |
+| 官方品牌图标（Skill + Command） | `packages/scanner/src/icon/icon-extractor.mjs` + `packages/scanner/src/icon/brand-map.mjs`（后端 `/api/icons/:brand`） |
+| 前端官方图标组件 | `packages/web/src/components/ui/OfficialBrandIcon.tsx` |
 | verify 断言约束 | `build/verify.mjs`（`#app`；CSS 子串 OR 含 `topbar`/`sidebar`/`detail` 任一） |
 
-### CLI 命令品牌 logo 资源策略
+### 官方品牌 icon 资源策略
 
-Command 模块的 brand（claude/code/codex/gstach/hermes）大多是 CLI 工具而非 GUI `.app`，扫描本机 `.app` 的路线（`/api/icons`）拿不到图标，因此走"前端构建产物直接打包品牌 SVG"路线：
+Skill 与 Command 模块统一通过 `/api/icons/:brand` 读取官方 icon，前端不再打包自制品牌 SVG，也不使用 emoji / lucide 品牌图标伪装官方 icon：
 
-1. **静态 SVG 资源**（`packages/web/src/assets/brand-logos/`）由 Vite 在构建时打入 `dist/assets/`，优先级最高
-2. **emoji 兜底**（`packages/web/src/lib/brandEmoji.ts`）：与 `packages/scanner/src/icon/brand-map.mjs` 的 `BRAND_APP_MAP.emoji` 字段口径一致
-3. **TerminalSquare 占位**：仅当上述两层都未命中时才显示
-
-`/api/icons` 接口保留供 Skill 模块使用（其 brand 集合由后端扫描器动态决定，CLI 命令品牌不在这条路径上）。
+1. **本机官方 `.app` 图标优先**：后端按 `brand-map.mjs` 中的 Bundle ID / App 名称扫描并提取系统应用图标。
+2. **官方远程 URL 兜底**：本机无图标时，仅从 `brand-map.mjs` 登记的 HTTPS 官方 URL 下载；结果缓存到 `~/.config/huhaa-myskills/icon-cache/`。
+3. **中性占位**：没有本机图标且没有可确认官方远程 URL（如 `hermes` / `gstach`）时，前端显示中性占位。
+4. **禁用联网**：`HUHAA_ICON_REMOTE=0` 时不触发远程下载，但仍可读取已有本地缓存。
 
 ---
 

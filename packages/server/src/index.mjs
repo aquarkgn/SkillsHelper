@@ -387,12 +387,10 @@ export async function startServer({ port = 11520 } = {}) {
     }
   });
 
-  // Real application icon for a skill's brand/source (R6). Serves a cached PNG
-  // extracted from the matching .app bundle; 404 JSON when no app is found so
-  // the frontend can fall back to an emoji.
-  // 404 结果在进程内缓存（noIconBrands）：无图标的 brand 会被前端反复请求
-  // （每次渲染 SkillIcon），不缓存则每次都要 mdfind/plutil/sips 探测，拖慢
-  // 列表渲染。缓存仅在进程生命周期内有效，重启后重新探测。
+  // 官方品牌图标：优先读取本机 .app 图标；无本机图标时按 manifest
+  // 中登记的官方 HTTPS URL 下载并缓存；仍无图标时返回 404，让前端显示中性占位。
+  // 404 结果在进程内缓存（noIconBrands），避免列表重复触发 mdfind/plutil/sips
+  // 或失败的远程探测；缓存仅在进程生命周期内有效，重启后重新探测。
   const noIconBrands = new Set();
   app.get('/api/icons/:brand', async (req, reply) => {
     try {
@@ -401,18 +399,28 @@ export async function startServer({ port = 11520 } = {}) {
       const cacheKey = `${brand}:${size}`;
       if (noIconBrands.has(cacheKey)) {
         reply.code(404);
-        return { ok: false, fallback: true, brand };
+        return {
+          ok: false,
+          fallback: true,
+          brand,
+          reason: 'official icon not found in local apps or registered remote cache',
+        };
       }
-      const { getIconForBrand } = await import('../../../packages/scanner/src/icon/icon-extractor.mjs');
-      const pngPath = await getIconForBrand(brand, size);
-      if (!pngPath || !fs.existsSync(pngPath)) {
+      const { getIconForBrand, contentTypeForIconPath } = await import('../../../packages/scanner/src/icon/icon-extractor.mjs');
+      const iconPath = await getIconForBrand(brand, size);
+      if (!iconPath || !fs.existsSync(iconPath)) {
         noIconBrands.add(cacheKey);
         reply.code(404);
-        return { ok: false, fallback: true, brand };
+        return {
+          ok: false,
+          fallback: true,
+          brand,
+          reason: 'official icon not found in local apps or registered remote cache',
+        };
       }
-      reply.type('image/png');
+      reply.type(contentTypeForIconPath(iconPath));
       reply.header('cache-control', 'public, max-age=86400');
-      return fs.createReadStream(pngPath);
+      return fs.createReadStream(iconPath);
     } catch (e) {
       reply.code(500);
       return { ok: false, error: e.message };

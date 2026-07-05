@@ -126,7 +126,7 @@ describe('Sidebar 模块化导航', () => {
     expect(screen.queryByText('其它技能')).toBeNull()
   })
 
-  it('命令模块：每个品牌旁渲染品牌 logo（<img src=BRAND_LOGO_ASSETS>），无静态资源时走 emoji 兜底', () => {
+  it('命令模块：每个品牌旁通过 /api/icons 渲染官方图标，code 使用 vscode iconBrand', () => {
     render(
       <Sidebar
         module="commands"
@@ -141,16 +141,42 @@ describe('Sidebar 模块化导航', () => {
         onEditor={noop}
       />
     )
-    // 5 个 brand 全部在 BRAND_LOGO_ASSETS 登记，渲染 <img src=静态资源>
-    for (const brand of ['claude', 'code', 'codex', 'gstach', 'hermes']) {
+    const expected: Record<string, string> = {
+      claude: '/api/icons/claude?size=20',
+      code: '/api/icons/vscode?size=20',
+      codex: '/api/icons/codex?size=20',
+      gstach: '/api/icons/gstach?size=20',
+      hermes: '/api/icons/hermes?size=20',
+    }
+    for (const [brand, src] of Object.entries(expected)) {
       const item = screen.getByText(brand).closest('button')
       expect(item, `未找到 ${brand} 按钮`).toBeInTheDocument()
       const img = item?.querySelector('img')
       expect(img, `${brand} 应渲染 <img>`).toBeTruthy()
-      // src 不再指向 /api/icons，而是前端构建产物的 SVG
-      expect(img?.getAttribute('src')).not.toContain('/api/icons/')
-      expect(img?.getAttribute('src')).toContain(`brand-logos/${brand}.svg`)
+      expect(img?.getAttribute('src')).toBe(src)
+      expect(img?.getAttribute('src')).not.toContain('brand-logos')
     }
+  })
+
+  it('技能模块：editor 来源项使用 /api/icons 官方图标组件', () => {
+    render(
+      <Sidebar
+        module="skills"
+        view="skills"
+        editorFilter={null}
+        selectedCommandBrand={null}
+        stats={statsWith({ 'Claude Code': 3, Cursor: 1 })}
+        onHome={noop}
+        onSettings={noop}
+        onOtherSkills={noop}
+        onCommandBrand={noop}
+        onEditor={noop}
+      />
+    )
+    const claude = screen.getByText('Claude Code').closest('button')
+    const cursor = screen.getByText('Cursor').closest('button')
+    expect(claude?.querySelector('img')?.getAttribute('src')).toBe('/api/icons/claude?size=20')
+    expect(cursor?.querySelector('img')?.getAttribute('src')).toBe('/api/icons/cursor?size=20')
   })
 
   it('命令模块：点击 claude 触发 onCommandBrand(claude)，点击「全部命令」传 null', () => {

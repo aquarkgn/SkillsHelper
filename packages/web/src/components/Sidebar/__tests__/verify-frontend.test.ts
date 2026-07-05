@@ -91,14 +91,10 @@ describe('Frontend Components - v4.0 Menu System', () => {
     expect(Object.keys(brandGroups)).toHaveLength(3);
     expect(brandGroups['cursor'].count).toBe(3);
 
-    // 品牌图标映射
-    const iconMap: Record<string, string> = {
-      cursor: '➡️',
-      claude: '🤖',
-      hermes: '🧙',
-    };
+    // 品牌图标统一通过 /api/icons/:brand 读取；无官方图标由组件显示中性占位。
+    const iconUrlForBrand = (brand: string) => `/api/icons/${brand}?size=16`;
 
-    expect(iconMap['cursor']).toBe('➡️');
+    expect(iconUrlForBrand('cursor')).toBe('/api/icons/cursor?size=16');
   });
 
   it('✓ SkillItem Component - 应该正确展示技能项和图标', () => {
@@ -110,21 +106,19 @@ describe('Frontend Components - v4.0 Menu System', () => {
       source: 'test',
       paths: { abs: '/path', rootKind: 'home' as const },
       iconUrl: '/api/icons/cursor?size=32',
-      iconFallback: '🤖',
     };
 
-    // 验证图标优先级：iconUrl > iconFallback > default
+    // 验证图标优先级：iconUrl 优先；缺失时按 brand 请求官方 icon；再由组件中性占位兜底
     expect(skill.iconUrl).toBeDefined();
-    expect(skill.iconFallback).toBeDefined();
 
     // 优先级测试
-    const getIcon = (s: any) => {
+    const getIconSource = (s: { iconUrl?: string; brand?: string }) => {
       if (s.iconUrl) return 'url';
-      if (s.iconFallback) return 'fallback';
-      return 'default';
+      if (s.brand) return 'brand';
+      return 'neutral';
     };
 
-    expect(getIcon(skill)).toBe('url');
+    expect(getIconSource(skill)).toBe('url');
   });
 
   it('✓ localStorage 持久化 - 应该保存和恢复菜单状态', () => {

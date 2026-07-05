@@ -6,6 +6,7 @@
 'use client';
 
 import { SkillItem } from '@/types';
+import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon';
 
 interface SkillItemComponentProps {
   skill: SkillItem;
@@ -27,21 +28,14 @@ export default function SkillItemComponent({
       title={skill.name}
     >
       <div className="flex items-center gap-2 min-w-0">
-        {/* 技能 icon */}
-        {skill.iconUrl && (
-          <img
-            src={skill.iconUrl}
-            alt=""
-            className="w-4 h-4 rounded flex-shrink-0"
-            loading="lazy"
-          />
-        )}
-        {skill.iconFallback && !skill.iconUrl && (
-          <span className="text-sm flex-shrink-0">{skill.iconFallback}</span>
-        )}
-        {!skill.iconUrl && !skill.iconFallback && (
-          <span className="text-sm flex-shrink-0">📄</span>
-        )}
+        {/* 官方技能 icon；缺失时显示中性占位，不使用 emoji / 自制品牌图标兜底 */}
+        <OfficialBrandIcon
+          brand={skill.brand || skill.editorBrand}
+          src={skill.iconUrl}
+          size={16}
+          label={skill.name}
+          className="rounded"
+        />
         {/* 技能名称 */}
         <span className="text-sm truncate">{skill.name}</span>
       </div>

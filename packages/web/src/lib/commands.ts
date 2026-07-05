@@ -17,6 +17,7 @@ export function getSubcommandCount(command: CliCommand): number {
 /** 单个命令品牌的统计摘要（用于侧栏与首页卡片展示）。 */
 export interface CommandBrandSummary {
   brand: string
+  iconBrand?: string
   version?: string
   summary_zh: string
   flagCount: number
@@ -30,6 +31,7 @@ export interface CommandBrandSummary {
 export const COMMAND_BRAND_SUMMARIES: readonly CommandBrandSummary[] = Object.freeze(
   COMMANDS.map((command) => ({
     brand: command.brand,
+    iconBrand: command.iconBrand,
     version: command.version,
     summary_zh: command.summary_zh,
     flagCount: getFlagCount(command),
@@ -55,6 +57,7 @@ export function getCommandBrandSummaries(
 ): CommandBrandSummary[] {
   return commands.map((command) => ({
     brand: command.brand,
+    iconBrand: command.iconBrand,
     version: command.version,
     summary_zh: command.summary_zh,
     flagCount: getFlagCount(command),

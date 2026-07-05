@@ -10,7 +10,7 @@
 import { useMemo } from 'react';
 import { SkillItem } from '@/types';
 import SkillItemComponent from './SkillItem';
-import { getBrandIconComponent } from '@/lib/brandIcons';
+import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon';
 
 interface TierGroupProps {
   title: string;
@@ -110,9 +110,6 @@ interface BrandGroupProps {
 }
 
 function BrandGroup({ brand, skills, collapsed, onToggle, onSelectSkill }: BrandGroupProps) {
-  // 获取品牌的 lucide 图标组件
-  const BrandIcon = useMemo(() => getBrandIconComponent(brand), [brand]);
-
   return (
     <div className="bg-tier1-bg">
       {/* 品牌 header */}
@@ -121,9 +118,7 @@ function BrandGroup({ brand, skills, collapsed, onToggle, onSelectSkill }: Brand
         className="w-full flex items-center justify-between p-2 pl-6 hover:bg-hover transition-colors text-sm"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-base flex-shrink-0">
-            <BrandIcon size={16} />
-          </span>
+          <OfficialBrandIcon brand={brand} size={16} label={brand} className="rounded" />
           <span className="capitalize truncate">{brand}</span>
           <span className="text-xs text-muted flex-shrink-0">({skills.length})</span>
         </div>

@@ -1,22 +1,17 @@
-// icon-extractor.mjs — extract real macOS application icons for skills.
+// icon-extractor.mjs — extract official icons for skills/commands.
 //
-// Node.js equivalent of Pearcleaner's NSWorkspace.icon(forFile:) using only
-// macOS built-in CLIs (mdfind / plutil / sips). No native bindings.
-//
-//   1. locateApp()      — find the .app bundle for a brand (mdfind + /Applications)
-//   2. extractIconPng() — read CFBundleIconFile from Info.plist, sips → PNG
-//   3. getIconForBrand()— combine + disk cache (mtime-invalidated)
-//   4. resolveIconRef() — sync: decide iconUrl / emoji fallback for a skill
-//
-// All extraction is lazy (on /api/icons request) and cached, so scanning stays
-// fast and non-macOS platforms degrade gracefully to emoji.
+// Priority chain:
+//   1. local macOS .app icon (official installed application icon)
+//   2. registered official remote icon URL, downloaded once and cached locally
+//   3. no icon (frontend renders a neutral placeholder; never a fake brand icon)
 
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
+import crypto from 'node:crypto';
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
-import { resolveBrandSpec, emojiForBrand } from './brand-map.mjs';
+import { normalizeBrandKey, resolveBrandSpec } from './brand-map.mjs';
 
 const execFileP = promisify(execFile);
 const IS_MACOS = process.platform === 'darwin';
@@ -26,12 +21,13 @@ const APP_DIRS = [
   '/System/Applications',
 ];
 const VALID_SIZES = new Set([32, 64, 128]);
+const MAX_REMOTE_ICON_BYTES = 1024 * 1024;
 
 // In-memory caches (per process). locateApp is stable within a session.
 const appPathCache = new Map(); // brand -> appPath|null
-const iconPathCache = new Map(); // `${brand}:${size}` -> pngPath|null
+const iconPathCache = new Map(); // `${brand}:${size}` -> iconPath|null
 
-function cacheDir() {
+export function cacheDir() {
   const base =
     process.env.HUHAA_HOME?.trim() ||
     path.join(process.env.XDG_CONFIG_HOME?.trim() || path.join(os.homedir(), '.config'), 'huhaa-myskills');
@@ -45,7 +41,146 @@ function expandTilde(p) {
 }
 
 function slugify(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+  return String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'icon';
+}
+
+function clampSize(size) {
+  return VALID_SIZES.has(size) ? size : 64;
+}
+
+function remoteDisabled() {
+  return process.env.HUHAA_ICON_REMOTE === '0';
+}
+
+function extensionForContentType(contentType) {
+  const clean = String(contentType || '').toLowerCase().split(';')[0].trim();
+  switch (clean) {
+    case 'image/png': return '.png';
+    case 'image/svg+xml': return '.svg';
+    case 'image/x-icon':
+    case 'image/vnd.microsoft.icon': return '.ico';
+    case 'image/jpeg': return '.jpg';
+    case 'image/webp': return '.webp';
+    default: return '';
+  }
+}
+
+function extensionForUrl(url) {
+  try {
+    const ext = path.extname(new URL(url).pathname).toLowerCase();
+    if (['.png', '.svg', '.ico', '.jpg', '.jpeg', '.webp'].includes(ext)) {
+      return ext === '.jpeg' ? '.jpg' : ext;
+    }
+  } catch {
+    // ignore invalid URL — caller validates separately
+  }
+  return '';
+}
+
+export function contentTypeForIconPath(iconPath) {
+  const ext = path.extname(iconPath || '').toLowerCase();
+  switch (ext) {
+    case '.png': return 'image/png';
+    case '.svg': return 'image/svg+xml';
+    case '.ico': return 'image/x-icon';
+    case '.jpg':
+    case '.jpeg': return 'image/jpeg';
+    case '.webp': return 'image/webp';
+    default: return 'application/octet-stream';
+  }
+}
+
+function remoteMetaPath(brand) {
+  return path.join(cacheDir(), `${slugify(normalizeBrandKey(brand) || brand)}.remote.json`);
+}
+
+function readRemoteCache(brand) {
+  try {
+    const meta = JSON.parse(fs.readFileSync(remoteMetaPath(brand), 'utf8'));
+    if (!meta?.fileName || !meta?.contentType) return null;
+    const filePath = path.join(cacheDir(), meta.fileName);
+    if (!fs.existsSync(filePath)) return null;
+    return filePath;
+  } catch {
+    return null;
+  }
+}
+
+function validateOfficialUrl(rawUrl) {
+  let url;
+  try {
+    url = new URL(rawUrl);
+  } catch {
+    return null;
+  }
+  if (url.protocol !== 'https:') return null;
+  return url;
+}
+
+async function readResponseBytes(response) {
+  const chunks = [];
+  let total = 0;
+  for await (const chunk of response.body) {
+    const buf = Buffer.from(chunk);
+    total += buf.length;
+    if (total > MAX_REMOTE_ICON_BYTES) {
+      throw new Error('remote icon too large');
+    }
+    chunks.push(buf);
+  }
+  return Buffer.concat(chunks);
+}
+
+async function downloadOfficialIcon(brand, spec) {
+  if (!spec?.officialIconUrls?.length) return null;
+  if (spec.remoteIconCache === false) return null;
+  if (remoteDisabled()) return null;
+
+  const dir = cacheDir();
+  fs.mkdirSync(dir, { recursive: true });
+  const normalized = normalizeBrandKey(brand) || String(brand || '').toLowerCase().trim();
+
+  for (const rawUrl of spec.officialIconUrls) {
+    const url = validateOfficialUrl(rawUrl);
+    if (!url) continue;
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          accept: 'image/avif,image/webp,image/svg+xml,image/png,image/*,*/*;q=0.8',
+          'user-agent': 'HuHaa-MySkills/official-icon-fetcher',
+        },
+        redirect: 'follow',
+      });
+      if (!response.ok || !response.body) continue;
+
+      const contentType = String(response.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
+      if (!contentType.startsWith('image/')) continue;
+
+      const bytes = await readResponseBytes(response);
+      if (!bytes.length) continue;
+
+      const sha256 = crypto.createHash('sha256').update(bytes).digest('hex');
+      const ext = extensionForContentType(contentType) || extensionForUrl(response.url || rawUrl) || '.img';
+      const fileName = `${slugify(normalized)}-remote-${sha256.slice(0, 12)}${ext}`;
+      const filePath = path.join(dir, fileName);
+      fs.writeFileSync(filePath, bytes);
+      fs.writeFileSync(remoteMetaPath(normalized), JSON.stringify({
+        brand: normalized,
+        sourceUrl: rawUrl,
+        finalUrl: response.url || rawUrl,
+        contentType,
+        sha256,
+        fetchedAt: new Date().toISOString(),
+        fileName,
+      }, null, 2));
+      return filePath;
+    } catch {
+      // Try the next registered official URL. The API layer reports fallback.
+    }
+  }
+
+  return null;
 }
 
 /**
@@ -55,19 +190,19 @@ function slugify(s) {
  */
 export async function locateApp(brand) {
   if (!IS_MACOS || !brand) return null;
-  const key = String(brand).toLowerCase().trim();
-  if (appPathCache.has(key)) return appPathCache.get(key);
+  const normalized = normalizeBrandKey(brand) || String(brand).toLowerCase().trim();
+  if (appPathCache.has(normalized)) return appPathCache.get(normalized);
 
   const spec = resolveBrandSpec(brand);
   if (!spec) {
-    appPathCache.set(key, null);
+    appPathCache.set(normalized, null);
     return null;
   }
 
   let found = null;
 
   // 1. Bundle ID via Spotlight — fastest and most accurate.
-  for (const bundleId of spec.bundleIds) {
+  for (const bundleId of spec.bundleIds || []) {
     const p = await mdfindBundle(bundleId);
     if (p) {
       found = p;
@@ -77,10 +212,10 @@ export async function locateApp(brand) {
 
   // 2. App-name scan of /Applications (case-insensitive) as fallback.
   if (!found) {
-    found = scanAppDirs(spec.appNames);
+    found = scanAppDirs(spec.appNames || []);
   }
 
-  appPathCache.set(key, found);
+  appPathCache.set(normalized, found);
   return found;
 }
 
@@ -179,33 +314,57 @@ async function findIcnsPath(appPath) {
 }
 
 /**
- * Get a cached PNG icon path for a brand at a given size (locate + extract).
+ * Get a cached official icon path for a brand at a given size.
+ * Local .app extraction is preferred; registered remote icons are downloaded
+ * once and then served from the local cache directory.
  * @param {string} brand
  * @param {number} [size=64]
  * @returns {Promise<string|null>}
  */
 export async function getIconForBrand(brand, size = 64) {
-  if (!IS_MACOS) return null;
-  const sz = VALID_SIZES.has(size) ? size : 64;
-  const key = `${String(brand).toLowerCase().trim()}:${sz}`;
+  const sz = clampSize(size);
+  const canonical = normalizeBrandKey(brand);
+  const lookupKey = canonical || String(brand || '').trim();
+  const cacheBrand = canonical || lookupKey.toLowerCase();
+  if (!lookupKey) return null;
+
+  const key = `${cacheBrand}:${sz}`;
   if (iconPathCache.has(key)) {
     const cached = iconPathCache.get(key);
     if (cached && fs.existsSync(cached)) return cached;
+    if (cached === null) return null;
   }
-  const appPath = await locateApp(brand);
-  if (!appPath) {
+
+  const spec = resolveBrandSpec(lookupKey);
+  if (!spec) {
     iconPathCache.set(key, null);
     return null;
   }
-  const png = await extractIconPng(appPath, sz);
-  iconPathCache.set(key, png);
-  return png;
+
+  const appPath = await locateApp(lookupKey);
+  if (appPath) {
+    const png = await extractIconPng(appPath, sz);
+    if (png) {
+      iconPathCache.set(key, png);
+      return png;
+    }
+  }
+
+  const remoteCached = readRemoteCache(cacheBrand);
+  if (remoteCached) {
+    iconPathCache.set(key, remoteCached);
+    return remoteCached;
+  }
+
+  const remote = await downloadOfficialIcon(cacheBrand, spec);
+  iconPathCache.set(key, remote);
+  return remote;
 }
 
 /**
  * Decide the icon reference for a skill WITHOUT touching the filesystem/spawns.
  * Implements the R6.5 priority chain:
- *   explicit frontmatter.icon > real app icon (brand/source) > emoji fallback
+ *   explicit frontmatter.icon > official icon endpoint (brand/source) > neutral UI placeholder
  *
  * @param {object} skill
  * @param {string} [skill.icon]    — explicit frontmatter icon ("emoji:🤖"/"url:.."/"app:bundleId")
@@ -215,7 +374,7 @@ export async function getIconForBrand(brand, size = 64) {
  * @returns {{ iconUrl?: string, iconFallback?: string }}
  */
 export function resolveIconRef(skill, size = 64) {
-  const sz = VALID_SIZES.has(size) ? size : 64;
+  const sz = clampSize(size);
   const icon = skill?.icon ? String(skill.icon).trim() : '';
 
   // 1. Explicit frontmatter override
@@ -223,23 +382,22 @@ export function resolveIconRef(skill, size = 64) {
     if (icon.startsWith('emoji:')) return { iconFallback: icon.slice(6) };
     if (icon.startsWith('url:')) return { iconUrl: icon.slice(4) };
     if (icon.startsWith('app:')) {
-      return { iconUrl: `/api/icons/${encodeURIComponent(icon.slice(4))}?size=${sz}` };
+      const key = normalizeBrandKey(icon.slice(4)) || icon.slice(4);
+      return { iconUrl: `/api/icons/${encodeURIComponent(key)}?size=${sz}` };
     }
     // A bare emoji / single glyph
     return { iconFallback: icon };
   }
 
-  // 2. Real app icon by brand, then source
-  for (const key of [skill?.brand, skill?.source]) {
+  // 2. Official icon endpoint by brand, then source
+  for (const rawKey of [skill?.brand, skill?.source]) {
+    const key = normalizeBrandKey(rawKey);
     if (key && resolveBrandSpec(key)) {
-      return {
-        iconUrl: `/api/icons/${encodeURIComponent(key)}?size=${sz}`,
-        iconFallback: emojiForBrand(key),
-      };
+      return { iconUrl: `/api/icons/${encodeURIComponent(key)}?size=${sz}` };
     }
   }
 
-  // 3. No mapping — frontend emoji map handles it
+  // 3. No mapping — frontend renders a neutral placeholder
   return {};
 }
 
