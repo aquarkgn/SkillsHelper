@@ -9,32 +9,39 @@ import { isNoneEditor, itemEditorKey } from '@/lib/editors'
 import { kindLabel, displayDescription } from '@/lib/i18n'
 import { getSkillIcons } from '@/hooks/getSkillIcons'
 import { isIconBlacklisted, markIconMissing } from '@/lib/iconBlacklist'
+import { getBrandIconComponent } from '@/lib/brandIcons'
 import type { SkillItem } from '@/types'
 
 /**
  * 技能图标组件（R6 真实应用图标）
- * 优先展示真实应用图标，加载失败自动回退到 tier/brand emoji。
+ * 优先展示真实应用图标，加载失败自动回退到 lucide 品牌图标。
  * 对标 Pearcleaner 的真实应用图标展示逻辑。
  *
  * 优化：
- * - 黑名单：已知无图标的 brand 直接用 emoji，不发 img 请求（避免 404 闪烁）
- * - 加载动画：img 加载期间显示半透明 emoji placeholder，加载完成替换
+ * - 黑名单：已知无图标的 brand 直接用 lucide，不发 img 请求（避免 404 闪烁）
+ * - 加载动画：img 加载期间显示半透明 lucide 品牌图标，加载完成替换
  */
 function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
   const [hasError, setHasError] = useState(false)
   const [loaded, setLoaded] = useState(false)
   const icons = getSkillIcons(item)
+  const iconBrand = item.brand || item.editorBrand
+  const iconBlacklisted = Boolean(iconBrand && isIconBlacklisted(iconBrand))
+  const apiIconUrl =
+    iconBrand && icons.isTier1 && !iconBlacklisted
+      ? `/api/icons/${encodeURIComponent(iconBrand)}?size=${size}`
+      : null
+  const iconUrl = iconBlacklisted ? null : item.iconUrl || apiIconUrl
   // brand 变化时重置加载状态：同 id 的技能 brand 改变（如扫描更新）时，
   // iconUrl 变化需重新加载，此时 loaded 仍为旧值会导致 placeholder 不显示。
   useEffect(() => {
     setLoaded(false)
     setHasError(false)
-  }, [item.brand])
-  // Tier 1 工具优先使用真实应用图标；黑名单内的 brand 跳过 img 请求
-  const iconUrl =
-    item.brand && icons.isTier1 && !isIconBlacklisted(item.brand)
-      ? `/api/icons/${encodeURIComponent(item.brand)}?size=${size}`
-      : null
+  }, [iconUrl, iconBrand])
+
+  // 获取 lucide 品牌图标组件（用作 placeholder）
+  const BrandIcon = iconBrand && icons.isTier1 ? getBrandIconComponent(iconBrand) : null
+  const placeholderSize = Math.round(size * 0.85)
 
   if (iconUrl && !hasError) {
     return (
@@ -42,12 +49,11 @@ function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
         className="relative inline-flex shrink-0 items-center justify-center"
         style={{ width: size, height: size }}
       >
-        {!loaded && (
+        {!loaded && BrandIcon && (
           <span
             className="absolute inset-0 flex items-center justify-center opacity-50 animate-pulse"
-            style={{ fontSize: size * 0.85 }}
           >
-            {icons.brandIcon}
+            <BrandIcon size={placeholderSize} />
           </span>
         )}
         <img
@@ -58,7 +64,7 @@ function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
           loading="lazy"
           onLoad={() => setLoaded(true)}
           onError={() => {
-            if (item.brand) markIconMissing(item.brand)
+            if (iconBrand) markIconMissing(iconBrand)
             setHasError(true)
           }}
           className="shrink-0 rounded-sm object-contain"
@@ -68,6 +74,19 @@ function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
     )
   }
 
+  // Fallback: 直接显示 lucide 品牌图标
+  if (BrandIcon) {
+    return (
+      <span
+        className="inline-flex shrink-0 items-center justify-center"
+        style={{ width: size, height: size }}
+      >
+        <BrandIcon size={size} />
+      </span>
+    )
+  }
+
+  // 终极 fallback: emoji
   return (
     <span
       className="inline-flex shrink-0 items-center justify-center"

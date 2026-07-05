@@ -145,7 +145,7 @@ function normalizeTier(skill: SkillItem): 'tool' | 'directory' | 'other' {
 
 export function getSkillIcons(skill: SkillItem): SkillIconResult {
   const tier = normalizeTier(skill);
-  const brand = skill.brand || 'other';
+  const brand = skill.brand || skill.editorBrand || 'other';
   const dirName = skill.dirName || skill.name;
 
   // Get tier icon

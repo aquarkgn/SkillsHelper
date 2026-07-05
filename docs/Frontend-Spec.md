@@ -602,7 +602,19 @@ localStorage.setItem('theme', next)
 | 三区布局类（sidebar/topbar/detail/main-pane） | `packages/web/src/index.css`（`@layer components`） |
 | 主题切换 | `packages/web/src/hooks/useTheme.ts` |
 | editor 色映射 | `packages/web/src/lib/editors.ts` |
+| CLI 命令品牌静态 logo + emoji 兜底 | `packages/web/src/lib/brandLogos.ts` + `packages/web/src/lib/brandEmoji.ts`；资源 `packages/web/src/assets/brand-logos/*.svg` |
+| Skill 模块真实 .app 图标 | `packages/scanner/src/icon/icon-extractor.mjs`（后端 `/api/icons/:brand`） |
 | verify 断言约束 | `build/verify.mjs`（`#app`；CSS 子串 OR 含 `topbar`/`sidebar`/`detail` 任一） |
+
+### CLI 命令品牌 logo 资源策略
+
+Command 模块的 brand（claude/code/codex/gstach/hermes）大多是 CLI 工具而非 GUI `.app`，扫描本机 `.app` 的路线（`/api/icons`）拿不到图标，因此走"前端构建产物直接打包品牌 SVG"路线：
+
+1. **静态 SVG 资源**（`packages/web/src/assets/brand-logos/`）由 Vite 在构建时打入 `dist/assets/`，优先级最高
+2. **emoji 兜底**（`packages/web/src/lib/brandEmoji.ts`）：与 `packages/scanner/src/icon/brand-map.mjs` 的 `BRAND_APP_MAP.emoji` 字段口径一致
+3. **TerminalSquare 占位**：仅当上述两层都未命中时才显示
+
+`/api/icons` 接口保留供 Skill 模块使用（其 brand 集合由后端扫描器动态决定，CLI 命令品牌不在这条路径上）。
 
 ---
 

@@ -126,7 +126,7 @@ describe('Sidebar 模块化导航', () => {
     expect(screen.queryByText('其它技能')).toBeNull()
   })
 
-  it('命令模块：每个品牌旁渲染品牌 logo（<img src=/api/icons/...>），fallback brand 走通用 TerminalSquare', () => {
+  it('命令模块：每个品牌旁渲染品牌 logo（<img src=BRAND_LOGO_ASSETS>），无静态资源时走 emoji 兜底', () => {
     render(
       <Sidebar
         module="commands"
@@ -141,22 +141,15 @@ describe('Sidebar 模块化导航', () => {
         onEditor={noop}
       />
     )
-    // claude/code/codex 应当走真实品牌 logo（指向 /api/icons）
-    for (const brand of ['claude', 'code', 'codex']) {
+    // 5 个 brand 全部在 BRAND_LOGO_ASSETS 登记，渲染 <img src=静态资源>
+    for (const brand of ['claude', 'code', 'codex', 'gstach', 'hermes']) {
       const item = screen.getByText(brand).closest('button')
-      expect(item).toBeInTheDocument()
+      expect(item, `未找到 ${brand} 按钮`).toBeInTheDocument()
       const img = item?.querySelector('img')
-      expect(img).toBeTruthy()
-      const apiBrand = brand === 'code' ? 'vscode' : brand
-      expect(img?.getAttribute('src')).toContain(`/api/icons/${apiBrand}`)
-    }
-    // gstach / hermes 是 fallback brand，无 img
-    for (const fallback of ['gstach', 'hermes']) {
-      const item = screen.getByText(fallback).closest('button')
-      expect(item).toBeInTheDocument()
-      expect(item?.querySelector('img')).toBeNull()
-      // fallback 应当用 lucide TerminalSquare（SVG）
-      expect(item?.querySelector('svg')).toBeTruthy()
+      expect(img, `${brand} 应渲染 <img>`).toBeTruthy()
+      // src 不再指向 /api/icons，而是前端构建产物的 SVG
+      expect(img?.getAttribute('src')).not.toContain('/api/icons/')
+      expect(img?.getAttribute('src')).toContain(`brand-logos/${brand}.svg`)
     }
   })
 

@@ -81,6 +81,7 @@ export async function startServer({ port = 11520 } = {}) {
   });
 
   const { scan, getWatchTargets } = await importScanner();
+  const { resolveIconRef } = await import(path.join(PKGS_ROOT, 'scanner/src/icon/icon-extractor.mjs'));
 
   // In-memory IR. HTTP handlers only read this snapshot; reload/watch swaps it atomically.
   let irCache = await scan();
@@ -221,6 +222,18 @@ export async function startServer({ port = 11520 } = {}) {
         if (base.editorBrand === 'claude-code') base.editorBrand = 'claude';
         if (base.editorBrand === 'hermes-plugin') base.editorBrand = 'hermes';
       }
+
+      // 列表接口也补齐官方图标引用，保证旧侧栏和技能列表都能直接渲染真实应用图标。
+      const { iconUrl, iconFallback } = resolveIconRef(
+        {
+          icon: base.icon,
+          brand: base.brand || base.editorBrand,
+          source: base.source,
+        },
+        64,
+      );
+      if (iconUrl && !base.iconUrl) base.iconUrl = iconUrl;
+      if (iconFallback && !base.iconFallback) base.iconFallback = iconFallback;
       
       // 确保有 pathHash 字段
       if (!base.pathHash && base.paths?.abs) {

@@ -71,6 +71,8 @@ test('server exposes health, list, detail, stats, and reload state without raw i
   assert.equal(items.length, 1);
   assert.equal(items[0].name, "quote's skill");
   assert.equal(items[0].raw, undefined, 'list endpoint must not expose raw content');
+  assert.equal(items[0].iconUrl, '/api/icons/hermes?size=64');
+  assert.equal(items[0].iconFallback, '⚡');
 
   const detail = await app.inject({ method: 'GET', url: `/api/skills/${items[0].id}` });
   assert.equal(detail.statusCode, 200);

@@ -10,6 +10,7 @@
 import { useMemo } from 'react';
 import { SkillItem } from '@/types';
 import SkillItemComponent from './SkillItem';
+import { getBrandIconComponent } from '@/lib/brandIcons';
 
 interface TierGroupProps {
   title: string;
@@ -109,34 +110,8 @@ interface BrandGroupProps {
 }
 
 function BrandGroup({ brand, skills, collapsed, onToggle, onSelectSkill }: BrandGroupProps) {
-  // 编辑器品牌 icon 映射表
-  const getBrandIcon = (b: string): string => {
-    const iconMap: Record<string, string> = {
-      hermes: '🧙',
-      claude: '🤖',
-      cursor: '➡️',
-      vscode: '📝',
-      codeium: '⚡',
-      windsurf: '🌬️',
-      continue: '⏯️',
-      tauri: '🦀',
-      trae: '🎯',
-      'trae-cn': '🎯',
-      qoder: '📦',
-      codex: '📚',
-      vim: '✏️',
-      neovim: '✨',
-      emacs: '🎨',
-      sublime: '💎',
-      jetbrains: '🚀',
-      nova: '⭐',
-      zed: '⚡',
-      copilot: '🤝',
-      replit: '🌐',
-      glot: '🌍',
-    };
-    return iconMap[b] || '📦';
-  };
+  // 获取品牌的 lucide 图标组件
+  const BrandIcon = useMemo(() => getBrandIconComponent(brand), [brand]);
 
   return (
     <div className="bg-tier1-bg">
@@ -146,7 +121,9 @@ function BrandGroup({ brand, skills, collapsed, onToggle, onSelectSkill }: Brand
         className="w-full flex items-center justify-between p-2 pl-6 hover:bg-hover transition-colors text-sm"
       >
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <span className="text-base flex-shrink-0">{getBrandIcon(brand)}</span>
+          <span className="text-base flex-shrink-0">
+            <BrandIcon size={16} />
+          </span>
           <span className="capitalize truncate">{brand}</span>
           <span className="text-xs text-muted flex-shrink-0">({skills.length})</span>
         </div>
