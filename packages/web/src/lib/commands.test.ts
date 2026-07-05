@@ -17,7 +17,7 @@ describe('lib/commands 数据汇总', () => {
       'claude',
       'code',
       'codex',
-      'gstach',
+      'gstack',
       'hermes',
     ])
   })

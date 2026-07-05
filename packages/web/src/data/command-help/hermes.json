@@ -1,0 +1,321 @@
+[
+  {
+    "brand": "hermes",
+    "subcommand": "doctor",
+    "summary_zh": "检查配置和依赖。",
+    "usage": "usage: hermes doctor [-h] [--fix] [--ack ADVISORY_ID]",
+    "groups": [
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-h --help",
+            "desc_zh": "show this help message and exit",
+            "raw": "show this help message and exit"
+          },
+          {
+            "name": "--fix",
+            "desc_zh": "Attempt to fix issues automatically",
+            "raw": "Attempt to fix issues automatically"
+          },
+          {
+            "name": "--ack",
+            "desc_zh": "Acknowledge a security advisory by ID and exit. After ack, the advisory will no longer trigger startup banners. Run `hermes doctor` first to see active advisories and their IDs.",
+            "raw": "Acknowledge a security advisory by ID and exit. After ack, the advisory will no longer trigger startup banners. Run `hermes doctor` first to see active advisories and their IDs.",
+            "args": "ADVISORY_ID"
+          }
+        ]
+      }
+    ],
+    "raw": "usage: hermes doctor [-h] [--fix] [--ack ADVISORY_ID]\n\nDiagnose issues with Hermes Agent setup\n\noptions:\n  -h, --help         show this help message and exit\n  --fix              Attempt to fix issues automatically\n  --ack ADVISORY_ID  Acknowledge a security advisory by ID and exit. After\n                     ack, the advisory will no longer trigger startup banners.\n                     Run `hermes doctor` first to see active advisories and\n                     their IDs.",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/hermes/doctor.cmd"
+  },
+  {
+    "brand": "hermes",
+    "subcommand": "mcp",
+    "summary_zh": "管理 MCP servers 并把 Hermes 作为 MCP server 运行。",
+    "usage": "usage: hermes mcp [-h] [--accept-hooks]\n{serve,add,remove,rm,list,ls,test,configure,config,login,picker,catalog,install}\n...",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "serve",
+            "desc_zh": "Run Hermes as an MCP server (expose conversations to other agents)",
+            "raw": "Run Hermes as an MCP server (expose conversations to other agents)"
+          },
+          {
+            "name": "add",
+            "desc_zh": "Add an MCP server (discovery-first install)",
+            "raw": "Add an MCP server (discovery-first install)"
+          },
+          {
+            "name": "remove",
+            "desc_zh": "Remove an MCP server",
+            "raw": "Remove an MCP server",
+            "args": "(rm)"
+          },
+          {
+            "name": "list",
+            "desc_zh": "List configured MCP servers",
+            "raw": "List configured MCP servers",
+            "args": "(ls)"
+          },
+          {
+            "name": "test",
+            "desc_zh": "Test MCP server connection",
+            "raw": "Test MCP server connection"
+          },
+          {
+            "name": "configure",
+            "desc_zh": "Toggle tool selection",
+            "raw": "Toggle tool selection",
+            "args": "(config)"
+          },
+          {
+            "name": "login",
+            "desc_zh": "Force re-authentication for an OAuth-based MCP server",
+            "raw": "Force re-authentication for an OAuth-based MCP server"
+          },
+          {
+            "name": "picker",
+            "desc_zh": "Interactive catalog picker (also the default for `hermes mcp`)",
+            "raw": "Interactive catalog picker (also the default for `hermes mcp`)"
+          },
+          {
+            "name": "catalog",
+            "desc_zh": "List Nous-approved MCPs available for one-click install",
+            "raw": "List Nous-approved MCPs available for one-click install"
+          },
+          {
+            "name": "install",
+            "desc_zh": "Install a catalog MCP by name (e.g. `hermes mcp install n8n`)",
+            "raw": "Install a catalog MCP by name (e.g. `hermes mcp install n8n`)"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-h --help",
+            "desc_zh": "show this help message and exit",
+            "raw": "show this help message and exit"
+          },
+          {
+            "name": "--accept-hooks",
+            "desc_zh": "Auto-approve unseen shell hooks without a TTY prompt (equivalent to HERMES_ACCEPT_HOOKS=1 / hooks_auto_accept: true).",
+            "raw": "Auto-approve unseen shell hooks without a TTY prompt (equivalent to HERMES_ACCEPT_HOOKS=1 / hooks_auto_accept: true)."
+          }
+        ]
+      }
+    ],
+    "raw": "usage: hermes mcp [-h] [--accept-hooks]\n                  {serve,add,remove,rm,list,ls,test,configure,config,login,picker,catalog,install}\n                  ...\n\nManage MCP server connections and run Hermes as an MCP server. MCP servers\nprovide additional tools via the Model Context Protocol. Use 'hermes mcp add'\nto connect to a new server, or 'hermes mcp serve' to expose Hermes\nconversations over MCP.\n\npositional arguments:\n  {serve,add,remove,rm,list,ls,test,configure,config,login,picker,catalog,install}\n    serve               Run Hermes as an MCP server (expose conversations to\n                        other agents)\n    add                 Add an MCP server (discovery-first install)\n    remove (rm)         Remove an MCP server\n    list (ls)           List configured MCP servers\n    test                Test MCP server connection\n    configure (config)  Toggle tool selection\n    login               Force re-authentication for an OAuth-based MCP server\n    picker              Interactive catalog picker (also the default for\n                        `hermes mcp`)\n    catalog             List Nous-approved MCPs available for one-click\n                        install\n    install             Install a catalog MCP by name (e.g. `hermes mcp\n                        install n8n`)\n\noptions:\n  -h, --help            show this help message and exit\n  --accept-hooks        Auto-approve unseen shell hooks without a TTY prompt\n                        (equivalent to HERMES_ACCEPT_HOOKS=1 /\n                        hooks_auto_accept: true).",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/hermes/mcp.cmd"
+  },
+  {
+    "brand": "hermes",
+    "subcommand": "plugins",
+    "summary_zh": "管理插件安装、更新、移除和列表。",
+    "usage": "usage: hermes plugins [-h]\n{install,update,remove,rm,uninstall,list,ls,enable,disable}\n...",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "install",
+            "desc_zh": "Install a plugin from a Git URL or owner/repo",
+            "raw": "Install a plugin from a Git URL or owner/repo"
+          },
+          {
+            "name": "update",
+            "desc_zh": "Pull latest changes for an installed plugin remove (rm, uninstall) Remove an installed plugin",
+            "raw": "Pull latest changes for an installed plugin remove (rm, uninstall) Remove an installed plugin"
+          },
+          {
+            "name": "list",
+            "desc_zh": "List installed plugins",
+            "raw": "List installed plugins",
+            "args": "(ls)"
+          },
+          {
+            "name": "enable",
+            "desc_zh": "Enable a disabled plugin",
+            "raw": "Enable a disabled plugin"
+          },
+          {
+            "name": "disable",
+            "desc_zh": "Disable a plugin without removing it",
+            "raw": "Disable a plugin without removing it"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-h --help",
+            "desc_zh": "show this help message and exit",
+            "raw": "show this help message and exit"
+          }
+        ]
+      }
+    ],
+    "raw": "usage: hermes plugins [-h]\n                      {install,update,remove,rm,uninstall,list,ls,enable,disable}\n                      ...\n\nInstall plugins from Git repositories, update, remove, or list them.\n\npositional arguments:\n  {install,update,remove,rm,uninstall,list,ls,enable,disable}\n    install             Install a plugin from a Git URL or owner/repo\n    update              Pull latest changes for an installed plugin\n    remove (rm, uninstall)\n                        Remove an installed plugin\n    list (ls)           List installed plugins\n    enable              Enable a disabled plugin\n    disable             Disable a plugin without removing it\n\noptions:\n  -h, --help            show this help message and exit",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/hermes/plugins.cmd"
+  },
+  {
+    "brand": "hermes",
+    "subcommand": "security",
+    "summary_zh": "对 venv、plugins 和 MCP servers 做供应链审计。",
+    "usage": "usage: hermes security [-h] <subcommand> ...",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "audit",
+            "desc_zh": "Run a one-shot supply-chain audit",
+            "raw": "Run a one-shot supply-chain audit"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-h --help",
+            "desc_zh": "show this help message and exit",
+            "raw": "show this help message and exit"
+          }
+        ]
+      }
+    ],
+    "raw": "usage: hermes security [-h] <subcommand> ...\n\nOn-demand vulnerability scan against OSV.dev. Covers the Hermes venv\n(installed PyPI dists), Python deps declared by plugins under\n~/.hermes/plugins/, and pinned npx/uvx MCP servers in config.yaml. Does NOT\nscan globally-installed packages or editor/browser extensions.\n\npositional arguments:\n  <subcommand>\n    audit       Run a one-shot supply-chain audit\n\noptions:\n  -h, --help    show this help message and exit",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/hermes/security.cmd"
+  },
+  {
+    "brand": "hermes",
+    "subcommand": "skills",
+    "summary_zh": "搜索、安装、配置和管理 skills。",
+    "usage": "usage: hermes skills [-h]\n{browse,search,install,inspect,list,check,update,audit,uninstall,reset,opt-out,opt-in,repair-official,publish,snapshot,tap,config}\n...",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "browse",
+            "desc_zh": "Browse all available skills (paginated)",
+            "raw": "Browse all available skills (paginated)"
+          },
+          {
+            "name": "search",
+            "desc_zh": "Search skill registries",
+            "raw": "Search skill registries"
+          },
+          {
+            "name": "install",
+            "desc_zh": "Install a skill",
+            "raw": "Install a skill"
+          },
+          {
+            "name": "inspect",
+            "desc_zh": "Preview a skill without installing",
+            "raw": "Preview a skill without installing"
+          },
+          {
+            "name": "list",
+            "desc_zh": "List installed skills",
+            "raw": "List installed skills"
+          },
+          {
+            "name": "check",
+            "desc_zh": "Check installed hub skills for updates",
+            "raw": "Check installed hub skills for updates"
+          },
+          {
+            "name": "update",
+            "desc_zh": "Update installed hub skills",
+            "raw": "Update installed hub skills"
+          },
+          {
+            "name": "audit",
+            "desc_zh": "Re-scan installed hub skills",
+            "raw": "Re-scan installed hub skills"
+          },
+          {
+            "name": "uninstall",
+            "desc_zh": "Remove a hub-installed skill",
+            "raw": "Remove a hub-installed skill"
+          },
+          {
+            "name": "reset",
+            "desc_zh": "Reset a bundled skill — clears 'user-modified' tracking so updates work again",
+            "raw": "Reset a bundled skill — clears 'user-modified' tracking so updates work again"
+          },
+          {
+            "name": "opt-out",
+            "desc_zh": "Stop bundled skills from being seeded into this profile",
+            "raw": "Stop bundled skills from being seeded into this profile"
+          },
+          {
+            "name": "opt-in",
+            "desc_zh": "Re-enable bundled-skill seeding (undo opt-out)",
+            "raw": "Re-enable bundled-skill seeding (undo opt-out)"
+          },
+          {
+            "name": "repair-official",
+            "desc_zh": "Backfill or restore official optional skills from repo source",
+            "raw": "Backfill or restore official optional skills from repo source"
+          },
+          {
+            "name": "publish",
+            "desc_zh": "Publish a skill to a registry",
+            "raw": "Publish a skill to a registry"
+          },
+          {
+            "name": "snapshot",
+            "desc_zh": "Export/import skill configurations",
+            "raw": "Export/import skill configurations"
+          },
+          {
+            "name": "tap",
+            "desc_zh": "Manage skill sources",
+            "raw": "Manage skill sources"
+          },
+          {
+            "name": "config",
+            "desc_zh": "Interactive skill configuration — enable/disable individual skills",
+            "raw": "Interactive skill configuration — enable/disable individual skills"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-h --help",
+            "desc_zh": "show this help message and exit",
+            "raw": "show this help message and exit"
+          }
+        ]
+      }
+    ],
+    "raw": "usage: hermes skills [-h]\n                     {browse,search,install,inspect,list,check,update,audit,uninstall,reset,opt-out,opt-in,repair-official,publish,snapshot,tap,config}\n                     ...\n\nSearch, install, inspect, audit, configure, and manage skills from skills.sh,\nwell-known agent skill endpoints, GitHub, ClawHub, and other registries.\n\npositional arguments:\n  {browse,search,install,inspect,list,check,update,audit,uninstall,reset,opt-out,opt-in,repair-official,publish,snapshot,tap,config}\n    browse              Browse all available skills (paginated)\n    search              Search skill registries\n    install             Install a skill\n    inspect             Preview a skill without installing\n    list                List installed skills\n    check               Check installed hub skills for updates\n    update              Update installed hub skills\n    audit               Re-scan installed hub skills\n    uninstall           Remove a hub-installed skill\n    reset               Reset a bundled skill — clears 'user-modified'\n                        tracking so updates work again\n    opt-out             Stop bundled skills from being seeded into this\n                        profile\n    opt-in              Re-enable bundled-skill seeding (undo opt-out)\n    repair-official     Backfill or restore official optional skills from repo\n                        source\n    publish             Publish a skill to a registry\n    snapshot            Export/import skill configurations\n    tap                 Manage skill sources\n    config              Interactive skill configuration — enable/disable\n                        individual skills\n\noptions:\n  -h, --help            show this help message and exit",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/hermes/skills.cmd"
+  }
+]

@@ -1,0 +1,444 @@
+[
+  {
+    "brand": "codex",
+    "subcommand": "exec",
+    "summary_zh": "非交互式运行 Codex。",
+    "usage": "Usage: codex exec [OPTIONS] [PROMPT]\ncodex exec [OPTIONS] <COMMAND> [ARGS]",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "resume",
+            "desc_zh": "Resume a previous session by id or pick the most recent with --last",
+            "raw": "Resume a previous session by id or pick the most recent with --last"
+          },
+          {
+            "name": "review",
+            "desc_zh": "Run a code review against the current repository",
+            "raw": "Run a code review against the current repository"
+          },
+          {
+            "name": "help",
+            "desc_zh": "Print this message or the help of the given subcommand(s)",
+            "raw": "Print this message or the help of the given subcommand(s)"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-c --config",
+            "desc_zh": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "raw": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "args": "<key=value>"
+          },
+          {
+            "name": "--enable",
+            "desc_zh": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "raw": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--disable",
+            "desc_zh": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "raw": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--strict-config",
+            "desc_zh": "--strict-config Error out when config.toml contains fields that are not recognized by this version of Codex",
+            "raw": "--strict-config Error out when config.toml contains fields that are not recognized by this version of Codex"
+          },
+          {
+            "name": "-i --image",
+            "desc_zh": "-i, --image <FILE>... Optional image(s) to attach to the initial prompt",
+            "raw": "-i, --image <FILE>... Optional image(s) to attach to the initial prompt",
+            "args": "<FILE>..."
+          },
+          {
+            "name": "-m --model",
+            "desc_zh": "-m, --model <MODEL> Model the agent should use",
+            "raw": "-m, --model <MODEL> Model the agent should use",
+            "args": "<MODEL>"
+          },
+          {
+            "name": "--oss",
+            "desc_zh": "--oss Use open-source provider",
+            "raw": "--oss Use open-source provider"
+          },
+          {
+            "name": "--local-provider",
+            "desc_zh": "--local-provider <OSS_PROVIDER> Specify which local provider to use (lmstudio or ollama). If not specified with --oss, will use config default or show selection",
+            "raw": "--local-provider <OSS_PROVIDER> Specify which local provider to use (lmstudio or ollama). If not specified with --oss, will use config default or show selection",
+            "args": "<OSS_PROVIDER>"
+          },
+          {
+            "name": "-p --profile",
+            "desc_zh": "-p, --profile <CONFIG_PROFILE_V2> Layer $CODEX_HOME/<name>.config.toml on top of the base user config",
+            "raw": "-p, --profile <CONFIG_PROFILE_V2> Layer $CODEX_HOME/<name>.config.toml on top of the base user config",
+            "args": "<CONFIG_PROFILE_V2>"
+          },
+          {
+            "name": "-s --sandbox",
+            "desc_zh": "-s, --sandbox <SANDBOX_MODE> Select the sandbox policy to use when executing model-generated shell commands",
+            "raw": "-s, --sandbox <SANDBOX_MODE> Select the sandbox policy to use when executing model-generated shell commands",
+            "args": "<SANDBOX_MODE>"
+          },
+          {
+            "name": "--dangerously-bypass-approvals-and-sandbox",
+            "desc_zh": "--dangerously-bypass-approvals-and-sandbox Skip all confirmation prompts and execute commands without sandboxing. EXTREMELY DANGEROUS. Intended solely for running in environments that are externally sandboxed",
+            "raw": "--dangerously-bypass-approvals-and-sandbox Skip all confirmation prompts and execute commands without sandboxing. EXTREMELY DANGEROUS. Intended solely for running in environments that are externally sandboxed"
+          },
+          {
+            "name": "--dangerously-bypass-hook-trust",
+            "desc_zh": "--dangerously-bypass-hook-trust Run enabled hooks without requiring persisted hook trust for this invocation. DANGEROUS. Intended only for automation that already vets hook sources",
+            "raw": "--dangerously-bypass-hook-trust Run enabled hooks without requiring persisted hook trust for this invocation. DANGEROUS. Intended only for automation that already vets hook sources"
+          },
+          {
+            "name": "-C --cd",
+            "desc_zh": "-C, --cd <DIR> Tell the agent to use the specified directory as its working root",
+            "raw": "-C, --cd <DIR> Tell the agent to use the specified directory as its working root",
+            "args": "<DIR>"
+          },
+          {
+            "name": "--add-dir",
+            "desc_zh": "--add-dir <DIR> Additional directories that should be writable alongside the primary workspace",
+            "raw": "--add-dir <DIR> Additional directories that should be writable alongside the primary workspace",
+            "args": "<DIR>"
+          },
+          {
+            "name": "--skip-git-repo-check",
+            "desc_zh": "--skip-git-repo-check Allow running Codex outside a Git repository",
+            "raw": "--skip-git-repo-check Allow running Codex outside a Git repository"
+          },
+          {
+            "name": "--ephemeral",
+            "desc_zh": "--ephemeral Run without persisting session files to disk",
+            "raw": "--ephemeral Run without persisting session files to disk"
+          },
+          {
+            "name": "--ignore-user-config",
+            "desc_zh": "--ignore-user-config Do not load `$CODEX_HOME/config.toml`; auth still uses `CODEX_HOME`",
+            "raw": "--ignore-user-config Do not load `$CODEX_HOME/config.toml`; auth still uses `CODEX_HOME`"
+          },
+          {
+            "name": "--ignore-rules",
+            "desc_zh": "--ignore-rules Do not load user or project execpolicy `.rules` files",
+            "raw": "--ignore-rules Do not load user or project execpolicy `.rules` files"
+          },
+          {
+            "name": "--output-schema",
+            "desc_zh": "--output-schema <FILE> Path to a JSON Schema file describing the model's final response shape",
+            "raw": "--output-schema <FILE> Path to a JSON Schema file describing the model's final response shape",
+            "args": "<FILE>"
+          },
+          {
+            "name": "--color",
+            "desc_zh": "--color <COLOR> Specifies color settings for use in the output",
+            "raw": "--color <COLOR> Specifies color settings for use in the output",
+            "args": "<COLOR>"
+          },
+          {
+            "name": "--json",
+            "desc_zh": "--json Print events to stdout as JSONL",
+            "raw": "--json Print events to stdout as JSONL"
+          },
+          {
+            "name": "-o --output-last-message",
+            "desc_zh": "-o, --output-last-message <FILE> Specifies file where the last message from the agent should be written",
+            "raw": "-o, --output-last-message <FILE> Specifies file where the last message from the agent should be written",
+            "args": "<FILE>"
+          },
+          {
+            "name": "-h --help",
+            "desc_zh": "-h, --help Print help (see a summary with '-h')",
+            "raw": "-h, --help Print help (see a summary with '-h')"
+          },
+          {
+            "name": "-V --version",
+            "desc_zh": "-V, --version Print version",
+            "raw": "-V, --version Print version"
+          }
+        ]
+      }
+    ],
+    "raw": "Run Codex non-interactively\n\nUsage: codex exec [OPTIONS] [PROMPT]\n       codex exec [OPTIONS] <COMMAND> [ARGS]\n\nCommands:\n  resume  Resume a previous session by id or pick the most recent with --last\n  review  Run a code review against the current repository\n  help    Print this message or the help of the given subcommand(s)\n\nArguments:\n  [PROMPT]\n          Initial instructions for the agent. If not provided as an argument (or if `-` is used),\n          instructions are read from stdin. If stdin is piped and a prompt is also provided, stdin\n          is appended as a `<stdin>` block\n\nOptions:\n  -c, --config <key=value>\n          Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`.\n          Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed\n          as TOML. If it fails to parse as TOML, the raw string is used as a literal.\n          \n          Examples: - `-c model=\"o3\"` - `-c 'sandbox_permissions=[\"disk-full-read-access\"]'` - `-c\n          shell_environment_policy.inherit=all`\n\n      --enable <FEATURE>\n          Enable a feature (repeatable). Equivalent to `-c features.<name>=true`\n\n      --disable <FEATURE>\n          Disable a feature (repeatable). Equivalent to `-c features.<name>=false`\n\n      --strict-config\n          Error out when config.toml contains fields that are not recognized by this version of\n          Codex\n\n  -i, --image <FILE>...\n          Optional image(s) to attach to the initial prompt\n\n  -m, --model <MODEL>\n          Model the agent should use\n\n      --oss\n          Use open-source provider\n\n      --local-provider <OSS_PROVIDER>\n          Specify which local provider to use (lmstudio or ollama). If not specified with --oss,\n          will use config default or show selection\n\n  -p, --profile <CONFIG_PROFILE_V2>\n          Layer $CODEX_HOME/<name>.config.toml on top of the base user config\n\n  -s, --sandbox <SANDBOX_MODE>\n          Select the sandbox policy to use when executing model-generated shell commands\n          \n          [possible values: read-only, workspace-write, danger-full-access]\n\n      --dangerously-bypass-approvals-and-sandbox\n          Skip all confirmation prompts and execute commands without sandboxing. EXTREMELY\n          DANGEROUS. Intended solely for running in environments that are externally sandboxed\n\n      --dangerously-bypass-hook-trust\n          Run enabled hooks without requiring persisted hook trust for this invocation. DANGEROUS.\n          Intended only for automation that already vets hook sources\n\n  -C, --cd <DIR>\n          Tell the agent to use the specified directory as its working root\n\n      --add-dir <DIR>\n          Additional directories that should be writable alongside the primary workspace\n\n      --skip-git-repo-check\n          Allow running Codex outside a Git repository\n\n      --ephemeral\n          Run without persisting session files to disk\n\n      --ignore-user-config\n          Do not load `$CODEX_HOME/config.toml`; auth still uses `CODEX_HOME`\n\n      --ignore-rules\n          Do not load user or project execpolicy `.rules` files\n\n      --output-schema <FILE>\n          Path to a JSON Schema file describing the model's final response shape\n\n      --color <COLOR>\n          Specifies color settings for use in the output\n          \n          [default: auto]\n          [possible values: always, never, auto]\n\n      --json\n          Print events to stdout as JSONL\n\n  -o, --output-last-message <FILE>\n          Specifies file where the last message from the agent should be written\n\n  -h, --help\n          Print help (see a summary with '-h')\n\n  -V, --version\n          Print version",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/codex/exec.cmd"
+  },
+  {
+    "brand": "codex",
+    "subcommand": "login",
+    "summary_zh": "管理登录。",
+    "usage": "Usage: codex login [OPTIONS] [COMMAND]",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "status",
+            "desc_zh": "Show login status",
+            "raw": "Show login status"
+          },
+          {
+            "name": "help",
+            "desc_zh": "Print this message or the help of the given subcommand(s)",
+            "raw": "Print this message or the help of the given subcommand(s)"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-c --config",
+            "desc_zh": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "raw": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "args": "<key=value>"
+          },
+          {
+            "name": "--with-api-key",
+            "desc_zh": "--with-api-key Read the API key from stdin (e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`)",
+            "raw": "--with-api-key Read the API key from stdin (e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`)"
+          },
+          {
+            "name": "--enable",
+            "desc_zh": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "raw": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--with-access-token",
+            "desc_zh": "--with-access-token Read the access token from stdin (e.g. `printenv CODEX_ACCESS_TOKEN | codex login",
+            "raw": "--with-access-token Read the access token from stdin (e.g. `printenv CODEX_ACCESS_TOKEN | codex login"
+          },
+          {
+            "name": "--with-access-token`)",
+            "desc_zh": "--with-access-token`)",
+            "raw": "--with-access-token`)"
+          },
+          {
+            "name": "--disable",
+            "desc_zh": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "raw": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--device-auth",
+            "desc_zh": "--device-auth",
+            "raw": "--device-auth"
+          },
+          {
+            "name": "-h --help",
+            "desc_zh": "-h, --help Print help (see a summary with '-h')",
+            "raw": "-h, --help Print help (see a summary with '-h')"
+          }
+        ]
+      }
+    ],
+    "raw": "Manage login\n\nUsage: codex login [OPTIONS] [COMMAND]\n\nCommands:\n  status  Show login status\n  help    Print this message or the help of the given subcommand(s)\n\nOptions:\n  -c, --config <key=value>\n          Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`.\n          Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed\n          as TOML. If it fails to parse as TOML, the raw string is used as a literal.\n          \n          Examples: - `-c model=\"o3\"` - `-c 'sandbox_permissions=[\"disk-full-read-access\"]'` - `-c\n          shell_environment_policy.inherit=all`\n\n      --with-api-key\n          Read the API key from stdin (e.g. `printenv OPENAI_API_KEY | codex login --with-api-key`)\n\n      --enable <FEATURE>\n          Enable a feature (repeatable). Equivalent to `-c features.<name>=true`\n\n      --with-access-token\n          Read the access token from stdin (e.g. `printenv CODEX_ACCESS_TOKEN | codex login\n          --with-access-token`)\n\n      --disable <FEATURE>\n          Disable a feature (repeatable). Equivalent to `-c features.<name>=false`\n\n      --device-auth\n          \n\n  -h, --help\n          Print help (see a summary with '-h')",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/codex/login.cmd"
+  },
+  {
+    "brand": "codex",
+    "subcommand": "mcp",
+    "summary_zh": "管理外部 MCP servers。",
+    "usage": "Usage: codex mcp [OPTIONS] <COMMAND>",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "help",
+            "desc_zh": "Print this message or the help of the given subcommand(s)",
+            "raw": "Print this message or the help of the given subcommand(s)"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-c --config",
+            "desc_zh": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "raw": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "args": "<key=value>"
+          },
+          {
+            "name": "--enable",
+            "desc_zh": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "raw": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--disable",
+            "desc_zh": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "raw": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "-h --help",
+            "desc_zh": "-h, --help Print help (see a summary with '-h')",
+            "raw": "-h, --help Print help (see a summary with '-h')"
+          }
+        ]
+      }
+    ],
+    "raw": "Manage external MCP servers for Codex\n\nUsage: codex mcp [OPTIONS] <COMMAND>\n\nCommands:\n  list    \n  get     \n  add     \n  remove  \n  login   \n  logout  \n  help    Print this message or the help of the given subcommand(s)\n\nOptions:\n  -c, --config <key=value>\n          Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`.\n          Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed\n          as TOML. If it fails to parse as TOML, the raw string is used as a literal.\n          \n          Examples: - `-c model=\"o3\"` - `-c 'sandbox_permissions=[\"disk-full-read-access\"]'` - `-c\n          shell_environment_policy.inherit=all`\n\n      --enable <FEATURE>\n          Enable a feature (repeatable). Equivalent to `-c features.<name>=true`\n\n      --disable <FEATURE>\n          Disable a feature (repeatable). Equivalent to `-c features.<name>=false`\n\n  -h, --help\n          Print help (see a summary with '-h')",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/codex/mcp.cmd"
+  },
+  {
+    "brand": "codex",
+    "subcommand": "plugin",
+    "summary_zh": "管理 Codex 插件。",
+    "usage": "Usage: codex plugin [OPTIONS] <COMMAND>",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "add",
+            "desc_zh": "Install a plugin from a configured marketplace snapshot",
+            "raw": "Install a plugin from a configured marketplace snapshot"
+          },
+          {
+            "name": "list",
+            "desc_zh": "List plugins available from configured marketplace snapshots",
+            "raw": "List plugins available from configured marketplace snapshots"
+          },
+          {
+            "name": "marketplace",
+            "desc_zh": "Add, list, upgrade, or remove configured plugin marketplaces",
+            "raw": "Add, list, upgrade, or remove configured plugin marketplaces"
+          },
+          {
+            "name": "remove",
+            "desc_zh": "Remove an installed plugin from local config and cache",
+            "raw": "Remove an installed plugin from local config and cache"
+          },
+          {
+            "name": "help",
+            "desc_zh": "Print this message or the help of the given subcommand(s)",
+            "raw": "Print this message or the help of the given subcommand(s)"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-c --config",
+            "desc_zh": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "raw": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "args": "<key=value>"
+          },
+          {
+            "name": "--enable",
+            "desc_zh": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "raw": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--disable",
+            "desc_zh": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "raw": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "-h --help",
+            "desc_zh": "-h, --help Print help (see a summary with '-h')",
+            "raw": "-h, --help Print help (see a summary with '-h')"
+          }
+        ]
+      }
+    ],
+    "raw": "Manage Codex plugins\n\nUsage: codex plugin [OPTIONS] <COMMAND>\n\nCommands:\n  add          Install a plugin from a configured marketplace snapshot\n  list         List plugins available from configured marketplace snapshots\n  marketplace  Add, list, upgrade, or remove configured plugin marketplaces\n  remove       Remove an installed plugin from local config and cache\n  help         Print this message or the help of the given subcommand(s)\n\nOptions:\n  -c, --config <key=value>\n          Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`.\n          Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed\n          as TOML. If it fails to parse as TOML, the raw string is used as a literal.\n          \n          Examples: - `-c model=\"o3\"` - `-c 'sandbox_permissions=[\"disk-full-read-access\"]'` - `-c\n          shell_environment_policy.inherit=all`\n\n      --enable <FEATURE>\n          Enable a feature (repeatable). Equivalent to `-c features.<name>=true`\n\n      --disable <FEATURE>\n          Disable a feature (repeatable). Equivalent to `-c features.<name>=false`\n\n  -h, --help\n          Print help (see a summary with '-h')",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/codex/plugin.cmd"
+  },
+  {
+    "brand": "codex",
+    "subcommand": "review",
+    "summary_zh": "非交互式运行代码审查。",
+    "usage": "Usage: codex review [OPTIONS] [PROMPT]",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": []
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "-c --config",
+            "desc_zh": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "raw": "-c, --config <key=value> Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`. Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed as TOML. If it fails to parse as TOML, the raw string is used as a literal.",
+            "args": "<key=value>"
+          },
+          {
+            "name": "--strict-config",
+            "desc_zh": "--strict-config Error out when config.toml contains fields that are not recognized by this version of Codex",
+            "raw": "--strict-config Error out when config.toml contains fields that are not recognized by this version of Codex"
+          },
+          {
+            "name": "--enable",
+            "desc_zh": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "raw": "--enable <FEATURE> Enable a feature (repeatable). Equivalent to `-c features.<name>=true`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--uncommitted",
+            "desc_zh": "--uncommitted Review staged, unstaged, and untracked changes",
+            "raw": "--uncommitted Review staged, unstaged, and untracked changes"
+          },
+          {
+            "name": "--base",
+            "desc_zh": "--base <BRANCH> Review changes against the given base branch",
+            "raw": "--base <BRANCH> Review changes against the given base branch",
+            "args": "<BRANCH>"
+          },
+          {
+            "name": "--disable",
+            "desc_zh": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "raw": "--disable <FEATURE> Disable a feature (repeatable). Equivalent to `-c features.<name>=false`",
+            "args": "<FEATURE>"
+          },
+          {
+            "name": "--commit",
+            "desc_zh": "--commit <SHA> Review the changes introduced by a commit",
+            "raw": "--commit <SHA> Review the changes introduced by a commit",
+            "args": "<SHA>"
+          },
+          {
+            "name": "--title",
+            "desc_zh": "--title <TITLE> Optional commit title to display in the review summary",
+            "raw": "--title <TITLE> Optional commit title to display in the review summary",
+            "args": "<TITLE>"
+          },
+          {
+            "name": "-h --help",
+            "desc_zh": "-h, --help Print help (see a summary with '-h')",
+            "raw": "-h, --help Print help (see a summary with '-h')"
+          }
+        ]
+      }
+    ],
+    "raw": "Run a code review non-interactively\n\nUsage: codex review [OPTIONS] [PROMPT]\n\nArguments:\n  [PROMPT]\n          Custom review instructions. If `-` is used, read from stdin\n\nOptions:\n  -c, --config <key=value>\n          Override a configuration value that would otherwise be loaded from `~/.codex/config.toml`.\n          Use a dotted path (`foo.bar.baz`) to override nested values. The `value` portion is parsed\n          as TOML. If it fails to parse as TOML, the raw string is used as a literal.\n          \n          Examples: - `-c model=\"o3\"` - `-c 'sandbox_permissions=[\"disk-full-read-access\"]'` - `-c\n          shell_environment_policy.inherit=all`\n\n      --strict-config\n          Error out when config.toml contains fields that are not recognized by this version of\n          Codex\n\n      --enable <FEATURE>\n          Enable a feature (repeatable). Equivalent to `-c features.<name>=true`\n\n      --uncommitted\n          Review staged, unstaged, and untracked changes\n\n      --base <BRANCH>\n          Review changes against the given base branch\n\n      --disable <FEATURE>\n          Disable a feature (repeatable). Equivalent to `-c features.<name>=false`\n\n      --commit <SHA>\n          Review the changes introduced by a commit\n\n      --title <TITLE>\n          Optional commit title to display in the review summary\n\n  -h, --help\n          Print help (see a summary with '-h')",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/codex/review.cmd"
+  }
+]

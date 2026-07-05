@@ -349,51 +349,63 @@
     "subcommands": [
       {
         "name": "agents",
-        "desc_zh": "管理后台 agents。"
+        "desc_zh": "管理后台 agents。",
+        "helpStatus": "ready"
       },
       {
         "name": "auth",
-        "desc_zh": "管理认证。"
+        "desc_zh": "管理认证。",
+        "helpStatus": "missing"
       },
       {
         "name": "auto-mode",
-        "desc_zh": "检查 auto mode 分类器配置。"
+        "desc_zh": "检查 auto mode 分类器配置。",
+        "helpStatus": "missing"
       },
       {
         "name": "doctor",
-        "desc_zh": "检查 Claude Code 自动更新器和工作区健康状态。"
+        "desc_zh": "检查 Claude Code 自动更新器和工作区健康状态。",
+        "helpStatus": "ready"
       },
       {
         "name": "gateway",
-        "desc_zh": "运行企业认证和 telemetry gateway。"
+        "desc_zh": "运行企业认证和 telemetry gateway。",
+        "helpStatus": "missing"
       },
       {
         "name": "install",
-        "desc_zh": "安装 Claude Code native build。"
+        "desc_zh": "安装 Claude Code native build。",
+        "helpStatus": "missing"
       },
       {
         "name": "mcp",
-        "desc_zh": "配置和管理 MCP servers。"
+        "desc_zh": "配置和管理 MCP servers。",
+        "helpStatus": "ready"
       },
       {
         "name": "plugin|plugins",
-        "desc_zh": "管理 Claude Code 插件。"
+        "desc_zh": "管理 Claude Code 插件。",
+        "helpStatus": "ready"
       },
       {
         "name": "project",
-        "desc_zh": "管理 Claude Code 项目状态。"
+        "desc_zh": "管理 Claude Code 项目状态。",
+        "helpStatus": "missing"
       },
       {
         "name": "setup-token",
-        "desc_zh": "设置长期认证 token。"
+        "desc_zh": "设置长期认证 token。",
+        "helpStatus": "missing"
       },
       {
         "name": "ultrareview",
-        "desc_zh": "运行云端多 agent 代码审查并打印结果。"
+        "desc_zh": "运行云端多 agent 代码审查并打印结果。",
+        "helpStatus": "missing"
       },
       {
         "name": "update|upgrade",
-        "desc_zh": "检查并安装更新。"
+        "desc_zh": "检查并安装更新。",
+        "helpStatus": "missing"
       }
     ],
     "iconBrand": "claude"
@@ -646,19 +658,23 @@
     "subcommands": [
       {
         "name": "chat",
-        "desc_zh": "在当前工作目录传入 prompt 并运行 chat 会话。"
+        "desc_zh": "在当前工作目录传入 prompt 并运行 chat 会话。",
+        "helpStatus": "ready"
       },
       {
         "name": "serve-web",
-        "desc_zh": "启动一个在浏览器中显示编辑器 UI 的服务。"
+        "desc_zh": "启动一个在浏览器中显示编辑器 UI 的服务。",
+        "helpStatus": "ready"
       },
       {
         "name": "agent",
-        "desc_zh": "启动并交互 AI agent hosts。"
+        "desc_zh": "启动并交互 AI agent hosts。",
+        "helpStatus": "ready"
       },
       {
         "name": "tunnel",
-        "desc_zh": "通过安全 tunnel 让当前机器可被 vscode.dev 或其他机器访问。"
+        "desc_zh": "通过安全 tunnel 让当前机器可被 vscode.dev 或其他机器访问。",
+        "helpStatus": "missing"
       }
     ],
     "iconBrand": "vscode"
@@ -813,109 +829,134 @@
     "subcommands": [
       {
         "name": "exec",
-        "desc_zh": "非交互式运行 Codex。"
+        "desc_zh": "非交互式运行 Codex。",
+        "helpStatus": "ready"
       },
       {
         "name": "review",
-        "desc_zh": "非交互式运行代码审查。"
+        "desc_zh": "非交互式运行代码审查。",
+        "helpStatus": "ready"
       },
       {
         "name": "login",
-        "desc_zh": "管理登录。"
+        "desc_zh": "管理登录。",
+        "helpStatus": "ready"
       },
       {
         "name": "logout",
-        "desc_zh": "移除已保存的认证凭据。"
+        "desc_zh": "移除已保存的认证凭据。",
+        "helpStatus": "missing"
       },
       {
         "name": "mcp",
-        "desc_zh": "管理外部 MCP servers。"
+        "desc_zh": "管理外部 MCP servers。",
+        "helpStatus": "ready"
       },
       {
         "name": "plugin",
-        "desc_zh": "管理 Codex 插件。"
+        "desc_zh": "管理 Codex 插件。",
+        "helpStatus": "ready"
       },
       {
         "name": "mcp-server",
-        "desc_zh": "以 stdio MCP server 方式启动 Codex。"
+        "desc_zh": "以 stdio MCP server 方式启动 Codex。",
+        "helpStatus": "missing"
       },
       {
         "name": "app-server",
-        "desc_zh": "实验性 app server 或相关工具。"
+        "desc_zh": "实验性 app server 或相关工具。",
+        "helpStatus": "missing"
       },
       {
         "name": "remote-control",
-        "desc_zh": "管理启用 remote control 的 app-server daemon。"
+        "desc_zh": "管理启用 remote control 的 app-server daemon。",
+        "helpStatus": "missing"
       },
       {
         "name": "app",
-        "desc_zh": "启动 Codex desktop app。"
+        "desc_zh": "启动 Codex desktop app。",
+        "helpStatus": "missing"
       },
       {
         "name": "completion",
-        "desc_zh": "生成 shell completion 脚本。"
+        "desc_zh": "生成 shell completion 脚本。",
+        "helpStatus": "missing"
       },
       {
         "name": "update",
-        "desc_zh": "更新 Codex 到最新版。"
+        "desc_zh": "更新 Codex 到最新版。",
+        "helpStatus": "missing"
       },
       {
         "name": "doctor",
-        "desc_zh": "诊断本地 Codex 安装、配置、认证和运行时健康。"
+        "desc_zh": "诊断本地 Codex 安装、配置、认证和运行时健康。",
+        "helpStatus": "missing"
       },
       {
         "name": "sandbox",
-        "desc_zh": "在 Codex 提供的 sandbox 中运行命令。"
+        "desc_zh": "在 Codex 提供的 sandbox 中运行命令。",
+        "helpStatus": "missing"
       },
       {
         "name": "debug",
-        "desc_zh": "调试工具。"
+        "desc_zh": "调试工具。",
+        "helpStatus": "missing"
       },
       {
         "name": "apply",
-        "desc_zh": "把 Codex agent 最新 diff 用 git apply 应用到本地工作区。"
+        "desc_zh": "把 Codex agent 最新 diff 用 git apply 应用到本地工作区。",
+        "helpStatus": "missing"
       },
       {
         "name": "resume",
-        "desc_zh": "恢复之前的交互会话。"
+        "desc_zh": "恢复之前的交互会话。",
+        "helpStatus": "missing"
       },
       {
         "name": "archive",
-        "desc_zh": "按 id 或名称归档已保存会话。"
+        "desc_zh": "按 id 或名称归档已保存会话。",
+        "helpStatus": "missing"
       },
       {
         "name": "delete",
-        "desc_zh": "按 id 或名称永久删除已保存会话。"
+        "desc_zh": "按 id 或名称永久删除已保存会话。",
+        "helpStatus": "missing"
       },
       {
         "name": "unarchive",
-        "desc_zh": "取消归档已保存会话。"
+        "desc_zh": "取消归档已保存会话。",
+        "helpStatus": "missing"
       },
       {
         "name": "fork",
-        "desc_zh": "从之前的交互会话派生新会话。"
+        "desc_zh": "从之前的交互会话派生新会话。",
+        "helpStatus": "missing"
       },
       {
         "name": "cloud",
-        "desc_zh": "实验性浏览 Codex Cloud 任务并把变更应用到本地。"
+        "desc_zh": "实验性浏览 Codex Cloud 任务并把变更应用到本地。",
+        "helpStatus": "missing"
       },
       {
         "name": "exec-server",
-        "desc_zh": "实验性运行独立 exec-server 服务。"
+        "desc_zh": "实验性运行独立 exec-server 服务。",
+        "helpStatus": "missing"
       },
       {
         "name": "features",
-        "desc_zh": "检查 feature flags。"
+        "desc_zh": "检查 feature flags。",
+        "helpStatus": "missing"
       },
       {
         "name": "help",
-        "desc_zh": "打印本消息或指定子命令帮助。"
+        "desc_zh": "打印本消息或指定子命令帮助。",
+        "helpStatus": "missing"
       }
     ],
     "iconBrand": "codex"
   },
   {
-    "brand": "gstach",
+    "brand": "gstack",
     "summary_zh": "gstack skill pack 安装器，用于全局或项目级安装、升级、诊断、列出和启停技能。",
     "groups": [
       {
@@ -985,42 +1026,51 @@
     "subcommands": [
       {
         "name": "install",
-        "desc_zh": "全局安装 gstack。"
+        "desc_zh": "全局安装 gstack。",
+        "helpStatus": "missing"
       },
       {
         "name": "init",
-        "desc_zh": "把 gstack 添加到当前项目。"
+        "desc_zh": "把 gstack 添加到当前项目。",
+        "helpStatus": "missing"
       },
       {
         "name": "uninstall",
-        "desc_zh": "移除 gstack，可用 --project 只移除当前仓库。"
+        "desc_zh": "移除 gstack，可用 --project 只移除当前仓库。",
+        "helpStatus": "missing"
       },
       {
         "name": "upgrade",
-        "desc_zh": "拉取最新版并重建。"
+        "desc_zh": "拉取最新版并重建。",
+        "helpStatus": "missing"
       },
       {
         "name": "doctor",
-        "desc_zh": "诊断安装问题。"
+        "desc_zh": "诊断安装问题。",
+        "helpStatus": "ready"
       },
       {
         "name": "status",
-        "desc_zh": "显示安装版本、hosts 和设置。"
+        "desc_zh": "显示安装版本、hosts 和设置。",
+        "helpStatus": "ready"
       },
       {
         "name": "list",
-        "desc_zh": "列出可用 skills。"
+        "desc_zh": "列出可用 skills。",
+        "helpStatus": "ready"
       },
       {
         "name": "enable",
-        "desc_zh": "在当前项目启用指定 skill。"
+        "desc_zh": "在当前项目启用指定 skill。",
+        "helpStatus": "ready"
       },
       {
         "name": "disable",
-        "desc_zh": "在当前项目禁用指定 skill。"
+        "desc_zh": "在当前项目禁用指定 skill。",
+        "helpStatus": "missing"
       }
     ],
-    "iconBrand": "gstach"
+    "iconBrand": "gstack"
   },
   {
     "brand": "hermes",
@@ -1139,211 +1189,263 @@
     "subcommands": [
       {
         "name": "chat",
-        "desc_zh": "与 agent 进行交互式聊天。"
+        "desc_zh": "与 agent 进行交互式聊天。",
+        "helpStatus": "missing"
       },
       {
         "name": "model",
-        "desc_zh": "选择默认模型和 provider。"
+        "desc_zh": "选择默认模型和 provider。",
+        "helpStatus": "missing"
       },
       {
         "name": "fallback",
-        "desc_zh": "管理主模型失败时尝试的 fallback providers。"
+        "desc_zh": "管理主模型失败时尝试的 fallback providers。",
+        "helpStatus": "missing"
       },
       {
         "name": "secrets",
-        "desc_zh": "管理外部 secret 来源。"
+        "desc_zh": "管理外部 secret 来源。",
+        "helpStatus": "missing"
       },
       {
         "name": "migrate",
-        "desc_zh": "迁移退役模型或废弃设置的配置。"
+        "desc_zh": "迁移退役模型或废弃设置的配置。",
+        "helpStatus": "missing"
       },
       {
         "name": "gateway",
-        "desc_zh": "管理 messaging gateway。"
+        "desc_zh": "管理 messaging gateway。",
+        "helpStatus": "missing"
       },
       {
         "name": "proxy",
-        "desc_zh": "运行到 OAuth providers 的本地 OpenAI-compatible proxy。"
+        "desc_zh": "运行到 OAuth providers 的本地 OpenAI-compatible proxy。",
+        "helpStatus": "missing"
       },
       {
         "name": "lsp",
-        "desc_zh": "管理 Language Server Protocol。"
+        "desc_zh": "管理 Language Server Protocol。",
+        "helpStatus": "missing"
       },
       {
         "name": "setup",
-        "desc_zh": "运行交互式设置向导。"
+        "desc_zh": "运行交互式设置向导。",
+        "helpStatus": "missing"
       },
       {
         "name": "postinstall",
-        "desc_zh": "为 pip 安装补齐 node、browser、ripgrep、ffmpeg 等非 Python 依赖。"
+        "desc_zh": "为 pip 安装补齐 node、browser、ripgrep、ffmpeg 等非 Python 依赖。",
+        "helpStatus": "missing"
       },
       {
         "name": "whatsapp",
-        "desc_zh": "设置 WhatsApp 集成。"
+        "desc_zh": "设置 WhatsApp 集成。",
+        "helpStatus": "missing"
       },
       {
         "name": "slack",
-        "desc_zh": "Slack 集成助手。"
+        "desc_zh": "Slack 集成助手。",
+        "helpStatus": "missing"
       },
       {
         "name": "send",
-        "desc_zh": "向已配置平台发送消息。"
+        "desc_zh": "向已配置平台发送消息。",
+        "helpStatus": "missing"
       },
       {
         "name": "login",
-        "desc_zh": "登录 inference provider。"
+        "desc_zh": "登录 inference provider。",
+        "helpStatus": "missing"
       },
       {
         "name": "logout",
-        "desc_zh": "清除 inference provider 认证。"
+        "desc_zh": "清除 inference provider 认证。",
+        "helpStatus": "missing"
       },
       {
         "name": "auth",
-        "desc_zh": "管理 pooled provider credentials。"
+        "desc_zh": "管理 pooled provider credentials。",
+        "helpStatus": "missing"
       },
       {
         "name": "status",
-        "desc_zh": "显示所有组件状态。"
+        "desc_zh": "显示所有组件状态。",
+        "helpStatus": "missing"
       },
       {
         "name": "cron",
-        "desc_zh": "管理 cron jobs。"
+        "desc_zh": "管理 cron jobs。",
+        "helpStatus": "missing"
       },
       {
         "name": "webhook",
-        "desc_zh": "管理动态 webhook subscriptions。"
+        "desc_zh": "管理动态 webhook subscriptions。",
+        "helpStatus": "missing"
       },
       {
         "name": "portal",
-        "desc_zh": "设置 Nous Portal。"
+        "desc_zh": "设置 Nous Portal。",
+        "helpStatus": "missing"
       },
       {
         "name": "kanban",
-        "desc_zh": "多 profile 协作看板。"
+        "desc_zh": "多 profile 协作看板。",
+        "helpStatus": "missing"
       },
       {
         "name": "hooks",
-        "desc_zh": "检查和管理 shell-script hooks。"
+        "desc_zh": "检查和管理 shell-script hooks。",
+        "helpStatus": "missing"
       },
       {
         "name": "doctor",
-        "desc_zh": "检查配置和依赖。"
+        "desc_zh": "检查配置和依赖。",
+        "helpStatus": "ready"
       },
       {
         "name": "security",
-        "desc_zh": "对 venv、plugins 和 MCP servers 做供应链审计。"
+        "desc_zh": "对 venv、plugins 和 MCP servers 做供应链审计。",
+        "helpStatus": "ready"
       },
       {
         "name": "dump",
-        "desc_zh": "导出设置摘要用于支持或调试。"
+        "desc_zh": "导出设置摘要用于支持或调试。",
+        "helpStatus": "missing"
       },
       {
         "name": "debug",
-        "desc_zh": "上传日志和系统信息等调试工具。"
+        "desc_zh": "上传日志和系统信息等调试工具。",
+        "helpStatus": "missing"
       },
       {
         "name": "backup",
-        "desc_zh": "把 Hermes home 目录备份为 zip。"
+        "desc_zh": "把 Hermes home 目录备份为 zip。",
+        "helpStatus": "missing"
       },
       {
         "name": "checkpoints",
-        "desc_zh": "检查、修剪或清空 checkpoints。"
+        "desc_zh": "检查、修剪或清空 checkpoints。",
+        "helpStatus": "missing"
       },
       {
         "name": "import",
-        "desc_zh": "从 zip 恢复 Hermes backup。"
+        "desc_zh": "从 zip 恢复 Hermes backup。",
+        "helpStatus": "missing"
       },
       {
         "name": "config",
-        "desc_zh": "查看和编辑配置。"
+        "desc_zh": "查看和编辑配置。",
+        "helpStatus": "missing"
       },
       {
         "name": "pairing",
-        "desc_zh": "管理用户授权 DM pairing codes。"
+        "desc_zh": "管理用户授权 DM pairing codes。",
+        "helpStatus": "missing"
       },
       {
         "name": "skills",
-        "desc_zh": "搜索、安装、配置和管理 skills。"
+        "desc_zh": "搜索、安装、配置和管理 skills。",
+        "helpStatus": "ready"
       },
       {
         "name": "bundles",
-        "desc_zh": "创建、列出和管理 skill bundles。"
+        "desc_zh": "创建、列出和管理 skill bundles。",
+        "helpStatus": "missing"
       },
       {
         "name": "plugins",
-        "desc_zh": "管理插件安装、更新、移除和列表。"
+        "desc_zh": "管理插件安装、更新、移除和列表。",
+        "helpStatus": "ready"
       },
       {
         "name": "curator",
-        "desc_zh": "管理后台 skill maintenance curator。"
+        "desc_zh": "管理后台 skill maintenance curator。",
+        "helpStatus": "missing"
       },
       {
         "name": "memory",
-        "desc_zh": "配置外部 memory provider。"
+        "desc_zh": "配置外部 memory provider。",
+        "helpStatus": "missing"
       },
       {
         "name": "tools",
-        "desc_zh": "配置各平台启用哪些 tools。"
+        "desc_zh": "配置各平台启用哪些 tools。",
+        "helpStatus": "missing"
       },
       {
         "name": "computer-use",
-        "desc_zh": "管理 macOS Computer Use 后端。"
+        "desc_zh": "管理 macOS Computer Use 后端。",
+        "helpStatus": "missing"
       },
       {
         "name": "mcp",
-        "desc_zh": "管理 MCP servers 并把 Hermes 作为 MCP server 运行。"
+        "desc_zh": "管理 MCP servers 并把 Hermes 作为 MCP server 运行。",
+        "helpStatus": "ready"
       },
       {
         "name": "sessions",
-        "desc_zh": "管理会话历史。"
+        "desc_zh": "管理会话历史。",
+        "helpStatus": "missing"
       },
       {
         "name": "insights",
-        "desc_zh": "显示使用洞察和分析。"
+        "desc_zh": "显示使用洞察和分析。",
+        "helpStatus": "missing"
       },
       {
         "name": "claw",
-        "desc_zh": "OpenClaw 迁移工具。"
+        "desc_zh": "OpenClaw 迁移工具。",
+        "helpStatus": "missing"
       },
       {
         "name": "version",
-        "desc_zh": "显示版本信息。"
+        "desc_zh": "显示版本信息。",
+        "helpStatus": "missing"
       },
       {
         "name": "update",
-        "desc_zh": "更新 Hermes Agent。"
+        "desc_zh": "更新 Hermes Agent。",
+        "helpStatus": "missing"
       },
       {
         "name": "uninstall",
-        "desc_zh": "卸载 Hermes Agent。"
+        "desc_zh": "卸载 Hermes Agent。",
+        "helpStatus": "missing"
       },
       {
         "name": "acp",
-        "desc_zh": "作为 ACP server 运行 Hermes Agent。"
+        "desc_zh": "作为 ACP server 运行 Hermes Agent。",
+        "helpStatus": "missing"
       },
       {
         "name": "profile",
-        "desc_zh": "管理多个隔离 Hermes profiles。"
+        "desc_zh": "管理多个隔离 Hermes profiles。",
+        "helpStatus": "missing"
       },
       {
         "name": "completion",
-        "desc_zh": "打印 shell completion 脚本。"
+        "desc_zh": "打印 shell completion 脚本。",
+        "helpStatus": "missing"
       },
       {
         "name": "dashboard",
-        "desc_zh": "启动 web UI dashboard。"
+        "desc_zh": "启动 web UI dashboard。",
+        "helpStatus": "missing"
       },
       {
         "name": "desktop",
-        "desc_zh": "构建并启动原生桌面 app。"
+        "desc_zh": "构建并启动原生桌面 app。",
+        "helpStatus": "missing"
       },
       {
         "name": "logs",
-        "desc_zh": "查看和过滤 Hermes 日志文件。"
+        "desc_zh": "查看和过滤 Hermes 日志文件。",
+        "helpStatus": "missing"
       },
       {
         "name": "prompt-size",
-        "desc_zh": "显示 system prompt 和 tool schemas 的字节拆分。"
+        "desc_zh": "显示 system prompt 和 tool schemas 的字节拆分。",
+        "helpStatus": "missing"
       }
     ],
     "iconBrand": "hermes"

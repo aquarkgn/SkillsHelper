@@ -47,7 +47,7 @@ describe('App reducer 状态机（module × view，首页为默认）', () => {
   })
 
   it('module 切换到 commands 重置 selectedCommandBrand 为 null', () => {
-    const dirty: UIState = { ...initialState, selectedCommandBrand: 'gstach' }
+    const dirty: UIState = { ...initialState, selectedCommandBrand: 'gstack' }
     const next = reducer(dirty, { type: 'module', module: 'commands' })
     expect(next.module).toBe('commands')
     expect(next.view).toBe('cli')

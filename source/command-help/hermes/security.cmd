@@ -1,0 +1,13 @@
+usage: hermes security [-h] <subcommand> ...
+
+On-demand vulnerability scan against OSV.dev. Covers the Hermes venv
+(installed PyPI dists), Python deps declared by plugins under
+~/.hermes/plugins/, and pinned npx/uvx MCP servers in config.yaml. Does NOT
+scan globally-installed packages or editor/browser extensions.
+
+positional arguments:
+  <subcommand>
+    audit       Run a one-shot supply-chain audit
+
+options:
+  -h, --help    show this help message and exit

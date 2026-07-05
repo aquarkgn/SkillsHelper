@@ -3,11 +3,13 @@ import test from 'node:test';
 
 import {
   digestCommands,
+  digestSubcommandHelpFiles,
   parseJsonOutput,
   validateCliCommand,
+  validateCliSubcommandHelp,
 } from './digest-commands.mjs';
 
-const EXPECTED_BRANDS = ['claude', 'code', 'codex', 'gstach', 'hermes'];
+const EXPECTED_BRANDS = ['claude', 'code', 'codex', 'gstack', 'hermes'];
 
 function brandFromPrompt(prompt) {
   const match = prompt.match(/brand 必须是 "([^"]+)"/);
@@ -69,6 +71,70 @@ test('validateCliCommand: 必填字段缺失时报错', () => {
   assert.throws(
     () => validateCliCommand({
       brand: 'codex',
+      summary_zh: '摘要',
+      groups: [{
+        name_zh: '选项',
+        source: 'explicit',
+        flags: [{ name: '--help', raw: 'help' }],
+      }],
+    }),
+    /desc_zh/,
+  );
+});
+
+
+function subcommandFromPrompt(prompt) {
+  const match = prompt.match(/subcommand 必须是 "([^"]+)"/);
+  assert.ok(match, 'prompt 应包含子命令约束');
+  return match[1];
+}
+
+function fakeSubcommandHelp(brand, subcommand) {
+  return {
+    brand,
+    subcommand,
+    summary_zh: `${brand} ${subcommand} 的子命令帮助`,
+    usage: `${brand} ${subcommand} [options]`,
+    groups: [{
+      name_zh: '选项',
+      source: 'explicit',
+      flags: [{
+        name: '--help',
+        desc_zh: '显示帮助信息',
+        raw: 'show help',
+      }],
+    }],
+    raw: 'show help',
+  };
+}
+
+test('digestSubcommandHelpFiles: 读取子命令 help fixture 并按品牌聚合', async () => {
+  const seenPrompts = [];
+  const { helpsByBrand, failures } = await digestSubcommandHelpFiles({
+    writeOutput: false,
+    llm: async (prompt, options) => {
+      seenPrompts.push(prompt);
+      assert.equal(options.max_tokens, 4096);
+      assert.match(prompt, /CLI 子命令帮助整理器/);
+      return JSON.stringify(fakeSubcommandHelp(brandFromPrompt(prompt), subcommandFromPrompt(prompt)));
+    },
+  });
+
+  assert.deepEqual(failures, []);
+  assert.ok(seenPrompts.length >= 15);
+  assert.ok(helpsByBrand.get('codex').some((help) => help.subcommand === 'exec'));
+  assert.ok(helpsByBrand.get('hermes').some((help) => help.subcommand === 'skills'));
+
+  for (const helps of helpsByBrand.values()) {
+    for (const help of helps) validateCliSubcommandHelp(help);
+  }
+});
+
+test('validateCliSubcommandHelp: 必填字段缺失时报错', () => {
+  assert.throws(
+    () => validateCliSubcommandHelp({
+      brand: 'codex',
+      subcommand: 'exec',
       summary_zh: '摘要',
       groups: [{
         name_zh: '选项',

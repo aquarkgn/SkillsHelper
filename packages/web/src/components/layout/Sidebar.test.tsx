@@ -118,7 +118,7 @@ describe('Sidebar 模块化导航', () => {
       />
     )
     expect(screen.getByText('全部命令')).toBeInTheDocument()
-    for (const brand of ['claude', 'code', 'codex', 'gstach', 'hermes']) {
+    for (const brand of ['claude', 'code', 'codex', 'gstack', 'hermes']) {
       expect(screen.getByText(brand)).toBeInTheDocument()
     }
     // 命令模块不混入技能侧栏菜单
@@ -145,7 +145,7 @@ describe('Sidebar 模块化导航', () => {
       claude: '/api/icons/claude?size=20',
       code: '/api/icons/vscode?size=20',
       codex: '/api/icons/codex?size=20',
-      gstach: '/api/icons/gstach?size=20',
+      gstack: '/api/icons/gstack?size=20',
       hermes: '/api/icons/hermes?size=20',
     }
     for (const [brand, src] of Object.entries(expected)) {

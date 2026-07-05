@@ -1,0 +1,177 @@
+[
+  {
+    "brand": "gstack",
+    "subcommand": "doctor",
+    "summary_zh": "诊断安装问题。",
+    "usage": "Usage:\nnpx @garrytan/gstack doctor [opts]",
+    "groups": [
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "--host",
+            "desc_zh": "Check host integration. Valid: claude, codex, factory, opencode, kiro",
+            "raw": "Check host integration. Valid: claude, codex, factory, opencode, kiro",
+            "args": "<id>"
+          },
+          {
+            "name": "--quiet -q",
+            "desc_zh": "Suppress non-essential output",
+            "raw": "Suppress non-essential output"
+          },
+          {
+            "name": "--yes -y",
+            "desc_zh": "Skip confirmation prompts",
+            "raw": "Skip confirmation prompts"
+          }
+        ]
+      }
+    ],
+    "raw": "Usage:\n  npx @garrytan/gstack doctor [opts]\n\nDiagnose install issues for the gstack skill pack.\n\nOptions:\n  --host <id>    Check host integration. Valid: claude, codex, factory, opencode, kiro\n  --quiet, -q    Suppress non-essential output\n  --yes, -y      Skip confirmation prompts",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/gstack/doctor.cmd"
+  },
+  {
+    "brand": "gstack",
+    "subcommand": "enable",
+    "summary_zh": "在当前项目启用指定 skill。",
+    "usage": "Usage:\nnpx @garrytan/gstack enable <name> [opts]",
+    "groups": [
+      {
+        "name_zh": "子命令与参数",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "<name>",
+            "desc_zh": "Skill name to enable",
+            "raw": "Skill name to enable",
+            "args": "<name>"
+          }
+        ]
+      },
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "--host",
+            "desc_zh": "Register with host. Valid: claude, codex, factory, opencode, kiro",
+            "raw": "Register with host. Valid: claude, codex, factory, opencode, kiro",
+            "args": "<id>"
+          },
+          {
+            "name": "--tier",
+            "desc_zh": "Use required or optional tier",
+            "raw": "Use required or optional tier",
+            "args": "<t>"
+          },
+          {
+            "name": "--prefix",
+            "desc_zh": "Use gstack-* skill names",
+            "raw": "Use gstack-* skill names"
+          },
+          {
+            "name": "--no-prefix",
+            "desc_zh": "Use flat skill names",
+            "raw": "Use flat skill names"
+          },
+          {
+            "name": "--no-commit",
+            "desc_zh": "Stage changes but do not commit",
+            "raw": "Stage changes but do not commit"
+          },
+          {
+            "name": "--yes -y",
+            "desc_zh": "Skip confirmation prompts",
+            "raw": "Skip confirmation prompts"
+          }
+        ]
+      }
+    ],
+    "raw": "Usage:\n  npx @garrytan/gstack enable <name> [opts]\n\nEnable a skill in the current project.\n\nArguments:\n  <name>         Skill name to enable\n\nOptions:\n  --host <id>    Register with host. Valid: claude, codex, factory, opencode, kiro\n  --tier <t>     Use required or optional tier\n  --prefix       Use gstack-* skill names\n  --no-prefix    Use flat skill names\n  --no-commit    Stage changes but do not commit\n  --yes, -y      Skip confirmation prompts",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/gstack/enable.cmd"
+  },
+  {
+    "brand": "gstack",
+    "subcommand": "list",
+    "summary_zh": "列出可用 skills。",
+    "usage": "Usage:\nnpx @garrytan/gstack list [opts]",
+    "groups": [
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "--host",
+            "desc_zh": "Filter or register with host. Valid: claude, codex, factory, opencode, kiro",
+            "raw": "Filter or register with host. Valid: claude, codex, factory, opencode, kiro",
+            "args": "<id>"
+          },
+          {
+            "name": "--prefix",
+            "desc_zh": "Use gstack-* skill names",
+            "raw": "Use gstack-* skill names"
+          },
+          {
+            "name": "--no-prefix",
+            "desc_zh": "Use flat skill names",
+            "raw": "Use flat skill names"
+          },
+          {
+            "name": "--quiet -q",
+            "desc_zh": "Suppress non-essential output",
+            "raw": "Suppress non-essential output"
+          },
+          {
+            "name": "--yes -y",
+            "desc_zh": "Skip confirmation prompts",
+            "raw": "Skip confirmation prompts"
+          }
+        ]
+      }
+    ],
+    "raw": "Usage:\n  npx @garrytan/gstack list [opts]\n\nList available skills from the gstack skill pack.\n\nOptions:\n  --host <id>    Filter or register with host. Valid: claude, codex, factory, opencode, kiro\n  --prefix       Use gstack-* skill names\n  --no-prefix    Use flat skill names\n  --quiet, -q    Suppress non-essential output\n  --yes, -y      Skip confirmation prompts",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/gstack/list.cmd"
+  },
+  {
+    "brand": "gstack",
+    "subcommand": "status",
+    "summary_zh": "显示安装版本、hosts 和设置。",
+    "usage": "Usage:\nnpx @garrytan/gstack status [opts]",
+    "groups": [
+      {
+        "name_zh": "选项",
+        "source": "explicit",
+        "flags": [
+          {
+            "name": "--host",
+            "desc_zh": "Show status for host. Valid: claude, codex, factory, opencode, kiro",
+            "raw": "Show status for host. Valid: claude, codex, factory, opencode, kiro",
+            "args": "<id>"
+          },
+          {
+            "name": "--prefix",
+            "desc_zh": "Show prefixed skill-name mode",
+            "raw": "Show prefixed skill-name mode"
+          },
+          {
+            "name": "--no-prefix",
+            "desc_zh": "Show flat skill-name mode",
+            "raw": "Show flat skill-name mode"
+          },
+          {
+            "name": "--quiet -q",
+            "desc_zh": "Suppress non-essential output",
+            "raw": "Suppress non-essential output"
+          }
+        ]
+      }
+    ],
+    "raw": "Usage:\n  npx @garrytan/gstack status [opts]\n\nShow install version, hosts, and current settings.\n\nOptions:\n  --host <id>    Show status for host. Valid: claude, codex, factory, opencode, kiro\n  --prefix       Show prefixed skill-name mode\n  --no-prefix    Show flat skill-name mode\n  --quiet, -q    Suppress non-essential output",
+    "capturedAt": "2026-07-05",
+    "sourcePath": "source/command-help/gstack/status.cmd"
+  }
+]

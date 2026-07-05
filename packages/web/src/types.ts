@@ -87,6 +87,25 @@ export interface CliCommandGroup {
 export interface CliCommandSubcommand {
   name: string
   desc_zh: string
+  /** 子命令详情采集状态：ready 可查看完整 help；missing 暂无详情；failed 采集失败。 */
+  helpStatus?: 'ready' | 'missing' | 'failed'
+}
+
+export interface CliCommandHelpGroup {
+  name_zh: string
+  source: 'inferred' | 'explicit'
+  flags: CliCommandFlag[]
+}
+
+export interface CliSubcommandHelp {
+  brand: string
+  subcommand: string
+  summary_zh: string
+  usage?: string
+  groups: CliCommandHelpGroup[]
+  raw?: string
+  capturedAt?: string
+  sourcePath?: string
 }
 
 export interface CliCommand {

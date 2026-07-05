@@ -9,14 +9,14 @@ describe('CliCommandView', () => {
 
     expect(screen.getByRole('heading', { name: 'CLI 命令' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/搜索 flag/)).toBeInTheDocument()
-    for (const brand of ['claude', 'code', 'codex', 'gstach', 'hermes']) {
+    for (const brand of ['claude', 'code', 'codex', 'gstack', 'hermes']) {
       expect(screen.getByRole('heading', { name: brand })).toBeInTheDocument()
     }
   })
 
   it('selectedBrand=空字符串 兜底为"全部命令"（防止空串污染过滤）', () => {
     render(<CliCommandView selectedBrand={''} />)
-    for (const brand of ['claude', 'code', 'codex', 'gstach', 'hermes']) {
+    for (const brand of ['claude', 'code', 'codex', 'gstack', 'hermes']) {
       expect(screen.getByRole('heading', { name: brand })).toBeInTheDocument()
     }
   })
@@ -34,7 +34,7 @@ describe('CliCommandView', () => {
 
   it('selectedBrand=null 时渲染全部命令', () => {
     render(<CliCommandView selectedBrand={null} />)
-    for (const brand of ['claude', 'code', 'codex', 'gstach', 'hermes']) {
+    for (const brand of ['claude', 'code', 'codex', 'gstack', 'hermes']) {
       expect(screen.getByRole('heading', { name: brand })).toBeInTheDocument()
     }
   })
@@ -82,4 +82,70 @@ describe('CliCommandView', () => {
     fireEvent.click(button)
     expect(within(section).getByText('--install-extension')).toBeInTheDocument()
   })
+
+  it('子命令以 tab 显示在命令卡片底部，点击后展示帮助详情', () => {
+    render(<CliCommandView selectedBrand="codex" />)
+
+    const section = screen.getByRole('heading', { name: 'codex' }).closest('section')
+    expect(section).toBeInTheDocument()
+    if (!section) return
+
+    expect(within(section).getByRole('tablist', { name: /codex 子命令/ })).toBeInTheDocument()
+    expect(within(section).getByText(/选择一个子命令查看帮助详情/)).toBeInTheDocument()
+
+    fireEvent.click(within(section).getAllByRole('tab').find((tab) => tab.textContent?.trim().startsWith('exec') && !tab.textContent.includes('exec-server'))!)
+
+    expect(within(section).getByRole('heading', { name: 'codex exec' })).toBeInTheDocument()
+    expect(within(section).getAllByText(/Usage: codex exec/).length).toBeGreaterThan(0)
+    expect(within(section).getAllByText(/--sandbox/).length).toBeGreaterThan(0)
+  })
+
+  it('未采集详情的子命令显示 fallback，不阻塞查看摘要', () => {
+    render(<CliCommandView selectedBrand="codex" />)
+
+    const section = screen.getByRole('heading', { name: 'codex' }).closest('section')
+    expect(section).toBeInTheDocument()
+    if (!section) return
+
+    fireEvent.click(within(section).getByRole('tab', { name: /logout/ }))
+
+    expect(within(section).getByText('logout', { selector: 'div' })).toBeInTheDocument()
+    expect(within(section).getByText(/暂未采集详细帮助/)).toBeInTheDocument()
+  })
+
+
+  it('gstack list 子命令可通过 tab 查看帮助详情', () => {
+    render(<CliCommandView selectedBrand="gstack" />)
+
+    const section = screen.getByRole('heading', { name: 'gstack' }).closest('section')
+    expect(section).toBeInTheDocument()
+    if (!section) return
+
+    expect(within(section).getByRole('tablist', { name: /gstack 子命令/ })).toBeInTheDocument()
+    fireEvent.click(within(section).getByRole('tab', { name: /^list/ }))
+
+    expect(within(section).getByRole('heading', { name: 'gstack list' })).toBeInTheDocument()
+    expect(within(section).getAllByText(/npx @garrytan\/gstack list/).length).toBeGreaterThan(0)
+    expect(within(section).getAllByText('--host').length).toBeGreaterThan(0)
+  })
+
+  it('兼容历史误拼 selectedBrand=gstach，并落到 gstack 命令页', () => {
+    render(<CliCommandView selectedBrand="gstach" />)
+
+    expect(screen.getByText('gstack', { selector: 'span' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'gstack' })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'codex' })).not.toBeInTheDocument()
+  })
+
+  it('全局搜索能命中已采集的子命令帮助内容', () => {
+    render(<CliCommandView selectedBrand={null} />)
+
+    const search = screen.getByPlaceholderText(/搜索 flag/)
+    fireEvent.change(search, { target: { value: 'CONNECTION_TOKEN_FILE' } })
+
+    expect(screen.getByRole('heading', { name: 'code' })).toBeInTheDocument()
+    expect(screen.getByRole('tab', { name: /^serve-web/ })).toBeInTheDocument()
+    expect(screen.queryByRole('heading', { name: 'claude' })).not.toBeInTheDocument()
+  })
+
 })

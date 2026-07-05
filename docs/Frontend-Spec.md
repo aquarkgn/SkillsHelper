@@ -612,7 +612,7 @@ Skill 与 Command 模块统一通过 `/api/icons/:brand` 读取官方 icon，前
 
 1. **本机官方 `.app` 图标优先**：后端按 `brand-map.mjs` 中的 Bundle ID / App 名称扫描并提取系统应用图标。
 2. **官方远程 URL 兜底**：本机无图标时，仅从 `brand-map.mjs` 登记的 HTTPS 官方 URL 下载；结果缓存到 `~/.config/huhaa-myskills/icon-cache/`。
-3. **中性占位**：没有本机图标且没有可确认官方远程 URL（如 `hermes` / `gstach`）时，前端显示中性占位。
+3. **中性占位**：没有本机图标且没有可确认官方远程 URL（如 `hermes` / `gstack`）时，前端显示中性占位。
 4. **禁用联网**：`HUHAA_ICON_REMOTE=0` 时不触发远程下载，但仍可读取已有本地缓存。
 
 ---

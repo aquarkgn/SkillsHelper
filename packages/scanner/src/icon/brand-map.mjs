@@ -77,7 +77,7 @@ export const BRAND_APP_MAP = {
     remoteIconCache: false,
     emoji: '⚡',
   },
-  gstach: {
+  gstack: {
     bundleIds: [],
     appNames: [],
     officialIconPages: [],
