@@ -16,7 +16,7 @@ import {
 import { ActionButton } from '@/components/ui/ActionButton'
 import { SkillDetail } from './SkillDetail'
 import { cn } from '@/lib/cn'
-import { editorLabel, isNoneEditor, itemEditorKey } from '@/lib/editors'
+import { editorLabel, isNoneEditor, itemEditorKey, PINNED_SKILL_SOURCES } from '@/lib/editors'
 import { copy, open } from '@/lib/api'
 import { kindLabel, displayDescription } from '@/lib/i18n'
 import { getSkillIcons } from '@/hooks/getSkillIcons'
@@ -115,78 +115,80 @@ function SkillContextPanel({ item }: { item: SkillItem }) {
   const actionButtonClass = 'h-9 justify-start px-2.5'
 
   return (
-    <aside className="sticky top-0 flex max-h-full flex-col overflow-y-auto rounded-md border border-border bg-card text-card-foreground">
-      <div className="border-b border-border px-4 py-4">
-        <p className="text-caption font-semibold text-muted-foreground">当前条目</p>
-        <div className="mt-2 flex items-start gap-3">
-          <SkillIcon item={item} size={32} />
-          <div className="min-w-0">
-            <h3 className="truncate text-body font-semibold text-foreground">
-              {item.title || item.name}
-            </h3>
-            <p className="mt-1 text-caption text-muted-foreground">{icons.tierLabel}</p>
+    <section className="rounded-md border border-border bg-card text-card-foreground">
+      <div className="grid gap-4 px-4 py-4 xl:grid-cols-[minmax(220px,0.9fr)_minmax(260px,1fr)_minmax(280px,1.1fr)] xl:items-start">
+        <div className="min-w-0">
+          <p className="text-caption font-semibold text-muted-foreground">当前条目</p>
+          <div className="mt-2 flex items-start gap-3">
+            <SkillIcon item={item} size={32} />
+            <div className="min-w-0">
+              <h3 className="truncate text-body font-semibold text-foreground">
+                {item.title || item.name}
+              </h3>
+              <p className="mt-1 text-caption text-muted-foreground">{icons.tierLabel}</p>
+            </div>
+          </div>
+        </div>
+
+        <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-body-sm">
+          <dt className="text-muted-foreground">类型</dt>
+          <dd>{kindLabel(item.kind)}</dd>
+          <dt className="text-muted-foreground">来源</dt>
+          <dd className="min-w-0 truncate">{editorLabel(itemEditorKey(item))}</dd>
+          <dt className="text-muted-foreground">更新</dt>
+          <dd className="font-mono text-caption">{formatUpdatedAt(item.updatedAt)}</dd>
+          <dt className="text-muted-foreground">路径</dt>
+          <dd className="min-w-0 break-all font-mono text-caption leading-relaxed text-muted-foreground">
+            {item.paths?.abs ?? '未记录'}
+          </dd>
+        </dl>
+
+        <div>
+          <p className="mb-2 text-caption font-semibold text-muted-foreground">操作</p>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-2">
+            <ActionButton
+              className={actionButtonClass}
+              icon={<Copy size={14} />}
+              label="复制路径"
+              onAction={() => copy(item.id, 'path')}
+            />
+            <ActionButton
+              className={actionButtonClass}
+              icon={<TypeIcon size={14} />}
+              label="复制名称"
+              onAction={() => copy(item.id, 'name')}
+            />
+            <ActionButton
+              className={actionButtonClass}
+              icon={<FileText size={14} />}
+              label="复制正文"
+              onAction={() => copy(item.id, 'raw')}
+            />
+            <ActionButton
+              className={actionButtonClass}
+              icon={<MessageSquare size={14} />}
+              label="调用提示"
+              onAction={() => copy(item.id, 'prompt')}
+            />
+            <ActionButton
+              className={actionButtonClass}
+              icon={<ExternalLink size={14} />}
+              label="打开"
+              onAction={() => open(item.id, 'default')}
+            />
+            <ActionButton
+              className={actionButtonClass}
+              icon={<FolderOpen size={14} />}
+              label="访达显示"
+              onAction={() => open(item.id, 'finder')}
+            />
           </div>
         </div>
       </div>
 
-      <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 px-4 py-4 text-body-sm">
-        <dt className="text-muted-foreground">类型</dt>
-        <dd>{kindLabel(item.kind)}</dd>
-        <dt className="text-muted-foreground">来源</dt>
-        <dd className="min-w-0 truncate">{editorLabel(itemEditorKey(item))}</dd>
-        <dt className="text-muted-foreground">更新</dt>
-        <dd className="font-mono text-caption">{formatUpdatedAt(item.updatedAt)}</dd>
-        <dt className="text-muted-foreground">路径</dt>
-        <dd className="min-w-0 break-all font-mono text-caption leading-relaxed text-muted-foreground">
-          {item.paths?.abs ?? '未记录'}
-        </dd>
-      </dl>
-
-      <div className="border-t border-border px-4 py-4">
-        <p className="mb-2 text-caption font-semibold text-muted-foreground">操作</p>
-        <div className="grid grid-cols-2 gap-2">
-          <ActionButton
-            className={actionButtonClass}
-            icon={<Copy size={14} />}
-            label="复制路径"
-            onAction={() => copy(item.id, 'path')}
-          />
-          <ActionButton
-            className={actionButtonClass}
-            icon={<TypeIcon size={14} />}
-            label="复制名称"
-            onAction={() => copy(item.id, 'name')}
-          />
-          <ActionButton
-            className={actionButtonClass}
-            icon={<FileText size={14} />}
-            label="复制正文"
-            onAction={() => copy(item.id, 'raw')}
-          />
-          <ActionButton
-            className={actionButtonClass}
-            icon={<MessageSquare size={14} />}
-            label="调用提示"
-            onAction={() => copy(item.id, 'prompt')}
-          />
-          <ActionButton
-            className={actionButtonClass}
-            icon={<ExternalLink size={14} />}
-            label="打开"
-            onAction={() => open(item.id, 'default')}
-          />
-          <ActionButton
-            className={actionButtonClass}
-            icon={<FolderOpen size={14} />}
-            label="访达显示"
-            onAction={() => open(item.id, 'finder')}
-          />
-        </div>
-      </div>
-
       {(categories.length > 0 || tags.length > 0) && (
-        <div className="border-t border-border px-4 py-4">
-          <p className="mb-2 text-caption font-semibold text-muted-foreground">标签</p>
+        <div className="border-t border-border px-4 py-3">
+          <p className="mb-2 text-caption font-semibold text-muted-foreground">分类与标签</p>
           <div className="flex flex-wrap gap-1.5">
             {categories.map((category) => (
               <span
@@ -207,7 +209,7 @@ function SkillContextPanel({ item }: { item: SkillItem }) {
           </div>
         </div>
       )}
-    </aside>
+    </section>
   )
 }
 
@@ -231,11 +233,18 @@ export function SkillsView({
       const key = itemEditorKey(it)
       counts.set(key, (counts.get(key) ?? 0) + 1)
     }
-    return [...counts.entries()].sort(
-      (a, b) =>
-        b[1] - a[1] ||
-        editorLabel(a[0]).localeCompare(editorLabel(b[0]), 'zh-CN'),
+    const pinnedSourceSet = new Set<string>(PINNED_SKILL_SOURCES)
+    const sortedSources = [...counts.entries()]
+      .filter(([source]) => !pinnedSourceSet.has(source))
+      .sort(
+        (a, b) =>
+          b[1] - a[1] ||
+          editorLabel(a[0]).localeCompare(editorLabel(b[0]), 'zh-CN'),
+      )
+    const pinnedSources = PINNED_SKILL_SOURCES.map(
+      (source) => [source, counts.get(source) ?? 0] as const,
     )
+    return [...sortedSources, ...pinnedSources]
   }, [items, tierFilter])
 
   const byEditor = useMemo(() => {
@@ -414,7 +423,7 @@ export function SkillsView({
         </div>
       </section>
 
-      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)_300px]">
+      <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-[320px_minmax(0,1fr)] 2xl:grid-cols-[340px_minmax(0,1fr)]">
         <section className="min-h-0 overflow-y-auto rounded-md border border-border bg-card">
           {filtered.length === 0 ? (
             <div className="flex min-h-48 flex-col items-center justify-center gap-2 px-4 text-center text-body-sm text-muted-foreground">
@@ -485,16 +494,15 @@ export function SkillsView({
 
         <section className="min-h-0 overflow-y-auto">
           {selected ? (
-            <SkillDetail item={selected} variant="reader" />
+            <div className="space-y-4">
+              <SkillContextPanel item={selected} />
+              <SkillDetail item={selected} variant="reader" />
+            </div>
           ) : (
             <div className="detail flex min-h-48 items-center justify-center text-muted-foreground">
               <p className="text-body-sm">从左侧选择一项查看详情</p>
             </div>
           )}
-        </section>
-
-        <section className="hidden min-h-0 2xl:block">
-          {selected ? <SkillContextPanel item={selected} /> : null}
         </section>
       </div>
     </div>

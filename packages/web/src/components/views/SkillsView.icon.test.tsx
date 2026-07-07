@@ -129,6 +129,26 @@ describe('SkillsView 官方图标', () => {
     expect(onKind).toHaveBeenCalledWith('mcp')
   })
 
+  it('来源下拉固定保留自定义技能和其它技能入口', () => {
+    renderSkills([
+      mkSkill({ id: 'claude-skill', name: 'claude-skill', editor: 'Claude Code' }),
+      mkSkill({
+        id: 'custom-skill',
+        name: 'custom-skill',
+        tier: 'tier-2',
+        source: 'my-skills',
+        editor: 'my-skills',
+      }),
+    ])
+
+    const sourceSelect = screen.getByLabelText('来源')
+    const options = Array.from(sourceSelect.querySelectorAll('option')).map((option) =>
+      option.textContent,
+    )
+
+    expect(options).toEqual(['全部来源', 'Claude Code 1', '自定义技能 1', '其它技能 0'])
+  })
+
   it('自定义技能条目不重复显示 my-skills 来源短码', () => {
     renderSkills([
       mkSkill({

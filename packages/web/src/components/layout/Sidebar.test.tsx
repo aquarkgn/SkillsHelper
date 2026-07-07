@@ -64,14 +64,14 @@ describe('Sidebar 工作区导航', () => {
     expect(screen.queryByText('claude')).toBeNull()
   })
 
-  it('技能库来源项使用统一中文名称展示自定义技能和其它技能', () => {
-    render(
+  it('技能库来源项使用统一中文名称展示自定义技能和其它技能，并固定在普通来源之后', () => {
+    const { container } = render(
       <Sidebar
         module="skills"
         view="skills"
         editorFilter={null}
         selectedCommandBrand={null}
-        stats={statsWith({ 'my-skills': 22, 'other-skills': 3 })}
+        stats={statsWith({ Hermes: 175, Claude: 60, 'my-skills': 22, Codex: 5 })}
         onHome={noop}
         onSettings={noop}
         onCommandBrand={noop}
@@ -81,9 +81,17 @@ describe('Sidebar 工作区导航', () => {
 
     expect(screen.getByText('自定义技能')).toBeInTheDocument()
     expect(screen.getByText('其它技能')).toBeInTheDocument()
+    expect(screen.getByText('0')).toBeInTheDocument()
     expect(screen.queryByText('我的技能')).toBeNull()
     expect(screen.queryByText('my-skills')).toBeNull()
     expect(screen.queryByText('other-skills')).toBeNull()
+
+    const sourceLabels = Array.from(container.querySelectorAll('button'))
+      .map((button) => button.textContent ?? '')
+      .filter((text) => /Hermes|Claude|Codex|自定义技能|其它技能/.test(text))
+      .map((text) => text.replace(/\d+$/, ''))
+
+    expect(sourceLabels).toEqual(['Hermes', 'Claude', 'Codex', '自定义技能', '其它技能'])
   })
 
   it('byEditor 全为 (none) 时只显示「未分类」来源项', () => {
