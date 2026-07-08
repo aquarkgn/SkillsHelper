@@ -5,10 +5,13 @@
  */
 
 import path from 'node:path';
+import fs from 'node:fs';
 import fg from 'fast-glob';
 import { expandTilde, readFileSafe, sha1Id } from '../utils.mjs';
 import { USER_TIER_2_CONFIG } from '../config/editor-tiers.mjs';
 import { pathHashCache } from '../hash/path-hash.mjs';
+import { ensureRegistered, getDescriptor } from '../core/registry.mjs';
+import { computeConfidence } from '../core/descriptor.mjs';
 
 /**
  * 扫描第2层：用户根目录 ~/skills/
@@ -26,18 +29,25 @@ export async function scanTier2UserSkills(options = {}) {
     maxFileBytes: limits.maxFileBytes ?? 1024 * 1024,
   };
 
+  // descriptor registry 化（渐进迁移）
+  ensureRegistered();
+  const desc = getDescriptor('tier2:user-skills');
+  const relPatterns = desc?.detect?.globPatterns || [`**/SKILL.md`, `**/skill.md`];
+  const ignore = desc?.detect?.ignore || ['**/node_modules/**', '**/.git/**', '**/dist/**'];
+  const deep = desc?.detect?.deep ?? 10;
+
   const items = [];
   const pathHashes = new Set();
 
-  try {
-    const basePath = expandTilde(USER_TIER_2_CONFIG.globalPath);
+  // 置信度统计
+  const basePath = expandTilde(USER_TIER_2_CONFIG.globalPath);
+  const dirExists = safeDirExists(basePath);
+  let matchedFiles = 0;
+  let parsedValid = 0;
+  let metadataComplete = 0;
 
-    // 三种模式：兼容大小写
-    // 由于 fast-glob 的 case-insensitive 模式支持有限，采用多模式扫描
-    const patterns = [
-      `${basePath}/**/SKILL.md`,
-      `${basePath}/**/skill.md`,
-    ];
+  try {
+    const patterns = relPatterns.map(p => `${basePath}/${p}`);
 
     const seen = new Set();
 
@@ -50,14 +60,15 @@ export async function scanTier2UserSkills(options = {}) {
           onlyFiles: true,
           dot: true,
           followSymbolicLinks: true,
-          deep: 10,
-          ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
+          deep,
+          ignore,
         });
 
         for (const filePath of matches) {
           if (items.length >= mergedLimits.maxFiles) break;
           if (seen.has(filePath)) continue;
           seen.add(filePath);
+          matchedFiles++;
 
           // 路径去重：检查是否已在 Tier 1 中
           const hash = pathHashCache.getOrCompute(filePath);
@@ -74,6 +85,8 @@ export async function scanTier2UserSkills(options = {}) {
             if (skill) {
               skill.tierId = 'tier-2';
               skill.pathHash = hash;
+              if (skill.name) parsedValid++;
+              if (skill.name && skill.description) metadataComplete++;
               items.push(skill);
               pathHashes.add(hash);
             }
@@ -89,7 +102,20 @@ export async function scanTier2UserSkills(options = {}) {
     console.warn(`[scanTier2] scan failed:`, e.message);
   }
 
-  return { items, pathHashes };
+  const confidence = computeConfidence({ dirExists, matchedFiles, parsedValid, metadataComplete });
+  if (confidence) {
+    for (const item of items) item.confidence = confidence;
+  }
+
+  return { items, pathHashes, confidence };
+}
+
+function safeDirExists(p) {
+  try {
+    return fs.existsSync(p);
+  } catch {
+    return false;
+  }
 }
 
 /**

@@ -6,10 +6,13 @@
  */
 
 import path from 'node:path';
+import fs from 'node:fs';
 import fg from 'fast-glob';
 import { expandTilde, readFileSafe, sha1Id } from '../utils.mjs';
 import { OTHER_TIER_3_CONFIGS } from '../config/editor-tiers.mjs';
 import { pathHashCache } from '../hash/path-hash.mjs';
+import { ensureRegistered, getDescriptor } from '../core/registry.mjs';
+import { computeConfidence } from '../core/descriptor.mjs';
 
 /**
  * 扫描第3层：其他位置
@@ -29,6 +32,9 @@ export async function scanTier3OtherSkills(options = {}) {
     maxFileBytes: limits.maxFileBytes ?? 1024 * 1024,
   };
 
+  // descriptor registry 化（渐进迁移）
+  ensureRegistered();
+
   const items = [];
 
   // 合并第1、2层的 pathHashes
@@ -37,57 +43,86 @@ export async function scanTier3OtherSkills(options = {}) {
   for (const location of OTHER_TIER_3_CONFIGS) {
     if (items.length >= mergedLimits.maxFiles) break;
 
+    const desc = getDescriptor(`tier3:${location.name}`);
+    const relPatterns = desc?.detect?.globPatterns || [`**/skill.md`];
+    const ignore = desc?.detect?.ignore || ['**/node_modules/**', '**/.git/**', '**/dist/**'];
+    const deep = desc?.detect?.deep ?? 10;
+
     const basePath = expandTilde(location.path);
+    const dirExists = safeDirExists(basePath);
+    let matchedFiles = 0;
+    let parsedValid = 0;
+    let metadataComplete = 0;
 
     try {
-      // 第3层：仅扫描小写 skill.md（精确大小写敏感）
-      const pattern = `${basePath}/**/skill.md`;
-
-      const matches = await fg(pattern, {
-        absolute: true,
-        onlyFiles: true,
-        dot: true,
-        followSymbolicLinks: true,
-        deep: 10,
-        ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
-      });
+      const patterns = relPatterns.map(p => `${basePath}/${p}`);
 
       const seen = new Set();
 
-      for (const filePath of matches) {
-        if (items.length >= mergedLimits.maxFiles) break;
-        if (seen.has(filePath)) continue;
-        seen.add(filePath);
+      for (const pattern of patterns) {
+        const matches = await fg(pattern, {
+          absolute: true,
+          onlyFiles: true,
+          dot: true,
+          followSymbolicLinks: true,
+          deep,
+          ignore,
+        });
 
-        // 路径去重
-        const hash = pathHashCache.getOrCompute(filePath);
-        if (existingHashes.has(hash)) {
-          continue; // 跳过重复项
-        }
+        for (const filePath of matches) {
+          if (items.length >= mergedLimits.maxFiles) break;
+          if (seen.has(filePath)) continue;
+          seen.add(filePath);
+          matchedFiles++;
 
-        try {
-          const skill = parseSkillFile({
-            abs: filePath,
-            editor: 'other-skills',
-            limits: mergedLimits,
-            location: location.name,
-          });
-          if (skill) {
-            skill.tierId = 'tier-3';
-            skill.pathHash = hash;
-            items.push(skill);
-            existingHashes.add(hash);
+          // 路径去重
+          const hash = pathHashCache.getOrCompute(filePath);
+          if (existingHashes.has(hash)) {
+            continue; // 跳过重复项
           }
-        } catch (e) {
-          console.warn(`[scanTier3] parse failed: ${filePath}`, e.message);
+
+          try {
+            const skill = parseSkillFile({
+              abs: filePath,
+              editor: 'other-skills',
+              limits: mergedLimits,
+              location: location.name,
+            });
+            if (skill) {
+              skill.tierId = 'tier-3';
+              skill.pathHash = hash;
+              if (skill.name) parsedValid++;
+              if (skill.name && skill.description) metadataComplete++;
+              items.push(skill);
+              existingHashes.add(hash);
+            }
+          } catch (e) {
+            console.warn(`[scanTier3] parse failed: ${filePath}`, e.message);
+          }
         }
       }
     } catch (e) {
       console.warn(`[scanTier3] scan ${location.name} failed:`, e.message);
     }
+
+    // 每个 location 独立计算置信度
+    const confidence = computeConfidence({ dirExists, matchedFiles, parsedValid, metadataComplete });
+    if (confidence) {
+      for (const item of items) {
+        if (item.tierId === 'tier-3' && !item.confidence) item.confidence = confidence;
+      }
+    }
   }
 
   return { items };
+}
+
+function safeDirExists(p) {
+  try {
+    return fs.existsSync(p);
+  } catch {
+    return false;
+  }
 }
 
 /**

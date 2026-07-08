@@ -5,6 +5,7 @@
 import os from 'node:os';
 import path from 'node:path';
 import fs from 'node:fs';
+import { atomicWriteJson } from './atomic-write.mjs';
 
 export function homeDir() {
   if (process.env.HUHAA_HOME && process.env.HUHAA_HOME.trim()) {
@@ -49,8 +50,10 @@ export function expandTilde(p) {
 }
 
 export function writeJson(file, obj) {
+  // v0.4 阶段三：原子写（临时文件 + rename），进程中断不残留半截 JSON。
+  // ensureHomeDir 由 atomicWriteJson 内部 mkdirSync 处理，但保留以确保与旧行为一致。
   ensureHomeDir();
-  fs.writeFileSync(file, JSON.stringify(obj, null, 2));
+  atomicWriteJson(file, obj);
 }
 
 export function readJson(file, fallback = null) {

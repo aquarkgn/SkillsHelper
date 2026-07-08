@@ -5,10 +5,13 @@
  */
 
 import path from 'node:path';
+import fs from 'node:fs';
 import fg from 'fast-glob';
 import { expandTilde, readFileSafe, parseFrontmatter, sha1Id } from '../utils.mjs';
 import { EDITOR_TIER_1_CONFIGS } from '../config/editor-tiers.mjs';
 import { getPathHash, pathHashCache } from '../hash/path-hash.mjs';
+import { ensureRegistered, getDescriptor } from '../core/registry.mjs';
+import { computeConfidence } from '../core/descriptor.mjs';
 
 /**
  * 扫描第1层：编辑器工具的全局和项目技能目录
@@ -25,6 +28,9 @@ export async function scanTier1EditorSkills(options = {}) {
     maxFileBytes: limits.maxFileBytes ?? 1024 * 1024,
   };
 
+  // 确保 descriptor registry 已初始化（渐进迁移：registry 与现有配置并存）
+  ensureRegistered();
+
   const items = [];
   const pathHashes = new Set();
   let fileCount = 0;
@@ -32,17 +38,20 @@ export async function scanTier1EditorSkills(options = {}) {
   for (const editor of EDITOR_TIER_1_CONFIGS) {
     if (fileCount >= mergedLimits.maxFiles) break;
 
+    const desc = getDescriptor(`tier1:${editor.brand}`);
+
     // 尝试全局路径
     const globalPath = expandTilde(editor.globalPath);
-    const globalItems = await scanEditorDirectory(
+    const globalResult = await scanEditorDirectory(
       globalPath,
       editor,
+      desc,
       mergedLimits,
       mergedLimits.maxFiles - fileCount
     );
-    items.push(...globalItems);
-    fileCount += globalItems.length;
-    globalItems.forEach(item => {
+    items.push(...globalResult.items);
+    fileCount += globalResult.items.length;
+    globalResult.items.forEach(item => {
       const hash = pathHashCache.getOrCompute(item.paths.abs);
       pathHashes.add(hash);
       item.pathHash = hash;
@@ -53,15 +62,16 @@ export async function scanTier1EditorSkills(options = {}) {
     // 尝试项目路径
     if (projectRoot) {
       const projectPath = path.join(projectRoot, editor.projectPath);
-      const projectItems = await scanEditorDirectory(
+      const projectResult = await scanEditorDirectory(
         projectPath,
         editor,
+        desc,
         mergedLimits,
         mergedLimits.maxFiles - fileCount
       );
-      items.push(...projectItems);
-      fileCount += projectItems.length;
-      projectItems.forEach(item => {
+      items.push(...projectResult.items);
+      fileCount += projectResult.items.length;
+      projectResult.items.forEach(item => {
         const hash = pathHashCache.getOrCompute(item.paths.abs);
         pathHashes.add(hash);
         item.pathHash = hash;
@@ -75,21 +85,30 @@ export async function scanTier1EditorSkills(options = {}) {
 /**
  * 扫描单个编辑器目录
  * 支持大小写不敏感的 skills 目录名和 SKILL.md / skill.md 文件
+ * glob 模式 / ignore / deep 从 descriptor 读取（registry 化），desc 为 null 时回退原值
  *
  * @private
  */
-async function scanEditorDirectory(basePath, editor, limits, maxRemaining) {
+async function scanEditorDirectory(basePath, editor, desc, limits, maxRemaining) {
   const items = [];
 
+  // 从 descriptor 读检测规则，回退到原硬编码值（渐进迁移期防御）
+  const relPatterns = desc?.detect?.globPatterns || [
+    `**/[sS][kK][iI][lL][lL][sS]/**/[sS][kK][iI][lL][lL].[mM][dD]`,
+    `**/SKILL.md`,
+    `**/skill.md`,
+  ];
+  const ignore = desc?.detect?.ignore || ['**/node_modules/**', '**/.git/**', '**/dist/**'];
+  const deep = desc?.detect?.deep ?? 10;
+
+  // 置信度统计
+  const dirExists = safeDirExists(basePath);
+  let matchedFiles = 0;
+  let parsedValid = 0;
+  let metadataComplete = 0;
+
   try {
-    // 两种通配模式：
-    // 1. skills (任意大小写) 目录下的 SKILL.md 或 skill.md
-    // 2. 直接查找 **/SKILL.md 或 **/skill.md（递归）
-    const patterns = [
-      `${basePath}/**/[sS][kK][iI][lL][lL][sS]/**/[sS][kK][iI][lL][lL].[mM][dD]`,
-      `${basePath}/**/SKILL.md`,
-      `${basePath}/**/skill.md`,
-    ];
+    const patterns = relPatterns.map(p => `${basePath}/${p}`);
 
     for (const pattern of patterns) {
       if (items.length >= maxRemaining) break;
@@ -100,8 +119,8 @@ async function scanEditorDirectory(basePath, editor, limits, maxRemaining) {
           onlyFiles: true,
           dot: true,
           followSymbolicLinks: true,
-          deep: 10,
-          ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**'],
+          deep,
+          ignore,
         });
 
         const seen = new Set(items.map(i => i.paths.abs));
@@ -109,6 +128,7 @@ async function scanEditorDirectory(basePath, editor, limits, maxRemaining) {
         for (const filePath of matches) {
           if (items.length >= maxRemaining || seen.has(filePath)) continue;
           seen.add(filePath);
+          matchedFiles++;
 
           try {
             const skill = parseSkillFile({
@@ -120,6 +140,9 @@ async function scanEditorDirectory(basePath, editor, limits, maxRemaining) {
             if (skill) {
               skill.tierId = 'tier-1';
               skill.editorBrand = editor.brand;
+              // 置信度统计：L3 解析有效（name 非空），L4 元数据完整（name+description）
+              if (skill.name) parsedValid++;
+              if (skill.name && skill.description) metadataComplete++;
               items.push(skill);
             }
           } catch (e) {
@@ -132,9 +155,24 @@ async function scanEditorDirectory(basePath, editor, limits, maxRemaining) {
     }
   } catch (e) {
     // 目录不存在或其他错误，静默跳过
+
   }
 
-  return items;
+  // 计算置信度并注入到每个 skill（可选字段，向后兼容）
+  const confidence = computeConfidence({ dirExists, matchedFiles, parsedValid, metadataComplete });
+  if (confidence) {
+    for (const item of items) item.confidence = confidence;
+  }
+
+  return { items, confidence };
+}
+
+function safeDirExists(p) {
+  try {
+    return fs.existsSync(p);
+  } catch {
+    return false;
+  }
 }
 
 /**

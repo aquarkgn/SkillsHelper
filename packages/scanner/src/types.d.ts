@@ -104,6 +104,9 @@ export interface SkillItem {
   /** v4.0 editor brand within Tier 1 (cursor, claude, hermes, etc.) */
   editorBrand?: string;
 
+  /** 检测置信度（v0.4 对标 cockpit registry 化）：L1 只发现目录 / L2 命中技能文件 / L3 解析有效 / L4 完整元数据 */
+  confidence?: 'L1' | 'L2' | 'L3' | 'L4';
+
   /** i18n translation metadata (if present) */
   i18n?: {
     zh?: {
