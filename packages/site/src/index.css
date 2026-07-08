@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─────────────────────────── 设计 token ───────────────────────────
+   HSL 通道值配合 tailwind.config.ts 的 hsl(var(--x))。
+   品牌色取蓝紫（250°），比纯蓝更有质感；背景做分层提升立体感。 */
+:root {
+  --color-background: 240 20% 99%;
+  --color-foreground: 240 10% 10%;
+  --color-card: 0 0% 100%;
+  --color-card-foreground: 240 10% 10%;
+  --color-border: 240 12% 90%;
+  --color-input: 240 12% 94%;
+  --color-ring: 250 84% 54%;
+  --color-primary: 250 84% 54%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-primary-soft: 250 84% 96%;
+  --color-secondary: 240 10% 14%;
+  --color-secondary-foreground: 240 10% 98%;
+  --color-destructive: 0 84% 60%;
+  --color-destructive-foreground: 0 0% 100%;
+  --color-muted: 240 12% 96%;
+  --color-muted-foreground: 240 6% 42%;
+  --color-accent: 38 92% 50%;
+  --color-accent-foreground: 240 10% 10%;
+
+  --font-sans: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  --font-mono: 'SF Mono', 'JetBrains Mono', 'Fira Code', Menlo, Consolas, monospace;
+}
+
+.dark {
+  --color-background: 240 10% 8%;
+  --color-foreground: 240 10% 95%;
+  --color-card: 240 8% 12%;
+  --color-card-foreground: 240 10% 95%;
+  --color-border: 240 8% 20%;
+  --color-input: 240 8% 16%;
+  --color-ring: 250 84% 60%;
+  --color-primary: 250 84% 60%;
+  --color-primary-foreground: 0 0% 100%;
+  --color-primary-soft: 250 40% 20%;
+  --color-secondary: 240 10% 95%;
+  --color-secondary-foreground: 240 10% 12%;
+  --color-destructive: 0 84% 60%;
+  --color-destructive-foreground: 0 0% 100%;
+  --color-muted: 240 8% 15%;
+  --color-muted-foreground: 240 8% 62%;
+  --color-accent: 38 92% 55%;
+  --color-accent-foreground: 240 10% 8%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+@layer components {
+  /* 落地页区块容器：限宽 + 上下间距 */
+  .section {
+    @apply mx-auto w-full max-w-5xl px-6 py-16;
+  }
+
+  /* 点阵画布纹理：调淡避免抢戏，用于 Hero 背景 / 截图占位 */
+  .canvas-dotted {
+    background-color: hsl(var(--color-background));
+    background-image: radial-gradient(hsl(var(--color-border) / 0.6) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* 代码块（安装命令展示）：加深底色与字色对比 */
+  .code-block {
+    @apply flex items-center gap-3 rounded-md border border-border bg-secondary px-4 py-3;
+  }
+  .code-block code {
+    @apply flex-1 font-mono text-body-sm text-secondary-foreground;
+  }
+  .code-block button {
+    @apply shrink-0 rounded-sm border border-border bg-card px-2 py-1 text-caption text-muted-foreground transition-colors hover:text-foreground;
+  }
+
+  /* 卡片：细微阴影提升立体感，hover 轻微上浮 */
+  .card-elevated {
+    @apply rounded-lg border border-border bg-card p-6 text-left;
+    box-shadow: 0 1px 2px hsl(var(--color-foreground) / 0.04);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+  }
+  .card-elevated:hover {
+    box-shadow: 0 4px 16px hsl(var(--color-primary) / 0.1);
+    transform: translateY(-2px);
+  }
+}
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+
+  /* 霓虹标题：多色渐变文字 + 发光投影。
+     渐变用 background-clip: text 裁切到文字，颜色取亮饱和值保证霓虹感；
+     text-shadow 多层叠加模拟光晕外溢。 */
+  .neon-cool {
+    background-image: linear-gradient(100deg, #22d3ee 0%, #818cf8 50%, #c084fc 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow:
+      0 0 6px rgba(34, 211, 238, 0.35),
+      0 0 14px rgba(129, 140, 248, 0.3),
+      0 0 28px rgba(192, 132, 252, 0.25);
+  }
+  .neon-warm {
+    background-image: linear-gradient(100deg, #f472b6 0%, #a855f7 45%, #6366f1 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow:
+      0 0 8px rgba(244, 114, 182, 0.45),
+      0 0 18px rgba(168, 85, 247, 0.4),
+      0 0 36px rgba(99, 102, 241, 0.3);
+  }
+
+  /* 兼容不支持 background-clip:text 的旧浏览器：回退为单色，避免文字消失 */
+  @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+    .neon-cool {
+      color: #818cf8;
+      background-image: none;
+    }
+    .neon-warm {
+      color: #a855f7;
+      background-image: none;
+    }
+  }
+}

@@ -1,6 +1,7 @@
 node_modules/
 /dist/
 packages/web/dist/
+packages/site/dist/
 .DS_Store
 *.log
 .vite/
