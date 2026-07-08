@@ -137,6 +137,9 @@ SkillItem {
   id, name, description, filePath,
   pathHash,          // MD5(filePath)，用于去重和菜单分层显示
   tier,              // 'tier-1' | 'tier-2' | 'tier-3'，标记所属层级
+  tierId,            // v4.0 同 tier，主路径字段名（tier 仅 scanLegacy 降级路径赋值）
+  editorBrand,       // v4.0 Tier 1 编辑器品牌（cursor/claude/hermes 等），用于分组和图标
+  confidence?,       // v0.4 检测置信度 'L1'|'L2'|'L3'|'L4'，见 R10
   category?, brand?, tier?, tags?,
   iconUrl?,          // 真实图标端点，如 "/api/icons/cursor?size=64"；无真实图标时为空
   iconFallback?,     // emoji 兜底值，如 "🤖"
@@ -359,6 +362,54 @@ Return: [tier1Skills, tier2Skills, tier3Skills] + { tier1Hashes, tier2Hashes }
 
 - 扫描结果中包含 `pathHashes: { tier1: Set<string>, tier2: Set<string> }`，方便前端或后续请求快速判断。
 - 内存中维护 LRU 缓存（最多 1000 条），避免重复计算同一路径的哈希值。
+
+---
+
+## R10 扫描规则 Registry 化与置信度分级 ⭐⭐
+
+> v0.4 对标 cockpit-tools 报告第一、二建议落地。把散落在各 tier adapter 的检测规则抽成显式 `ScannerDescriptor` registry，并引入四级检测置信度。性质是工程加固，不改扫描产出。
+
+### R10.1 ScannerDescriptor registry
+
+检测规则（目录候选、glob 模式、ignore、deep、品牌 key）显式登记成 `ScannerDescriptor`，集中在 `packages/scanner/src/core/descriptor.mjs` 定义类型、`core/registry.mjs` 派生注册。
+
+```
+ScannerDescriptor {
+  id: 'tier1:claude'              // 唯一标识
+  tier: 'tier-1'                  // 所属层级
+  brand: 'claude'                 // 品牌 key（用于图标映射）
+  label: 'Claude'                 // 人类可读名称
+  editorName: 'Claude'            // SkillItem.editor 字段值
+  detect: {
+    globalPath: '~/.claude/skills'
+    projectPath: '.claude/skills'
+    globPatterns: ['**/SKILL.md', ...]   // 相对模式，adapter 拼 basePath
+    ignore: ['**/node_modules/**', '**/.git/**', '**/dist/**']
+    deep: 10
+  }
+}
+```
+
+registry 从 `config/editor-tiers.mjs` 现有配置派生，配置单一来源不变。tier1/2/3 adapter 改为从 registry 读 descriptor 的 glob/ignore/deep，替代硬编码。
+
+注册总数：26 个 descriptor（22 tier1 + 1 tier2 + 3 tier3）。
+
+### R10.2 检测置信度四级
+
+对标 cockpit-tools 报告第二建议，把"只发现目录"与"已确认可解析完整技能"区分开，避免 UI 把候选目录误显示成已确认实例。
+
+| 级别 | 含义 | 触发条件 |
+|------|------|----------|
+| **L1** | 只发现目录 | `detect.globalPath` 存在但未命中技能文件 |
+| **L2** | 命中技能文件 | glob 匹配到至少 1 个 SKILL.md |
+| **L3** | 解析出有效技能 | frontmatter 解析成功，name 非空 |
+| **L4** | 完整元数据 | name + description 齐全 |
+
+`confidence` 作为可选字段注入 SkillItem（向后兼容，不破坏 IR）。目录不存在时不注入（返回 null）。
+
+### R10.3 渐进迁移原则
+
+registry 与现有 `editor-tiers.mjs` 配置并存，adapter 逐个迁移。descriptor 只管"去哪扫、用什么 glob"，不管"怎么解析"（解析逻辑仍由各 adapter 自持，避免行为变化）。
 
 ---
 
