@@ -52,17 +52,19 @@ export default function SidebarMenu({
           onSelectSkill={onSelectSkill}
         />
 
-        {/* Tier 2: 自定义技能 */}
-        <TierGroup
-          title="自定义技能"
-          icon="👤"
-          count={tier2Count}
-          expanded={menuState.tier2Expanded}
-          onToggle={toggleTier2}
-          skills={tier2Skills}
-          tier="tier-2"
-          onSelectSkill={onSelectSkill}
-        />
+        {/* Tier 2: 自定义技能（仅在有技能时显示） */}
+        {tier2Count > 0 && (
+          <TierGroup
+            title="自定义技能"
+            icon="👤"
+            count={tier2Count}
+            expanded={menuState.tier2Expanded}
+            onToggle={toggleTier2}
+            skills={tier2Skills}
+            tier="tier-2"
+            onSelectSkill={onSelectSkill}
+          />
+        )}
 
         {/* Tier 3: 其它技能（仅在有技能时显示） */}
         {tier3Count > 0 && (
