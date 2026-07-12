@@ -14,7 +14,20 @@ packages/site/dist/
 !.hermes/plans/skillshelper-promotion/**
 
 # 呼哈哈-技能助手推广视频在本工作区管理，但大文件默认不提交。
-.hermes/plans/skillshelper-promotion/videos/**/*.{mp4,mov,m4v,avi,mkv,webm,wav,mp3,aac,flac,prproj,drp,fcpxml}
+.hermes/plans/skillshelper-promotion/videos/**/*.mp4
+.hermes/plans/skillshelper-promotion/videos/**/*.mov
+.hermes/plans/skillshelper-promotion/videos/**/*.m4v
+.hermes/plans/skillshelper-promotion/videos/**/*.avi
+.hermes/plans/skillshelper-promotion/videos/**/*.mkv
+.hermes/plans/skillshelper-promotion/videos/**/*.webm
+.hermes/plans/skillshelper-promotion/videos/**/*.wav
+.hermes/plans/skillshelper-promotion/videos/**/*.mp3
+.hermes/plans/skillshelper-promotion/videos/**/*.aac
+.hermes/plans/skillshelper-promotion/videos/**/*.flac
+.hermes/plans/skillshelper-promotion/videos/**/*.prproj
+.hermes/plans/skillshelper-promotion/videos/**/*.drp
+.hermes/plans/skillshelper-promotion/videos/**/*.fcpxml
+.hermes/plans/skillshelper-promotion/videos/**/.scratch/
 !.hermes/plans/skillshelper-promotion/videos/**/README.md
 !.hermes/plans/skillshelper-promotion/videos/**/.gitkeep
 

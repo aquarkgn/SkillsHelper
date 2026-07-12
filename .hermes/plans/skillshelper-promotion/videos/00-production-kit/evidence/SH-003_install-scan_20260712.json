@@ -1,0 +1,13 @@
+{
+  "generatedAt": "2026-07-12T10:46:20.699Z",
+  "npm": {
+    "version": "0.4.1",
+    "dist-tags.latest": "0.4.1"
+  },
+  "cliVersion": "skillshelper v0.4.1",
+  "jsonOk": true,
+  "itemCount": 0,
+  "stdoutHasScan": false,
+  "stderrHasScan": true,
+  "transcript": "$ npm view skillshelper version dist-tags.latest --json\n{\n  \"version\": \"0.4.1\",\n  \"dist-tags.latest\": \"0.4.1\"\n}\n$ npm install --prefix <tmp>/install --cache <tmp>/npm-cache --prefer-online --omit=dev skillshelper@latest\n$ <tmp>/install/node_modules/.bin/skillshelper --version\nskillshelper v0.4.1\n$ SKILLSHELPER_HOME=<tmp>/config HOME=<tmp>/home skillshelper scan --json > skills.json 2> scan.stderr.txt\nJSON OK: true / 0 item(s)\n[scan] Tier 1: scanning editor tools...\n[scan] Tier 1: found 0 skills\n[scan] Tier 2: scanning user skills library...\n[scan] Tier 2: found 0 skills\n[scan] 0 item(s)"
+}

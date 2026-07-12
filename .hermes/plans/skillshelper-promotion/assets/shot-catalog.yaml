@@ -4,6 +4,7 @@ brand: 呼哈哈-技能助手
 campaign: SHL-LAUNCH
 default_status: planned
 asset_root: .hermes/plans/skillshelper-promotion/videos
+latest_auto_asset_index: .hermes/plans/skillshelper-promotion/videos/00-production-kit/latest.json
 status_flow:
   - planned
   - recorded
