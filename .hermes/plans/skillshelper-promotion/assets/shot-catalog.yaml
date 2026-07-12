@@ -103,7 +103,7 @@ shots:
         - 录制前确认 `skillshelper@latest` 仍指向目标版本。
         - 如果展示 `scan --json`，同时录制 stdout 可直接保存为 JSON、stderr 显示扫描进度的区别。
       acceptance:
-        - 画面中能看到 `skillshelper v0.4.0`。
+        - 画面中能看到 `skillshelper v0.4.1`。
         - 使用 `SKILLSHELPER_HOME` 或干净配置目录，避免污染个人真实配置。
       review_metrics:
         - install_intent_comments
