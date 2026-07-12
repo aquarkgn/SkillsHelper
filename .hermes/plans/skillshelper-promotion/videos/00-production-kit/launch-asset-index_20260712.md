@@ -1,6 +1,6 @@
 # SkillsHelper 首发素材包索引
 
-生成时间：2026-07-12T10:46:20.699Z
+生成时间：2026-07-12T10:50:45.892Z
 
 本素材包一次性覆盖 SH-001 到 SH-008。视频文件用于粗剪、节奏占位和封面/字幕预演；正式发布前，涉及真实产品运行的镜头仍以真实录屏或本目录 evidence 为准。
 
@@ -24,3 +24,8 @@
 - CLI 版本：skillshelper v0.4.1
 - stdout 含 `[scan]`：false
 - stderr 含 `[scan]`：true
+
+## 合集预览
+
+- 16:9 首发合集：`.hermes/plans/skillshelper-promotion/videos/04-export/SHL-LAUNCH_auto-preview_16x9_20260712_v01.mp4`
+- 时长：60 秒

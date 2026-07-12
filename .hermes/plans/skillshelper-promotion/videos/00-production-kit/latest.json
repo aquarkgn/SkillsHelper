@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-07-12T10:46:20.699Z",
+  "generatedAt": "2026-07-12T10:50:45.892Z",
   "date": "20260712",
   "brand": "呼哈哈-技能助手",
   "campaign": "SHL-LAUNCH",
@@ -114,6 +114,12 @@
       "editDecisionList": ".hermes/plans/skillshelper-promotion/videos/03-edit/SH-008_edit-decision-list_20260712_v01.md"
     }
   ],
+  "montage": {
+    "assetType": "auto-preview",
+    "ratio": "16x9",
+    "export": ".hermes/plans/skillshelper-promotion/videos/04-export/SHL-LAUNCH_auto-preview_16x9_20260712_v01.mp4",
+    "durationSeconds": 60
+  },
   "evidence": {
     "SH003": {
       "json": ".hermes/plans/skillshelper-promotion/videos/00-production-kit/evidence/SH-003_install-scan_20260712.json",

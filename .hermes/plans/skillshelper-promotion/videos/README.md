@@ -28,5 +28,6 @@ node .hermes/plans/skillshelper-promotion/videos/scripts/generate-launch-assets.
 - `05-cover/`：每条镜头的封面 SVG，可进入 Git。
 - `03-edit/`：每条镜头的剪辑卡，说明主张、节奏、素材路径和验收点。
 - `00-production-kit/`：素材索引、字幕和 SH-003 的 npm 安装/扫描证据。
+- `04-export/SHL-LAUNCH_auto-preview_16x9_YYYYMMDD_v01.mp4`：8 条镜头拼接后的本地首发合集预览，默认不进入 Git。
 
 当前机器的 ffmpeg 如果不支持 `drawtext`，生成器会自动降级为“视频占位 + SRT 字幕 + SVG 封面”；正式发布前仍以真实录屏或 `evidence/` 证据为准。

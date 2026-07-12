@@ -1,6 +1,6 @@
 # SH-003 安装与扫描证据
 
-生成时间：2026-07-12T10:46:20.699Z
+生成时间：2026-07-12T10:50:45.892Z
 
 ```text
 $ npm view skillshelper version dist-tags.latest --json

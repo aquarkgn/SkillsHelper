@@ -215,6 +215,39 @@ function remux(inputPath, outputPath) {
   execFileSync("ffmpeg", ["-y", "-i", inputPath, "-c", "copy", outputPath], { stdio: "pipe" });
 }
 
+function renderMontage({ items, outputPath }) {
+  ensureParent(outputPath);
+  const args = ["-y"];
+  for (const item of items) {
+    args.push("-i", join(root, item.export));
+  }
+  const filters = items
+    .map(
+      (_item, index) =>
+        `[${index}:v]scale=1920:1080:force_original_aspect_ratio=decrease,pad=1920:1080:(ow-iw)/2:(oh-ih)/2:color=0x0B1020,setsar=1[v${index}]`
+    )
+    .join(";");
+  const concatInputs = items.map((_item, index) => `[v${index}]`).join("");
+  args.push(
+    "-filter_complex",
+    `${filters};${concatInputs}concat=n=${items.length}:v=1:a=0[outv]`,
+    "-map",
+    "[outv]",
+    "-c:v",
+    "libx264",
+    "-pix_fmt",
+    "yuv420p",
+    "-preset",
+    "veryfast",
+    "-crf",
+    "23",
+    "-movflags",
+    "+faststart",
+    outputPath
+  );
+  execFileSync("ffmpeg", args, { stdio: "pipe" });
+}
+
 function svgEscape(value) {
   return String(value)
     .replaceAll("&", "&amp;")
@@ -426,6 +459,8 @@ for (const shot of shots) {
 }
 
 const sh003 = collectSh003Evidence();
+const montagePath = join(videoRoot, "04-export", `SHL-LAUNCH_auto-preview_16x9_${today}_v01.mp4`);
+renderMontage({ items: generated, outputPath: montagePath });
 const index = {
   generatedAt,
   date: today,
@@ -437,6 +472,12 @@ const index = {
     videoTextMode: supportsDrawtext ? "burned-in" : "subtitle-and-cover",
   },
   shots: generated,
+  montage: {
+    assetType: "auto-preview",
+    ratio: "16x9",
+    export: montagePath.replace(`${root}/`, ""),
+    durationSeconds: generated.reduce((sum, item) => sum + item.durationSeconds, 0),
+  },
   evidence: {
     SH003: {
       json: sh003.jsonPath.replace(`${root}/`, ""),
@@ -476,6 +517,11 @@ ${generated
 - CLI 版本：${index.evidence.SH003.cliVersion}
 - stdout 含 \`[scan]\`：${index.evidence.SH003.stdoutHasScan}
 - stderr 含 \`[scan]\`：${index.evidence.SH003.stderrHasScan}
+
+## 合集预览
+
+- 16:9 首发合集：\`${index.montage.export}\`
+- 时长：${index.montage.durationSeconds} 秒
 `,
   "utf8"
 );
