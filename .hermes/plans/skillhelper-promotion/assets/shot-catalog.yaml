@@ -1,263 +1,57 @@
-# SkillHelper 抖音推广镜头唯一事实来源。发布前必须复核 evidence，不使用此处以外的数字口径。
-schema_version: 1
+# SkillHelper 抖音首发短片的唯一事实来源。
+schema_version: 2
 brand: SkillHelper
-campaign: SH-DY-Q3
+campaign: DY-001
 default_status: planned
 asset_root: .hermes/plans/skillhelper-promotion/videos
-status_flow:
-  - planned
-  - recorded
-  - selected
-  - edited
-  - approved
-  - published
-  - measured
-shots:
-  - id: SH-001
-    title: 痛点开场
-    objective: 让目标用户在五秒内理解“能力资产分散”的问题。
-    duration_seconds: 5
-    claim: 技能、插件和 MCP 配置分散在不同工具中，难以统一查找。
-    format: motion-graphic-or-real-window-switching
-    evidence:
-      - type: editorial
-        source: 用户工作流的真实多工具场景；不使用无法核验的行业数字。
-    recording_notes: 不展示个人通知、账户或敏感目录。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-001_pain-point_9x16_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-001_pain-point_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-001_pain-point_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-001_pain-point_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 录制前关闭通知和个人账号露出。
-        - 准备 3 个真实工具窗口或目录切换画面，避免使用虚构截图。
-      acceptance:
-        - 五秒内能看懂“能力散落”的痛点。
-        - 不出现 Token、真实私有路径或个人消息。
-      review_metrics:
-        - three_second_retention
-        - hook_completion_rate
-
-  - id: SH-002
-    title: 产品定位
-    objective: 说清 SkillHelper 是能力工作台，而不是聊天产品。
-    duration_seconds: 6
-    claim: SkillHelper 将本地 AI 工作流能力统一为可搜索、可理解、可维护的工作台。
-    format: landing-page-and-dashboard
-    evidence:
-      - type: source
-        source: README.md 与 packages/site/src/sections/Hero.tsx
-    recording_notes: 使用产品新名称 SkillHelper；CLI 写作 skillshelper。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-002_positioning_16x9_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-002_positioning_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-002_positioning_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-002_positioning_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 本地启动官网，确认 Hero、Logo、favicon 与 manifest 显示正常。
-        - 截取工作台首屏，避免只展示官网造成“只是 landing page”的误解。
-      acceptance:
-        - 同时出现官网定位和工作台界面。
-        - 字幕统一写作 SkillHelper；命令统一写作 skillshelper。
-      review_metrics:
-        - product_understanding_comments
-        - repo_click_rate
-
-  - id: SH-003
-    title: 本地启动与扫描
-    objective: 证明产品可运行且扫描发生在本机。
-    duration_seconds: 8
-    claim: 一条开发命令即可启动本地 API 与前端工作台。
-    format: terminal-to-browser
+status_flow: [planned, recorded, selected, edited, approved, published, measured]
+videos:
+  - id: DY-001
+    title: 30 秒产品介绍
+    objective: 让开发者在 30 秒内看懂 SkillHelper 解决什么问题、如何起作用、去哪里获取。
+    duration_seconds: 30
+    format: vertical-9x16
+    main_cta: GitHub 搜 SkillHelper
     evidence:
       - type: command
-        source: npm install -g skillshelper@latest
+        source: npm view skillhelper version dist-tags.latest --json
       - type: command
-        source: skillshelper --version
-      - type: command
-        source: skillshelper init
-      - type: command
-        source: skillshelper scan --json
-      - type: source
-        source: package.json bin.skillshelper
-    recording_notes: 录制当天验证端口和健康检查；不把本机扫描数量写进固定字幕。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-003_install-scan_16x9_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-003_install-scan_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-003_install-scan_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-003_install-scan_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 使用干净终端环境录制 npm 安装和版本输出。
-        - 录制前确认 `skillshelper@latest` 仍指向目标版本。
-        - 如果展示 `scan --json`，同时录制 stdout 可直接保存为 JSON、stderr 显示扫描进度的区别。
-      acceptance:
-        - 画面中能看到 `skillshelper v0.4.1`。
-        - 使用 `SKILLSHELPER_HOME` 或干净配置目录，避免污染个人真实配置。
-      review_metrics:
-        - install_intent_comments
-        - npm_page_visits
-
-  - id: SH-004
-    title: 三级分类
-    objective: 展示来源结构，建立“中枢”心智。
-    duration_seconds: 8
-    claim: 技能按编辑器工具、个人技能库和其它来源分为三级展示。
-    format: dashboard-sidebar
-    evidence:
-      - type: source
-        source: docs/scan_skills_rules.md R7
-      - type: source
-        source: packages/web/src/App.tsx
-    recording_notes: 展开三个层级；使用界面当前实际命名。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-004_sidebar-tiers_16x9_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-004_sidebar-tiers_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-004_sidebar-tiers_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-004_sidebar-tiers_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 准备一个来源足够丰富的本地配置，确保侧边栏层级有内容可展示。
-        - 录制前折叠/展开路径，确认不会露出敏感目录。
-      acceptance:
-        - 三层来源结构在一屏内可识别。
-        - 侧边栏数量只作为当天实测画面，不写进永久字幕。
-      review_metrics:
-        - feature_comprehension_comments
-        - average_watch_time
-
-  - id: SH-005
-    title: 搜索、筛选与分组
-    objective: 用一个连续交互展示直接收益。
-    duration_seconds: 9
-    claim: 可通过关键词、来源和分组快速定位需要的能力。
-    format: dashboard-interaction
-    evidence:
-      - type: source
-        source: packages/web/src/hooks/useOtherSkills.ts
-    recording_notes: 选一个在录制环境中稳定有结果的关键词；录制前先搜索验证。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-005_search-filter_16x9_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-005_search-filter_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-005_search-filter_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-005_search-filter_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 预选 2 个稳定关键词：一个返回多结果，一个返回精确结果。
-        - 准备放大或光标高亮，避免搜索框和筛选状态在短视频里看不清。
-      acceptance:
-        - 搜索输入、结果变化和来源筛选连贯出现。
-        - 没有暴露本机敏感 skill 内容。
-      review_metrics:
-        - interaction_replay_rate
-        - saved_or_favorited_rate
-
-  - id: SH-006
-    title: 真实图标
-    objective: 展示细节差异化，而非仅靠功能名词。
-    duration_seconds: 7
-    claim: 在支持的系统中，品牌图标优先从本机应用提取，缺失时自动降级。
-    format: dashboard-closeup-and-terminal
-    evidence:
-      - type: command
-        source: curl -s -o /tmp/skillshelper-icon.png "http://127.0.0.1:<port>/api/icons/hermes?size=64"
-      - type: source
-        source: docs/scan_skills_rules.md R6
-    recording_notes: 非 macOS 或未安装对应应用时，只录制降级表现，不宣称“真实图标”。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-006_icons_16x9_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-006_icons_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-006_icons_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-006_icons_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 启动服务后以实际端口替换 `<port>`。
-        - 同时准备“内置 Hermes 图标”和“应用图标降级”两个画面，按录制机器实际情况取用。
-      acceptance:
-        - 图标清晰可见，不把 fallback 误讲成系统原生提取。
-        - curl 命令和界面结果能互相印证。
-      review_metrics:
-        - detail_feature_mentions
-        - tutorial_pause_rate
-
-  - id: SH-007
-    title: 原文、中文对照与安全边界
-    objective: 回答“能否看懂”和“本地数据是否可控”。
-    duration_seconds: 8
-    claim: 中文对照保留原文，代码块与命令不翻译；扫描只读，MCP 展示会脱敏。
-    format: detail-view
-    evidence:
-      - type: source
-        source: packages/server/src/index.mjs translate-raw route
-      - type: source
-        source: config/sources.example.yaml Safety section
-    recording_notes: 明确说明触发翻译时需要网络，避免宣称“所有数据永不出本机”。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-007_translation-safety_16x9_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-007_translation-safety_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-007_translation-safety_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-007_translation-safety_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 选择一个不含私密信息的 skill 详情页作为翻译样本。
-        - 录制前确认 MCP 配置展示已脱敏，不出现 token、key、cookie。
-      acceptance:
-        - 能看到原文与中文对照的价值。
-        - 旁白包含“翻译可能联网，扫描和展示按只读/脱敏边界处理”的限定。
-      review_metrics:
-        - safety_question_count
-        - trust_comment_ratio
-
-  - id: SH-008
-    title: 行动号召
-    objective: 把兴趣转化为仓库访问、安装或订阅。
-    duration_seconds: 9
-    claim: 可在 GitHub 获取源码，在 npm 安装 CLI，并关注后续真实演示。
-    format: repo-and-cta
-    evidence:
-      - type: command
-        source: npm view skillshelper version dist-tags.latest --json
-      - type: source
-        source: package.json repository and bin
-    recording_notes: 录制当天重查版本；不引用过期 release 数、star 数或本机技能数量。
-    production:
-      status: planned
-      priority: launch-core
-      platforms: [douyin]
-      asset_paths:
-        capture: .hermes/plans/skillhelper-promotion/videos/01-capture/SH-008_cta_9x16_YYYYMMDD_v01.mov
-        selects: .hermes/plans/skillhelper-promotion/videos/02-selects/SH-008_cta_select_YYYYMMDD_v01.mov
-        edit: .hermes/plans/skillhelper-promotion/videos/03-edit/SH-008_cta_edit_YYYYMMDD_v01.prproj
-        export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/SH-008_cta_9x16_YYYYMMDD_v01.mp4
-      gaps:
-        - 录制当天重新确认 npm latest、GitHub Release 和 README 安装命令。
-        - 准备一个主 CTA，不同时要求 star、安装、关注、评论四件事。
-      acceptance:
-        - 结尾 3 秒内能看清安装命令或仓库入口。
-        - 版本号与 npm registry 当前状态一致。
-      review_metrics:
-        - repository_click_rate
-        - npm_click_or_visit_rate
+        source: skillhelper --version
+      - type: product
+        source: 真实本机扫描结果与搜索交互
+    segments:
+      - id: DY-001-A
+        range_seconds: 0-3
+        purpose: 痛点
+        screen: 多个 AI 工具或目录之间的真实切换。
+        subtitle: AI 技能越来越多，想找一个却翻半天？
+      - id: DY-001-B
+        range_seconds: 3-8
+        purpose: 产品定义
+        screen: 由真实扫描结果进入 SkillHelper 工作台首屏。
+        subtitle: 把本机 AI 能力收进一个工作台。
+      - id: DY-001-C
+        range_seconds: 8-21
+        purpose: 直接收益
+        screen: 搜索一个预先验证有结果的关键词，展示筛选后的技能详情。
+        subtitle: 搜一下，技能、插件和 MCP 配置都能找到。
+      - id: DY-001-D
+        range_seconds: 21-30
+        purpose: 单一行动
+        screen: GitHub 仓库页与一行安装命令。
+        subtitle: 开源、本地运行。GitHub 搜 SkillHelper。
+    recording_notes:
+      - 连续录制产品演示；只在段落切换处剪切。
+      - 关闭通知，隐藏账号、Token、私有路径与未脱敏配置。
+      - 不展示固定扫描数量、Star 数或过期版本号。
+      - 命令统一使用 skillhelper；录制当天复核 npm latest 与实际 UI。
+    asset_paths:
+      capture: .hermes/plans/skillhelper-promotion/videos/01-capture/DY-001_product-intro_9x16_YYYYMMDD_v01.mov
+      selects: .hermes/plans/skillhelper-promotion/videos/02-selects/DY-001_product-intro_select_YYYYMMDD_v01.mov
+      edit: .hermes/plans/skillhelper-promotion/videos/03-edit/DY-001_product-intro_edit_YYYYMMDD_v01.prproj
+      export: .hermes/plans/skillhelper-promotion/videos/04-export/douyin/DY-001_product-intro_9x16_YYYYMMDD_v01.mp4
+    acceptance:
+      - 前三秒清楚讲出痛点。
+      - 第八秒前出现真实产品界面。
+      - 21 秒内完成一次可见的搜索到详情交互。
+      - 结尾只保留 GitHub 搜 SkillHelper 这个动作。
