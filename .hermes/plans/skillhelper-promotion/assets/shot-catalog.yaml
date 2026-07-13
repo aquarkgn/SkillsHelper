@@ -23,13 +23,13 @@ videos:
       - id: DY-001-A
         range_seconds: 0-3
         purpose: 痛点
-        screen: 多个 AI 工具或目录之间的真实切换。
-        subtitle: AI 技能越来越多，想找一个却翻半天？
+        screen: 多个人工智能工具或目录之间的真实切换。
+        subtitle: 人工智能技能越来越多，想找一个却翻半天？
       - id: DY-001-B
         range_seconds: 3-8
         purpose: 产品定义
         screen: 由真实扫描结果进入 SkillHelper 工作台首屏。
-        subtitle: 把本机 AI 能力收进一个工作台。
+        subtitle: 把本机人工智能能力收进一个工作台。
       - id: DY-001-C
         range_seconds: 8-21
         purpose: 直接收益
@@ -42,7 +42,7 @@ videos:
         subtitle: 开源、本地运行。GitHub 搜 SkillHelper。
     recording_notes:
       - 连续录制产品演示；只在段落切换处剪切。
-      - 关闭通知，隐藏账号、Token、私有路径与未脱敏配置。
+      - 关闭通知，隐藏账号、令牌、私有路径与未脱敏配置。
       - 不展示固定扫描数量、Star 数或过期版本号。
       - 命令统一使用 skillhelper；录制当天复核 npm latest 与实际 UI。
     asset_paths:
