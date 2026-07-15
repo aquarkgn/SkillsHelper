@@ -16,7 +16,14 @@ import {
 import { ActionButton } from '@/components/ui/ActionButton'
 import { SkillDetail } from './SkillDetail'
 import { cn } from '@/lib/cn'
-import { editorLabel, isNoneEditor, itemEditorKey, PINNED_SKILL_SOURCES } from '@/lib/editors'
+import {
+  CUSTOM_SKILL_SOURCE,
+  editorLabel,
+  FIXED_PRODUCT_SOURCES,
+  isNoneEditor,
+  itemEditorKey,
+  PINNED_SKILL_SOURCES,
+} from '@/lib/editors'
 import { copy, open } from '@/lib/api'
 import {
   kindLabel,
@@ -285,10 +292,11 @@ export function SkillsView({
           b[1] - a[1] ||
           editorLabel(a[0]).localeCompare(editorLabel(b[0]), 'zh-CN'),
       )
-    const pinnedSources = PINNED_SKILL_SOURCES.map(
+    const productSources = FIXED_PRODUCT_SOURCES.map(
       (source) => [source, counts.get(source) ?? 0] as const,
     )
-    return [...pinnedSources, ...sortedSources]
+    const customSource = [CUSTOM_SKILL_SOURCE, counts.get(CUSTOM_SKILL_SOURCE) ?? 0] as const
+    return [...productSources, ...sortedSources, customSource]
   }, [items, tierFilter])
 
   const byEditor = useMemo(() => {

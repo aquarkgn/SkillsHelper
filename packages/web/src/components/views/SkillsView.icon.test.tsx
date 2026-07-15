@@ -232,6 +232,21 @@ describe('SkillsView 官方图标', () => {
     ])
   })
 
+  it('来源下拉将自定义技能固定在动态来源之后', () => {
+    renderSkills([
+      mkSkill({ id: 'trae-skill', editor: 'Trae-CN', editorBrand: 'trae-cn' }),
+      mkSkill({
+        id: 'custom-skill',
+        tier: 'tier-2',
+        source: 'my-skills',
+        editor: 'my-skills',
+      }),
+    ])
+
+    const options = Array.from(screen.getByLabelText('来源').querySelectorAll('option')).map((option) => option.textContent)
+    expect(options.slice(-2)).toEqual(['Trae-CN 1', '自定义技能 1'])
+  })
+
   it('自定义技能条目不重复显示 my-skills 来源短码', () => {
     renderSkills([
       mkSkill({

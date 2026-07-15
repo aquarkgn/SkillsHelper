@@ -53,7 +53,9 @@ const RULES: Rule[] = [
 ]
 
 const FALLBACK: Omit<EditorMeta, 'label'> = { color: '#6B7280', icon: Boxes }
-export const PINNED_SKILL_SOURCES = ['chatgpt-codex', 'anthropic-claude', 'hermes', 'openclaw', 'my-skills'] as const
+export const FIXED_PRODUCT_SOURCES = ['chatgpt-codex', 'anthropic-claude', 'hermes', 'openclaw'] as const
+export const CUSTOM_SKILL_SOURCE = 'my-skills'
+export const PINNED_SKILL_SOURCES = [...FIXED_PRODUCT_SOURCES, CUSTOM_SKILL_SOURCE] as const
 
 const LABELS: Record<string, string> = {
   'my-skills': '自定义技能',

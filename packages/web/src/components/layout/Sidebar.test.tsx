@@ -100,6 +100,28 @@ describe('Sidebar 工作区导航', () => {
     ])
   })
 
+  it('自定义技能固定排在所有动态来源之后', () => {
+    const { container } = render(
+      <Sidebar
+        module="skills"
+        view="skills"
+        editorFilter={null}
+        selectedCommandBrand={null}
+        stats={statsWith({ Hermes: 1, 'Trae-CN': 3, 'my-skills': 2 })}
+        onHome={noop}
+        onSettings={noop}
+        onCommandBrand={noop}
+        onEditor={noop}
+      />,
+    )
+
+    const labels = Array.from(container.querySelectorAll('button'))
+      .map((button) => button.textContent ?? '')
+      .filter((text) => /Trae-CN|自定义技能/.test(text))
+      .map((text) => text.replace(/\d+$/, ''))
+    expect(labels).toEqual(['Trae-CN', '自定义技能'])
+  })
+
   it('Anthropic / Claude Code 在后端 byEditor 缺失时仍以 0 计数渲染', () => {
     const { container } = render(
       <Sidebar

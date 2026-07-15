@@ -1,7 +1,14 @@
 import { BookOpen, LayoutDashboard, Layers, Settings, TerminalSquare } from 'lucide-react'
 import type { ModuleKey } from '@/components/layout/Topbar'
 import { cn } from '@/lib/cn'
-import { getEditorMeta, isNoneEditor, normalizeEditorKey, PINNED_SKILL_SOURCES } from '@/lib/editors'
+import {
+  CUSTOM_SKILL_SOURCE,
+  FIXED_PRODUCT_SOURCES,
+  getEditorMeta,
+  isNoneEditor,
+  normalizeEditorKey,
+  PINNED_SKILL_SOURCES,
+} from '@/lib/editors'
 import { COMMAND_BRAND_SUMMARIES } from '@/lib/commands'
 import { CommandIcon } from '@/components/views/CommandIcon'
 import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon'
@@ -45,7 +52,8 @@ export function Sidebar({
   const editors = Object.entries(byEditor)
     .filter(([k, count]) => !isNoneEditor(k) && !pinnedSourceSet.has(k) && count > 0)
     .sort((a, b) => a[0].localeCompare(b[0], 'zh-CN'))
-  const pinnedEditors = PINNED_SKILL_SOURCES.map((key) => [key, byEditor[key] ?? 0] as const)
+  const productEditors = FIXED_PRODUCT_SOURCES.map((key) => [key, byEditor[key] ?? 0] as const)
+  const customEditor = [CUSTOM_SKILL_SOURCE, byEditor[CUSTOM_SKILL_SOURCE] ?? 0] as const
   const noneCount = Object.entries(byEditor).find(([k]) => isNoneEditor(k))?.[1] ?? 0
   const total = stats?.total ?? 0
   const commandBrands = COMMAND_BRAND_SUMMARIES
@@ -98,7 +106,7 @@ export function Sidebar({
         <>
           <p className={sectionCls}>来源</p>
 
-          {[...pinnedEditors, ...editors].map(([key, count]) => {
+          {[...productEditors, ...editors, customEditor].map(([key, count]) => {
             const meta = getEditorMeta(key)
             const active = editorFilter === key
             return (

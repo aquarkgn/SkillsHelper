@@ -100,9 +100,9 @@ export const BRAND_APP_MAP = {
   openclaw: {
     bundleIds: [],
     appNames: ['OpenClaw'],
-    officialIconPages: [],
-    officialIconUrls: [],
-    remoteIconCache: false,
+    officialIconPages: ['https://openclaw.ai/'],
+    officialIconUrls: ['https://openclaw.ai/favicon.svg'],
+    remoteIconCache: true,
   },
   mcp: { bundleIds: [], appNames: [], officialIconUrls: [], remoteIconCache: false, emoji: '🔌' },
   google: {

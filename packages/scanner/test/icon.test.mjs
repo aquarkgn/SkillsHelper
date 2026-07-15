@@ -15,6 +15,8 @@ test('resolveBrandSpec resolves known brands and raw bundle ids', () => {
   assert.equal(resolveBrandSpec('Cursor')?.appNames.includes('Cursor'), true, 'case-insensitive');
   assert.equal(normalizeBrandKey('code'), 'vscode');
   assert.equal(normalizeBrandKey('claude-code'), 'claude');
+  assert.equal(normalizeBrandKey('openclaw'), 'openclaw');
+  assert.deepEqual(resolveBrandSpec('openclaw')?.officialIconUrls, ['https://openclaw.ai/favicon.svg']);
   // A dotted string is treated as an explicit bundle id
   const spec = resolveBrandSpec('com.example.MyApp');
   assert.deepEqual(spec?.bundleIds, ['com.example.MyApp']);
