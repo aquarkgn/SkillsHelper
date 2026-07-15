@@ -57,6 +57,7 @@ test('resolveIconRef maps brand/source to the official icon endpoint', () => {
   // Falls through to source when brand is absent/unmapped
   const bySource = resolveIconRef({ source: 'vs-code' }, 32);
   assert.equal(bySource.iconUrl, '/api/icons/vscode?size=32');
+  assert.equal(resolveIconRef({ brand: 'tauri' }, 64).iconUrl, '/api/icons/tauri?size=64');
 
   // Unknown brand → empty（前端显示中性占位）
   assert.deepEqual(resolveIconRef({ brand: 'made-up' }), {});

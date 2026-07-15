@@ -414,10 +414,10 @@ function locateWebPublicDirs() {
   ]) {
     if (fs.existsSync(p) && fs.statSync(p).isDirectory()) candidates.push(p);
   }
-  // packaged: server sits in packages/server, icons live in packages/web/public
+  // packaged: scanner sits in packages/scanner/src/icon, icons live in packages/web/public
   try {
     const here = path.dirname(fileURLToPath(import.meta.url));
-    candidates.push(path.resolve(here, '..', '..', 'web', 'public'));
+    candidates.push(path.resolve(here, '..', '..', '..', 'web', 'public'));
   } catch {}
   _webPublicDirs = candidates;
   return _webPublicDirs;
