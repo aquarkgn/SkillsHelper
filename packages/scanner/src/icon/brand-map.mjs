@@ -69,8 +69,9 @@ export const BRAND_APP_MAP = {
   codex: {
     bundleIds: [],
     appNames: ['Codex'],
+    aliases: ['openai', 'chatgpt'],
     officialIconPages: ['https://openai.com/codex/'],
-    officialIconUrls: [],
+    officialIconUrls: ['https://openai.com/favicon.ico'],
     remoteIconCache: true,
     fingerprints: ['openai.com', 'codex.com'],
     emoji: '📋',
@@ -95,6 +96,13 @@ export const BRAND_APP_MAP = {
     officialIconUrls: [],
     remoteIconCache: false,
     emoji: '⚡',
+  },
+  openclaw: {
+    bundleIds: [],
+    appNames: ['OpenClaw'],
+    officialIconPages: [],
+    officialIconUrls: [],
+    remoteIconCache: false,
   },
   mcp: { bundleIds: [], appNames: [], officialIconUrls: [], remoteIconCache: false, emoji: '🔌' },
   google: {

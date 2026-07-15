@@ -32,9 +32,9 @@ describe('editors 映射（D2 主轴 = editor）', () => {
     expect(isNoneEditor('Claude Code')).toBe(false)
   })
 
-  it('Claude 多来源归一为同一个 Claude Code 筛选键', () => {
+  it('Claude 多来源归一为同一个 Anthropic / Claude Code 筛选键', () => {
     for (const source of ['Claude', 'Claude Code', 'claude-agents', 'claude-plugin', 'Anthropic']) {
-      expect(normalizeEditorKey(source)).toBe('claude-code')
+      expect(normalizeEditorKey(source)).toBe('anthropic-claude')
     }
   })
 })

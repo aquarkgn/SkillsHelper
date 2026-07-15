@@ -139,6 +139,11 @@ export interface SkillItem {
     translationModel?: string;
   };
 
+  translation?: {
+    name: 'ready' | 'pending' | 'failed' | 'idle';
+    description: 'ready' | 'pending' | 'failed' | 'idle';
+  };
+
   plugin?: PluginMetadata;
 }
 

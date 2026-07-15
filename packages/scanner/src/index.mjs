@@ -322,20 +322,24 @@ function withLegacyMetadata(item) {
       pathHash = item.id; // 降级：用 id 作为 pathHash
     }
 
-    // 分层逻辑
-    let tier = 'tier-1'; // 默认 tier-1（编辑器工具）
-    if (item.tier === 'directory') {
-      tier = 'tier-2'; // 用户目录技能
-    } else if (item.tier === 'other') {
-      tier = 'tier-3'; // 其他
-    }
+    // tierId 与 editorBrand 由分层扫描器明确给出时必须保留；brand 是技能内容
+    // 主题（如 Airtable），不能覆盖所属编辑器品牌（如 Hermes）。
+    let tier = item.tierId || 'tier-1';
+    if (!item.tierId && item.tier === 'directory') tier = 'tier-2';
+    if (!item.tierId && item.tier === 'other') tier = 'tier-3';
 
-    // 提取 editorBrand
-    let editorBrand = item.brand || item.source;
-    if (editorBrand === 'claude-code') editorBrand = 'claude';
-    if (editorBrand === 'hermes-plugin') editorBrand = 'hermes';
-    if (editorBrand === 'claude-agents') editorBrand = 'claude';
-    if (editorBrand === 'claude-plugin') editorBrand = 'claude';
+    let editorBrand = item.editorBrand;
+    if (!editorBrand && tier === 'tier-1') {
+      editorBrand = item.editor || item.source;
+      if (/codex|openai|chatgpt/i.test(editorBrand)) editorBrand = 'codex';
+      if (/hermes/i.test(editorBrand)) editorBrand = 'hermes';
+      if (/trae[\s-]?cn/i.test(editorBrand)) editorBrand = 'trae-cn';
+      if (/trae/i.test(editorBrand)) editorBrand = 'trae';
+      if (editorBrand === 'claude-code') editorBrand = 'claude';
+      if (editorBrand === 'hermes-plugin') editorBrand = 'hermes';
+      if (editorBrand === 'claude-agents') editorBrand = 'claude';
+      if (editorBrand === 'claude-plugin') editorBrand = 'claude';
+    }
 
     return {
       ...item,

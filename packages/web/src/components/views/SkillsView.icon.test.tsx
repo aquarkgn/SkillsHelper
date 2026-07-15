@@ -100,6 +100,45 @@ describe('SkillsView 官方图标', () => {
     expect(img).toHaveAttribute('src', '/api/icons/cursor?size=24')
   })
 
+  it('所属编辑器品牌优先于内容品牌作为列表图标，并同时展示双品牌徽章', () => {
+    const { container } = renderSkills([
+      mkSkill({
+        id: 'hermes-airtable',
+        editor: 'Hermes',
+        editorBrand: 'hermes',
+        brand: 'Airtable',
+      }),
+    ])
+
+    expect(container.querySelector('img')).toHaveAttribute('src', '/api/icons/hermes?size=24')
+    expect(screen.getByText('所属 Hermes')).toBeInTheDocument()
+    expect(screen.getByText('内容 Airtable')).toBeInTheDocument()
+  })
+
+  it('无所属品牌时显示默认技能图标与未标记徽章', () => {
+    renderSkills([
+      mkSkill({
+        id: 'unbranded-skill',
+        tier: 'tier-2',
+        source: 'my-skills',
+        editor: 'my-skills',
+      }),
+    ])
+
+    expect(screen.getAllByTestId('official-brand-icon-fallback')).not.toHaveLength(0)
+    expect(screen.getByText('未标记')).toBeInTheDocument()
+  })
+
+  it('列表明确显示后台翻译排队和失败状态', () => {
+    renderSkills([
+      mkSkill({ id: 'translation-pending', translation: { name: 'pending', description: 'pending' } }),
+      mkSkill({ id: 'translation-failed', name: 'translation-failed', translation: { name: 'failed', description: 'failed' } }),
+    ])
+
+    expect(screen.getByText('翻译准备中')).toBeInTheDocument()
+    expect(screen.getByText('翻译不可用')).toBeInTheDocument()
+  })
+
   it('右侧上下文面板兼容后端返回的字符串分类', () => {
     renderSkills([
       mkSkill({
@@ -157,10 +196,10 @@ describe('SkillsView 官方图标', () => {
       { onEditorFilter, onKind },
     )
 
-    fireEvent.change(screen.getByLabelText('来源'), { target: { value: 'claude-code' } })
+    fireEvent.change(screen.getByLabelText('来源'), { target: { value: 'anthropic-claude' } })
     fireEvent.change(screen.getByLabelText('类型'), { target: { value: 'mcp' } })
 
-    expect(onEditorFilter).toHaveBeenCalledWith('claude-code')
+    expect(onEditorFilter).toHaveBeenCalledWith('anthropic-claude')
     expect(onKind).toHaveBeenCalledWith('mcp')
   })
 
@@ -181,7 +220,14 @@ describe('SkillsView 官方图标', () => {
       option.textContent,
     )
 
-    expect(options).toEqual(['全部来源', '自定义技能 1', 'Claude Code 1'])
+    expect(options).toEqual([
+      '全部来源',
+      'ChatGPT / Codex 0',
+      'Anthropic / Claude Code 1',
+      'Hermes 0',
+      'OpenClaw 0',
+      '自定义技能 1',
+    ])
   })
 
   it('自定义技能条目不重复显示 my-skills 来源短码', () => {
@@ -195,7 +241,7 @@ describe('SkillsView 官方图标', () => {
       }),
     ])
 
-    expect(screen.getAllByText('自定义技能').length).toBeGreaterThan(0)
+    expect(screen.getByText('所属 自定义技能')).toBeInTheDocument()
     expect(screen.queryByText('我的技能')).toBeNull()
     expect(screen.queryByText('my-skills')).toBeNull()
   })

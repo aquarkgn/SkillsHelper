@@ -64,6 +64,20 @@ describe('useLiveReload', () => {
     expect(onReload).not.toHaveBeenCalled()
   })
 
+  it('翻译版本变化时静默刷新列表', async () => {
+    const onReload = vi.fn()
+    let revision = 0
+    vi.stubGlobal('fetch', vi.fn().mockImplementation(async () => ({
+      ok: true,
+      json: async () => ({ lastReloadAt: '2026-01-01T00:00:00Z', translation: { revision } }),
+    })))
+    renderHook(() => useLiveReload(onReload))
+    await vi.advanceTimersByTimeAsync(0)
+    revision = 1
+    await vi.advanceTimersByTimeAsync(10000)
+    expect(onReload).toHaveBeenCalledTimes(1)
+  })
+
   it('轮询失败时静默，不触发 onReload 也不抛错', async () => {
     const onReload = vi.fn()
     vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('network')))

@@ -38,9 +38,12 @@ interface Rule {
 const RULES: Rule[] = [
   { test: /^my-skills$/i, color: '#10B981', icon: Boxes },
   { test: /^other-skills$/i, color: '#8B5CF6', icon: Sparkles },
-  { test: /claude|anthropic/i, color: '#D97757', icon: Sparkles, iconBrand: 'claude' },
-  { test: /codex|openai/i, color: '#10A37F', icon: Cpu, iconBrand: 'codex' },
+  { test: /anthropic-claude|claude|anthropic/i, color: '#D97757', icon: Sparkles, iconBrand: 'claude' },
+  { test: /chatgpt-codex|codex|openai|chatgpt/i, color: '#10A37F', icon: Cpu, iconBrand: 'codex' },
   { test: /hermes/i, color: '#4A5FC7', icon: Bot, iconBrand: 'hermes' },
+  { test: /openclaw/i, color: '#0F766E', icon: Ghost },
+  { test: /trae[\s-]?cn/i, color: '#2563EB', icon: Code2, iconBrand: 'trae-cn' },
+  { test: /trae/i, color: '#2563EB', icon: Code2, iconBrand: 'trae' },
   { test: /cursor/i, color: '#1F2937', icon: Code2, iconBrand: 'cursor' },
   { test: /windsurf/i, color: '#10B6C4', icon: Wind, iconBrand: 'windsurf' },
   { test: /kiro/i, color: '#8B5CF6', icon: Ghost },
@@ -50,19 +53,26 @@ const RULES: Rule[] = [
 ]
 
 const FALLBACK: Omit<EditorMeta, 'label'> = { color: '#6B7280', icon: Boxes }
-export const PINNED_SKILL_SOURCES = ['my-skills', 'claude-code'] as const
+export const PINNED_SKILL_SOURCES = ['chatgpt-codex', 'anthropic-claude', 'hermes', 'openclaw', 'my-skills'] as const
 
 const LABELS: Record<string, string> = {
   'my-skills': '自定义技能',
   'other-skills': '其它技能',
-  'claude-code': 'Claude Code',
+  'chatgpt-codex': 'ChatGPT / Codex',
+  'anthropic-claude': 'Anthropic / Claude Code',
+  hermes: 'Hermes',
+  openclaw: 'OpenClaw',
 }
 
 /** Claude 的技能、Agent 与插件在技能库中属于同一来源。 */
 export function normalizeEditorKey(key?: string | null): string {
   const value = key?.trim()
   if (!value) return '(none)'
-  return /claude|anthropic/i.test(value) ? 'claude-code' : value
+  if (/claude|anthropic/i.test(value)) return 'anthropic-claude'
+  if (/codex|openai|chatgpt/i.test(value)) return 'chatgpt-codex'
+  if (/hermes/i.test(value)) return 'hermes'
+  if (/openclaw/i.test(value)) return 'openclaw'
+  return value
 }
 
 /** 是否为「无归属」桶（C6）——调用方据此过滤或标注「未分类」。 */

@@ -46,7 +46,7 @@ describe('SkillDetail（P7 markdown 正文）', () => {
     })
     render(<SkillDetail item={item} />)
     // 元数据
-    expect(screen.getByText('Claude Code')).toBeInTheDocument()
+    expect(screen.getByText('Anthropic / Claude Code')).toBeInTheDocument()
     expect(screen.getByText((item.paths as NonNullable<typeof item.paths>).abs)).toBeInTheDocument()
     expect(screen.getByText('复制正文')).toBeInTheDocument()
     // markdown 渲染（异步加载后出现）

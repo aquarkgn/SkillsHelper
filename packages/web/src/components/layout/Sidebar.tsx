@@ -44,7 +44,7 @@ export function Sidebar({
   const pinnedSourceSet = new Set<string>(PINNED_SKILL_SOURCES)
   const editors = Object.entries(byEditor)
     .filter(([k, count]) => !isNoneEditor(k) && !pinnedSourceSet.has(k) && count > 0)
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => a[0].localeCompare(b[0], 'zh-CN'))
   const pinnedEditors = PINNED_SKILL_SOURCES.map((key) => [key, byEditor[key] ?? 0] as const)
   const noneCount = Object.entries(byEditor).find(([k]) => isNoneEditor(k))?.[1] ?? 0
   const total = stats?.total ?? 0
@@ -98,7 +98,7 @@ export function Sidebar({
         <>
           <p className={sectionCls}>来源</p>
 
-          {[...editors, ...pinnedEditors].map(([key, count]) => {
+          {[...pinnedEditors, ...editors].map(([key, count]) => {
             const meta = getEditorMeta(key)
             const active = editorFilter === key
             return (

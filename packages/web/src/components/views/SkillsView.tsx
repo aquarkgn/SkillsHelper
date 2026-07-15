@@ -37,9 +37,8 @@ const TIER_OPTIONS: Array<{ key: TierFilter | null; label: string }> = [
 ]
 
 function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
-  const icons = getSkillIcons(item)
-  const iconBrand = item.brand || item.editorBrand
-  const officialBrand = icons.isTier1 ? iconBrand : null
+  // editorBrand 是所属产品；brand 是技能正文识别出的主题，不能用后者替换来源图标。
+  const officialBrand = item.editorBrand || null
 
   return (
     <OfficialBrandIcon
@@ -80,11 +79,6 @@ function formatUpdatedAt(value?: string): string {
 function categoriesOf(item: SkillItem): string[] {
   if (Array.isArray(item.category)) return item.category.filter(Boolean)
   return item.category ? [item.category] : []
-}
-
-function shouldShowSourceBadge(item: SkillItem): boolean {
-  const icons = getSkillIcons(item)
-  return editorLabel(itemEditorKey(item)) !== icons.tierLabel
 }
 
 function PluginCapabilityBadges({ item, compact = false }: { item: SkillItem; compact?: boolean }) {
@@ -294,7 +288,7 @@ export function SkillsView({
     const pinnedSources = PINNED_SKILL_SOURCES.map(
       (source) => [source, counts.get(source) ?? 0] as const,
     )
-    return [...sortedSources, ...pinnedSources]
+    return [...pinnedSources, ...sortedSources]
   }, [items, tierFilter])
 
   const byEditor = useMemo(() => {
@@ -514,6 +508,9 @@ export function SkillsView({
                 const icons = getSkillIcons(it)
                 const isSelected = selected?.id === it.id
                 const sourceLabel = editorLabel(itemEditorKey(it))
+                const hasContentBrand = Boolean(
+                  it.brand && it.brand.toLocaleLowerCase() !== (it.editorBrand ?? '').toLocaleLowerCase(),
+                )
                 return (
                   <button
                     key={it.id}
@@ -558,9 +555,26 @@ export function SkillsView({
                         >
                           {icons.isTier1 ? '官方工具' : '其它技能'}
                         </span>
-                        {shouldShowSourceBadge(it) && (
+                        <span className="rounded-sm bg-muted px-1.5 py-0.5 text-caption text-muted-foreground">
+                          所属 {sourceLabel}
+                        </span>
+                        {hasContentBrand ? (
+                          <span className="rounded-sm bg-sky-500/10 px-1.5 py-0.5 text-caption text-sky-700 dark:text-sky-300">
+                            内容 {it.brand}
+                          </span>
+                        ) : !it.editorBrand ? (
                           <span className="rounded-sm bg-muted px-1.5 py-0.5 text-caption text-muted-foreground">
-                            {sourceLabel}
+                            未标记
+                          </span>
+                        ) : null}
+                        {it.translation?.description === 'pending' && (
+                          <span className="rounded-sm bg-amber-500/10 px-1.5 py-0.5 text-caption text-amber-700 dark:text-amber-300">
+                            翻译准备中
+                          </span>
+                        )}
+                        {it.translation?.description === 'failed' && (
+                          <span className="rounded-sm bg-destructive/10 px-1.5 py-0.5 text-caption text-destructive">
+                            翻译不可用
                           </span>
                         )}
                         <PluginCapabilityBadges item={it} compact />

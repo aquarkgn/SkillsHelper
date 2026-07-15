@@ -23,6 +23,8 @@ const PACKAGE_JSON = path.resolve(PKGS_ROOT, '..', 'package.json');
 const VERSION = readPackageVersion();
 const WEB_DIST = path.join(PKGS_ROOT, 'web', 'dist');
 const WEB_PUBLIC = path.join(PKGS_ROOT, 'web', 'public');
+const TRANSLATION_CONCURRENCY = 2;
+const TRANSLATION_RETRY_DELAY = 5 * 60 * 1000;
 const ROOT_STATIC_FILES = [
   'favicon.ico',
   'favicon.svg',
@@ -53,6 +55,38 @@ function readPackageVersion() {
   }
 }
 
+function translationProvider() {
+  return process.env.SKILLHELPER_TRANSLATION_PROVIDER || 'google';
+}
+
+function cacheOptions() {
+  return { to: 'zh-CN', provider: translationProvider() };
+}
+
+function isTranslationEnabled() {
+  return process.env.SKILLHELPER_TRANSLATE === '1';
+}
+
+function editorBrandFrom(value) {
+  const key = String(value || '').trim().toLowerCase();
+  if (!key) return undefined;
+  if (/claude|anthropic/.test(key)) return 'claude';
+  if (/codex|openai/.test(key)) return 'codex';
+  if (/hermes/.test(key)) return 'hermes';
+  if (/trae[\s-]?cn/.test(key)) return 'trae-cn';
+  if (/trae/.test(key)) return 'trae';
+  if (/cursor/.test(key)) return 'cursor';
+  if (/windsurf|codeium/.test(key)) return 'windsurf';
+  if (/vscode|visual studio code/.test(key)) return 'vscode';
+  return undefined;
+}
+
+function normalizedTier(item) {
+  if (item.tierId === 'tier-1' || item.tier === 'tier-1' || item.tier === 'tool') return 'tier-1';
+  if (item.tierId === 'tier-2' || item.tier === 'tier-2' || item.tier === 'directory') return 'tier-2';
+  return 'tier-3';
+}
+
 /**
  * 翻译文本 —— 中文短路 + md5 缓存 + Google 翻译，失败降级原文本。
  * @param {string} text - 要翻译的文本
@@ -60,7 +94,7 @@ function readPackageVersion() {
  * @returns {Promise<{result:string,status:'source'|'cached'|'translated'|'unchanged'|'failed'|'timeout',provider:string,error?:string}>} 翻译结果与状态
  */
 async function translateText(text, targetLang = 'zh-CN') {
-  const provider = process.env.SKILLHELPER_TRANSLATION_PROVIDER || 'google';
+  const provider = translationProvider();
   if (!text || !text.trim()) return { result: '', status: 'source', provider };
 
   // 1. 语言判定：已是中文则直接返回，省一次外网请求
@@ -132,6 +166,97 @@ export async function startServer({ port = 11520 } = {}) {
   };
   let reloadTimer = null;
   let watcher = null;
+  const translationQueue = [];
+  const queuedTranslationKeys = new Set();
+  const translationFailures = new Map();
+  let activeTranslations = 0;
+  let translationRevision = 0;
+
+  function translationKey(id, field, text) {
+    return crypto.createHash('sha256').update(`${id}\u0000${field}\u0000${text}`, 'utf8').digest('hex');
+  }
+
+  function translationQueueState() {
+    return {
+      revision: translationRevision,
+      pending: translationQueue.length + activeTranslations,
+      failed: translationFailures.size,
+    };
+  }
+
+  function cachedZh(item) {
+    const source = item.i18n || {};
+    const zh = { ...(source.zh || {}) };
+    if (source.name_zh && !zh.name) zh.name = source.name_zh;
+    if (source.description_zh && !zh.description) zh.description = source.description_zh;
+    const options = cacheOptions();
+    if (item.description && !zh.description) {
+      const cached = getCached(item.description, options);
+      if (cached) zh.description = cached.result;
+    }
+    const name = item.title || item.name;
+    if (name && !zh.name) {
+      const cached = getCached(name, options);
+      if (cached && cached.result !== name) zh.name = cached.result;
+    }
+    return zh;
+  }
+
+  function fieldTranslationState(id, field, text, hasTranslation) {
+    if (!text || isChinese(text) || hasTranslation) return 'ready';
+    const failure = translationFailures.get(translationKey(id, field, text));
+    if (failure && failure.retryAt > Date.now()) return 'failed';
+    return isTranslationEnabled() ? 'pending' : 'idle';
+  }
+
+  function enqueueTranslation(id, field, text) {
+    if (!isTranslationEnabled() || !text || isChinese(text)) return;
+    const key = translationKey(id, field, text);
+    const failure = translationFailures.get(key);
+    if (queuedTranslationKeys.has(key) || (failure && failure.retryAt > Date.now())) return;
+    queuedTranslationKeys.add(key);
+    translationQueue.push({ id, field, text, key });
+    void drainTranslationQueue();
+  }
+
+  async function drainTranslationQueue() {
+    while (activeTranslations < TRANSLATION_CONCURRENCY && translationQueue.length > 0) {
+      const job = translationQueue.shift();
+      if (!job) return;
+      activeTranslations++;
+      void (async () => {
+        try {
+          const translated = await translateText(job.text, 'zh-CN');
+          if (translated.status === 'translated' || translated.status === 'cached' || translated.status === 'source') {
+            translationFailures.delete(job.key);
+            translationRevision++;
+          } else {
+            translationFailures.set(job.key, {
+              retryAt: Date.now() + TRANSLATION_RETRY_DELAY,
+              status: translated.status,
+            });
+          }
+        } finally {
+          queuedTranslationKeys.delete(job.key);
+          activeTranslations--;
+          void drainTranslationQueue();
+        }
+      })();
+    }
+  }
+
+  function attachTranslations(base) {
+    const zh = cachedZh(base);
+    if (Object.keys(zh).length) {
+      base.i18n = { zh, translatedAt: new Date().toISOString() };
+    }
+    const name = base.title || base.name;
+    const nameState = fieldTranslationState(base.id, 'name', name, Boolean(zh.name));
+    const descriptionState = fieldTranslationState(base.id, 'description', base.description, Boolean(zh.description));
+    base.translation = { name: nameState, description: descriptionState };
+    if (nameState === 'pending') enqueueTranslation(base.id, 'name', name);
+    if (descriptionState === 'pending') enqueueTranslation(base.id, 'description', base.description);
+  }
 
   async function runReload(reason = 'manual') {
     if (reloadState.scanning) {
@@ -218,12 +343,12 @@ export async function startServer({ port = 11520 } = {}) {
       return base;
     }
 
-    // 列表接口也补齐官方图标引用，保证旧侧栏和技能列表都能直接渲染真实应用图标。
+    // 品牌图标只使用所属编辑器品牌；base.brand 是技能内容主题，不能让
+    // Airtable/OpenAI 等主题图标覆盖 Hermes/Codex 的来源图标。
     const { iconUrl, iconFallback } = resolveIconRef(
       {
         icon: base.icon,
-        brand: base.brand || base.editorBrand,
-        source: base.source,
+        brand: base.editorBrand || editorBrandFrom(base.editor || base.source),
       },
       size,
     );
@@ -264,20 +389,11 @@ export async function startServer({ port = 11520 } = {}) {
       const base = stripRaw(item);
       base.editorKey = normalizedEditorKey(base);
       
-      // 确保有 tier 字段
-      if (!base.tier || base.tier === 'tool') {
-        base.tier = 'tier-1'; // 默认 tier-1
-      } else if (base.tier === 'directory') {
-        base.tier = 'tier-2';
-      } else if (base.tier === 'other') {
-        base.tier = 'tier-3';
-      }
-      
-      // 确保有 editorBrand 字段
-      if (!base.editorBrand && base.source) {
-        base.editorBrand = base.source;
-        if (base.editorBrand === 'claude-code') base.editorBrand = 'claude';
-        if (base.editorBrand === 'hermes-plugin') base.editorBrand = 'hermes';
+      // tierId/editorBrand 是来源身份；brand 是技能内容主题，二者不能互相覆盖。
+      base.tier = normalizedTier(base);
+      base.tierId = base.tier;
+      if (!base.editorBrand && base.tier === 'tier-1') {
+        base.editorBrand = editorBrandFrom(base.editor || base.source);
       }
 
       attachIconRef(base, 64);
@@ -290,20 +406,7 @@ export async function startServer({ port = 11520 } = {}) {
         base.pathHash = base.id;
       }
 
-      // 填充缓存命中的 i18n（无网络，毫秒级）。未命中的留空，详情页按需翻译。
-      // description 和 name 都可能命中（用户在详情页触发翻译后写缓存，下次列表命中）。
-      const zh = {};
-      if (base.description) {
-        const cached = getCached(base.description);
-        if (cached) zh.description = cached.result;
-      }
-      if (base.name) {
-        const cached = getCached(base.name);
-        if (cached && cached.result !== base.name) zh.name = cached.result;
-      }
-      if (Object.keys(zh).length) {
-        base.i18n = { zh, translatedAt: new Date().toISOString() };
-      }
+      attachTranslations(base);
 
       return base;
     });
@@ -318,16 +421,12 @@ export async function startServer({ port = 11520 } = {}) {
     // 返回副本，避免下面的 i18n 填充污染 irById 缓存
     const result = { ...item };
     result.editorKey = normalizedEditorKey(result);
-    // 填充缓存命中的 i18n（无网络，毫秒级）——与 /api/skills 列表口径一致
-    const zh = {};
-    if (result.description) {
-      const cached = getCached(result.description);
-      if (cached) zh.description = cached.result;
+    result.tier = normalizedTier(result);
+    result.tierId = result.tier;
+    if (!result.editorBrand && result.tier === 'tier-1') {
+      result.editorBrand = editorBrandFrom(result.editor || result.source);
     }
-    if (result.name) {
-      const cached = getCached(result.name);
-      if (cached && cached.result !== result.name) zh.name = cached.result;
-    }
+    const zh = cachedZh(result);
     // SKILLHELPER_TRANSLATE=1 时主动翻译 description（缓存未命中）
     if (
       process.env.SKILLHELPER_TRANSLATE === '1' &&
@@ -495,6 +594,7 @@ export async function startServer({ port = 11520 } = {}) {
   app.get('/api/reload-state', async () => ({
     ok: !reloadState.lastError,
     ...reloadState,
+    translation: translationQueueState(),
   }));
 
   app.post('/api/reload', async () => runReload('manual'));

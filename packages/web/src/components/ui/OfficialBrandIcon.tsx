@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { ImageIcon } from 'lucide-react'
+import { FileText } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 interface OfficialBrandIconProps {
@@ -95,7 +95,7 @@ export function OfficialBrandIcon({
       aria-label={label}
       data-testid="official-brand-icon-fallback"
     >
-      <ImageIcon size={Math.max(12, Math.round(size * 0.55))} aria-hidden="true" />
+      <FileText size={Math.max(12, Math.round(size * 0.55))} aria-hidden="true" />
     </span>
   )
 }

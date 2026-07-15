@@ -102,6 +102,10 @@ test('server exposes health, list, detail, stats, and reload state without raw i
   assert.equal(items[0].raw, undefined, 'list endpoint must not expose raw content');
   assert.equal(items[0].iconUrl, '/api/icons/hermes?size=64');
   assert.equal(items[0].iconFallback, undefined, '品牌无官方图标时不再注入 emoji 伪装兜底');
+  assert.equal(items[0].tier, 'tier-1');
+  assert.equal(items[0].tierId, 'tier-1');
+  assert.equal(items[0].editorBrand, 'hermes');
+  assert.equal(items[0].translation.description, 'idle');
 
   const detail = await app.inject({ method: 'GET', url: `/api/skills/${items[0].id}` });
   assert.equal(detail.statusCode, 200);
@@ -115,6 +119,7 @@ test('server exposes health, list, detail, stats, and reload state without raw i
   const reloadState = await app.inject({ method: 'GET', url: '/api/reload-state' });
   assert.equal(reloadState.statusCode, 200);
   assert.equal(JSON.parse(reloadState.body).items, 1);
+  assert.deepEqual(JSON.parse(reloadState.body).translation, { revision: 0, pending: 0, failed: 0 });
 });
 
 test('server exposes safe Codex plugin metadata without leaking MCP configuration', async (t) => {

@@ -13,6 +13,7 @@ const POLL_INTERVAL = 10000 // 10s 轮询一次
  */
 export function useLiveReload(onReload: () => void) {
   const lastReloadAt = useRef<string>('')
+  const translationRevision = useRef<number | null>(null)
   useEffect(() => {
     let timer: ReturnType<typeof setInterval> | undefined
     const poll = async () => {
@@ -20,11 +21,19 @@ export function useLiveReload(onReload: () => void) {
         const res = await fetch('/api/reload-state')
         if (!res.ok) return
         const data = await res.json()
-        if (data.lastReloadAt && data.lastReloadAt !== lastReloadAt.current) {
+        const reloadChanged = data.lastReloadAt && data.lastReloadAt !== lastReloadAt.current
+        const nextTranslationRevision = typeof data.translation?.revision === 'number'
+          ? data.translation.revision
+          : null
+        const translationChanged = nextTranslationRevision !== null
+          && translationRevision.current !== null
+          && nextTranslationRevision !== translationRevision.current
+        if (reloadChanged || translationChanged) {
           // 首次只记录，不触发刷新（避免启动时多余刷新）
-          if (lastReloadAt.current) onReload()
-          lastReloadAt.current = data.lastReloadAt
+          if (lastReloadAt.current || translationRevision.current !== null) onReload()
         }
+        if (data.lastReloadAt) lastReloadAt.current = data.lastReloadAt
+        if (nextTranslationRevision !== null) translationRevision.current = nextTranslationRevision
       } catch {
         // 静默：轮询失败不打断界面
       }

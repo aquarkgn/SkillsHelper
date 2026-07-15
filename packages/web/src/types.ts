@@ -69,6 +69,12 @@ export interface SkillItem {
     translatedAt?: string
   }
 
+  /** 列表后台翻译状态；pending/failed 均保留原文，避免误标为中文译文。 */
+  translation?: {
+    name: 'ready' | 'pending' | 'failed' | 'idle'
+    description: 'ready' | 'pending' | 'failed' | 'idle'
+  }
+
   // v4.0 Priority Scan & Menu Layering
   /** MD5(normalizedAbsPath) — 用于去重和菜单分层 */
   pathHash?: string

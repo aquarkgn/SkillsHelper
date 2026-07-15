@@ -57,14 +57,14 @@ describe('Sidebar 工作区导航', () => {
     )
 
     expect(screen.getByText('来源')).toBeInTheDocument()
-    expect(screen.getByText('Claude Code')).toBeInTheDocument()
+    expect(screen.getByText('Anthropic / Claude Code')).toBeInTheDocument()
     expect(screen.getByText('Cursor')).toBeInTheDocument()
     expect(screen.getByText('未分类')).toBeInTheDocument()
     expect(screen.queryByText('命令品牌')).toBeNull()
     expect(screen.queryByText('claude')).toBeNull()
   })
 
-  it('技能库来源项使用统一中文名称展示自定义技能，并固定 Claude Code 在普通来源之后', () => {
+  it('技能库来源项按固定产品顺序展示双品牌与其它技能', () => {
     const { container } = render(
       <Sidebar
         module="skills"
@@ -80,7 +80,7 @@ describe('Sidebar 工作区导航', () => {
     )
 
     expect(screen.getByText('自定义技能')).toBeInTheDocument()
-    expect(screen.getByText('Claude Code')).toBeInTheDocument()
+    expect(screen.getByText('Anthropic / Claude Code')).toBeInTheDocument()
     expect(screen.queryByText('其它技能')).toBeNull()
     expect(screen.queryByText('我的技能')).toBeNull()
     expect(screen.queryByText('my-skills')).toBeNull()
@@ -88,13 +88,19 @@ describe('Sidebar 工作区导航', () => {
 
     const sourceLabels = Array.from(container.querySelectorAll('button'))
       .map((button) => button.textContent ?? '')
-      .filter((text) => /Hermes|Claude Code|Codex|自定义技能/.test(text))
+      .filter((text) => /Hermes|Anthropic \/ Claude Code|ChatGPT \/ Codex|OpenClaw|自定义技能/.test(text))
       .map((text) => text.replace(/\d+$/, ''))
 
-    expect(sourceLabels).toEqual(['Hermes', 'Codex', '自定义技能', 'Claude Code'])
+    expect(sourceLabels).toEqual([
+      'ChatGPT / Codex',
+      'Anthropic / Claude Code',
+      'Hermes',
+      'OpenClaw',
+      '自定义技能',
+    ])
   })
 
-  it('Claude Code 在后端 byEditor 缺失时仍以 0 计数渲染', () => {
+  it('Anthropic / Claude Code 在后端 byEditor 缺失时仍以 0 计数渲染', () => {
     const { container } = render(
       <Sidebar
         module="skills"
@@ -109,14 +115,14 @@ describe('Sidebar 工作区导航', () => {
       />,
     )
 
-    const claudeButton = screen.getByText('Claude Code').closest('button')
+    const claudeButton = screen.getByText('Anthropic / Claude Code').closest('button')
     expect(claudeButton).toBeInTheDocument()
     expect(claudeButton?.querySelector('img')?.getAttribute('src')).toBe('/api/icons/claude?size=20')
     expect(claudeButton?.textContent).toContain('0')
     expect(screen.queryByText('其它技能')).toBeNull()
   })
 
-  it('归并 Claude 与 Claude Code 的统计，只显示一个 Claude Code 菜单项', () => {
+  it('归并 Claude 与 Claude Code 的统计，只显示一个双品牌菜单项', () => {
     render(
       <Sidebar
         module="skills"
@@ -131,8 +137,8 @@ describe('Sidebar 工作区导航', () => {
       />,
     )
 
-    expect(screen.getAllByText('Claude Code')).toHaveLength(1)
-    expect(screen.getByText('Claude Code').closest('button')).toHaveTextContent('5')
+    expect(screen.getAllByText('Anthropic / Claude Code')).toHaveLength(1)
+    expect(screen.getByText('Anthropic / Claude Code').closest('button')).toHaveTextContent('5')
   })
 
   it('其它技能只在 byEditor 实际有值时渲染，0 不渲染', () => {
@@ -206,9 +212,9 @@ describe('Sidebar 工作区导航', () => {
       />,
     )
 
-    fireEvent.click(screen.getByText('Claude Code'))
+    fireEvent.click(screen.getByText('Anthropic / Claude Code'))
     fireEvent.click(screen.getByText('技能库'))
-    expect(onEditor).toHaveBeenCalledWith('claude-code')
+    expect(onEditor).toHaveBeenCalledWith('anthropic-claude')
     expect(onEditor).toHaveBeenCalledWith(null)
   })
 
@@ -232,7 +238,7 @@ describe('Sidebar 工作区导航', () => {
       expect(screen.getByText(brand)).toBeInTheDocument()
     }
     expect(screen.queryByText('来源')).toBeNull()
-    expect(screen.queryByText('Claude Code')).toBeNull()
+    expect(screen.queryByText('Anthropic / Claude Code')).toBeNull()
   })
 
   it('命令模块：每个品牌旁通过 /api/icons 渲染官方图标，code 使用 vscode iconBrand', () => {
@@ -282,7 +288,7 @@ describe('Sidebar 工作区导航', () => {
       />,
     )
 
-    const claude = screen.getByText('Claude Code').closest('button')
+    const claude = screen.getByText('Anthropic / Claude Code').closest('button')
     const cursor = screen.getByText('Cursor').closest('button')
     expect(claude?.querySelector('img')?.getAttribute('src')).toBe('/api/icons/claude?size=20')
     expect(cursor?.querySelector('img')?.getAttribute('src')).toBe('/api/icons/cursor?size=20')

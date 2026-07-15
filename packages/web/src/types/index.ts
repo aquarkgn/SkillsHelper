@@ -70,6 +70,11 @@ export interface SkillItem {
     }
     translatedAt?: string
   }
+
+  translation?: {
+    name: 'ready' | 'pending' | 'failed' | 'idle'
+    description: 'ready' | 'pending' | 'failed' | 'idle'
+  }
 }
 
 export interface Stats {
