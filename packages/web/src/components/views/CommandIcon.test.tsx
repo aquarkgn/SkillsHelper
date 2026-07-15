@@ -25,12 +25,12 @@ describe('CommandIcon 官方品牌图标', () => {
     expect(wrapper?.style.width).toBe('20px')
   })
 
-  it('官方图标加载失败后显示中性占位，不显示自制 SVG 或 emoji', () => {
+  it('官方图标加载失败后显示项目默认图标', () => {
     const { container, getByTestId } = render(<CommandIcon brand="codex" />)
     const img = container.querySelector('img')
     expect(img).toBeTruthy()
     if (img) fireEvent.error(img)
-    expect(container.querySelector('img')).toBeNull()
+    expect(container.querySelector('img')).toHaveAttribute('src', '/brand-icon.png')
     expect(getByTestId('official-brand-icon-fallback')).toBeInTheDocument()
   })
 })

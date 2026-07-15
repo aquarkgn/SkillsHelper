@@ -58,7 +58,7 @@ export interface SkillItem {
 
   /**
    * i18n 翻译结果（仅 description 走在线翻译，name 保持原英文）。
-   * 后端在 SKILLHELPER_TRANSLATE=1 时按需填充；缓存命中的也在列表接口返回。
+   * 后端默认按需填充；SKILLHELPER_TRANSLATE=0 时仅返回缓存命中结果。
    */
   i18n?: {
     zh?: {

@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react'
-import { FileText } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
 interface OfficialBrandIconProps {
@@ -25,7 +24,7 @@ function iconUrlForBrand(brand: string, size: number): string {
 
 /**
  * 官方品牌图标组件：只显示后端 /api/icons 返回的真实/官方图标。
- * 加载失败时显示中性占位，不再用 lucide 品牌图标或自制 SVG 伪装官方 icon。
+ * 加载失败时使用项目品牌图标，保证未知来源也有一致、可识别的默认视觉。
  */
 export function OfficialBrandIcon({
   brand,
@@ -95,7 +94,15 @@ export function OfficialBrandIcon({
       aria-label={label}
       data-testid="official-brand-icon-fallback"
     >
-      <FileText size={Math.max(12, Math.round(size * 0.55))} aria-hidden="true" />
+      <img
+        src="/brand-icon.png"
+        alt={label ? `${label} 默认图标` : ''}
+        aria-hidden={label ? undefined : true}
+        width={innerSize}
+        height={innerSize}
+        className="rounded-[4px] object-contain"
+        style={{ height: innerSize, width: innerSize }}
+      />
     </span>
   )
 }

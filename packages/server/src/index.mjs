@@ -64,7 +64,8 @@ function cacheOptions() {
 }
 
 function isTranslationEnabled() {
-  return process.env.SKILLHELPER_TRANSLATE === '1';
+  // 前端中文展示默认开启，服务端也默认补译；只有显式设为 0 才关闭外部翻译。
+  return process.env.SKILLHELPER_TRANSLATE !== '0';
 }
 
 function editorBrandFrom(value) {
@@ -427,9 +428,9 @@ export async function startServer({ port = 11520 } = {}) {
       result.editorBrand = editorBrandFrom(result.editor || result.source);
     }
     const zh = cachedZh(result);
-    // SKILLHELPER_TRANSLATE=1 时主动翻译 description（缓存未命中）
+    // 翻译启用时主动补译详情 description（缓存未命中）
     if (
-      process.env.SKILLHELPER_TRANSLATE === '1' &&
+      isTranslationEnabled() &&
       result.description &&
       !zh.description &&
       !isChinese(result.description)

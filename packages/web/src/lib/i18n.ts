@@ -114,7 +114,7 @@ export function pluginSearchText(item: {
 }
 
 // 翻译展示开关（localStorage）—— 控制前端是否优先展示译文。
-// 后端 SKILLHELPER_TRANSLATE=1 控制是否预翻译；前端开关控制是否展示。
+// 后端默认补译，SKILLHELPER_TRANSLATE=0 可关闭；前端开关控制是否展示。
 // 默认启用（用户要求中文化）。
 const TRANSLATE_DISPLAY_KEY = 'skillhelper_translate_display'
 

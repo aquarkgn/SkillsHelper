@@ -125,7 +125,9 @@ describe('SkillsView 官方图标', () => {
       }),
     ])
 
-    expect(screen.getAllByTestId('official-brand-icon-fallback')).not.toHaveLength(0)
+    const fallback = screen.getAllByTestId('official-brand-icon-fallback')
+    expect(fallback).not.toHaveLength(0)
+    expect(fallback[0]?.querySelector('img')).toHaveAttribute('src', '/brand-icon.png')
     expect(screen.getByText('未标记')).toBeInTheDocument()
   })
 

@@ -30,8 +30,14 @@ async function bootFixtureServer(t, { withCodexPlugin = false } = {}) {
   // 不再读取 sources.yaml 的 hermes.roots。把 HOME 指向临时目录，让 tier1
   // 扫描器从 <home>/.hermes/skills/ 下找到 fixture skill。
   const oldHome = process.env.HOME;
+  const oldTranslate = process.env.SKILLHELPER_TRANSLATE;
   process.env.HOME = home;
-  t.after(() => { process.env.HOME = oldHome; });
+  process.env.SKILLHELPER_TRANSLATE = '0';
+  t.after(() => {
+    process.env.HOME = oldHome;
+    if (oldTranslate === undefined) delete process.env.SKILLHELPER_TRANSLATE;
+    else process.env.SKILLHELPER_TRANSLATE = oldTranslate;
+  });
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
   write(path.join(home, '.hermes', 'skills', 'quote-skill', 'SKILL.md'), `---

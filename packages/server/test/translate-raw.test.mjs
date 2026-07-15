@@ -12,6 +12,9 @@ import assert from 'node:assert/strict';
 
 import { startServer, splitSegments } from '../src/index.mjs';
 
+// 本文件的断言只覆盖正文翻译；关闭列表后台队列，避免测试扫描到真实技能后触发外网请求。
+process.env.SKILLHELPER_TRANSLATE = '0';
+
 test('splitSegments: 代码块整体保留为 code 类型', () => {
   const text = '段落一\n\n```js\nconst x = 1;\n```\n\n段落二';
   const segs = splitSegments(text);
