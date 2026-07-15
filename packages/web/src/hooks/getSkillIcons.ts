@@ -80,7 +80,7 @@ const TIER_ICONS: Record<string, IconMapping> = {
   },
   directory: {
     icon: '📁',
-    label: '自定义技能',
+    label: '其它技能',
     colorClass: 'text-emerald-600',
   },
   other: {

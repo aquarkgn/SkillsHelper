@@ -1,7 +1,7 @@
 import { BookOpen, LayoutDashboard, Layers, Settings, TerminalSquare } from 'lucide-react'
 import type { ModuleKey } from '@/components/layout/Topbar'
 import { cn } from '@/lib/cn'
-import { getEditorMeta, isNoneEditor, PINNED_SKILL_SOURCES } from '@/lib/editors'
+import { getEditorMeta, isNoneEditor, normalizeEditorKey, PINNED_SKILL_SOURCES } from '@/lib/editors'
 import { COMMAND_BRAND_SUMMARIES } from '@/lib/commands'
 import { CommandIcon } from '@/components/views/CommandIcon'
 import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon'
@@ -33,7 +33,14 @@ export function Sidebar({
   onCommandBrand,
   onEditor,
 }: SidebarProps) {
-  const byEditor = stats?.byEditor ?? {}
+  const byEditor = Object.entries(stats?.byEditor ?? {}).reduce<Record<string, number>>(
+    (normalized, [key, count]) => {
+      const editorKey = normalizeEditorKey(key)
+      normalized[editorKey] = (normalized[editorKey] ?? 0) + count
+      return normalized
+    },
+    {},
+  )
   const pinnedSourceSet = new Set<string>(PINNED_SKILL_SOURCES)
   const editors = Object.entries(byEditor)
     .filter(([k, count]) => !isNoneEditor(k) && !pinnedSourceSet.has(k) && count > 0)

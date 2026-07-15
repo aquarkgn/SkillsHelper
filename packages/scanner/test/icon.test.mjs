@@ -23,6 +23,16 @@ test('resolveBrandSpec resolves known brands and raw bundle ids', () => {
   assert.equal(resolveBrandSpec(''), null);
 });
 
+test('R0 编辑器品牌都有可追溯的官方图标来源或本机应用映射', () => {
+  const brands = ['hermes', 'claude', 'cursor', 'vscode', 'codeium', 'windsurf', 'continue', 'tauri', 'trae', 'trae-cn', 'qoder', 'codex', 'vim', 'neovim', 'emacs', 'sublime', 'jetbrains', 'nova', 'zed', 'copilot', 'replit', 'glot'];
+  for (const brand of brands) {
+    const spec = BRAND_APP_MAP[brand];
+    assert.ok(spec, `${brand} must be registered`);
+    assert.ok((spec.appNames?.length || 0) + (spec.bundleIds?.length || 0) > 0 || spec.localIconBase, `${brand} must have an official local icon source`);
+    for (const url of spec.officialIconUrls || []) assert.match(url, /^https:\/\//);
+  }
+});
+
 test('emojiForBrand returns the mapped emoji', () => {
   assert.equal(emojiForBrand('hermes'), BRAND_APP_MAP.hermes.emoji);
   assert.equal(emojiForBrand('CLAUDE-CODE'), BRAND_APP_MAP.claude.emoji);
@@ -319,4 +329,3 @@ test('getIconForBrand: 本地兜底优先于远程下载', async (t) => {
   const p64 = await getIconForBrand('hermes', 64);
   assert.ok(p64?.endsWith('hermes-128.png'), `期望回退到 hermes-128，实际 ${p64}`);
 });
-

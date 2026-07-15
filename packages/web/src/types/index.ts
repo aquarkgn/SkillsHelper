@@ -40,6 +40,8 @@ export interface SkillItem {
   description?: string
   category?: string | string[]
   editor?: string
+  /** 服务端归一后的来源筛选键；editor/source 保留原始扫描来源。 */
+  editorKey?: string
   brand?: string
   product?: string
   triggers?: string[]

@@ -13,7 +13,7 @@ describe('App reducer 状态机（module × view，首页为默认）', () => {
       ...initialState,
       module: 'home',
       view: 'home',
-      tierFilter: 'tier-3',
+      tierFilter: 'other',
       kindFilter: 'skill',
       selectedId: 'abc',
     }
@@ -46,7 +46,7 @@ describe('App reducer 状态机（module × view，首页为默认）', () => {
   it('query / kind / select 只改对应字段', () => {
     expect(reducer(initialState, { type: 'query', query: 'mcp' }).query).toBe('mcp')
     expect(reducer(initialState, { type: 'commandQuery', query: 'serve' }).commandQuery).toBe('serve')
-    expect(reducer(initialState, { type: 'tier', tier: 'tier-3' }).tierFilter).toBe('tier-3')
+    expect(reducer(initialState, { type: 'tier', tier: 'other' }).tierFilter).toBe('other')
     expect(reducer(initialState, { type: 'kind', kind: 'skill' }).kindFilter).toBe('skill')
     expect(reducer(initialState, { type: 'select', id: 'x1' }).selectedId).toBe('x1')
   })
@@ -106,7 +106,7 @@ describe('App reducer 状态机（module × view，首页为默认）', () => {
     const otherSkills = reducer(dirty, { type: 'otherSkills' })
     expect(otherSkills.module).toBe('skills')
     expect(otherSkills.view).toBe('skills')
-    expect(otherSkills.tierFilter).toBe('tier-3')
+    expect(otherSkills.tierFilter).toBe('other')
     expect(otherSkills.editorFilter).toBeNull()
     expect(otherSkills.selectedCommandBrand).toBeNull()
   })

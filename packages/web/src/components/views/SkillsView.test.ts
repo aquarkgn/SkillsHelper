@@ -17,7 +17,7 @@ function mk(partial: Partial<SkillItem>): SkillItem {
 
 describe('itemEditorKey（与 server buildStats 口径一致）', () => {
   it('优先 editor', () => {
-    expect(itemEditorKey(mk({ editor: 'Claude Code', source: 'claude-code' }))).toBe('Claude Code')
+    expect(itemEditorKey(mk({ editor: 'Claude Code', source: 'claude-code' }))).toBe('claude-code')
   })
   it('无 editor 落到 source', () => {
     expect(itemEditorKey(mk({ editor: undefined, source: 'hermes' }))).toBe('hermes')

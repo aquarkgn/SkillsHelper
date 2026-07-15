@@ -116,6 +116,25 @@ describe('Sidebar 工作区导航', () => {
     expect(screen.queryByText('其它技能')).toBeNull()
   })
 
+  it('归并 Claude 与 Claude Code 的统计，只显示一个 Claude Code 菜单项', () => {
+    render(
+      <Sidebar
+        module="skills"
+        view="skills"
+        editorFilter={null}
+        selectedCommandBrand={null}
+        stats={statsWith({ Claude: 2, 'Claude Code': 3 })}
+        onHome={noop}
+        onSettings={noop}
+        onCommandBrand={noop}
+        onEditor={noop}
+      />,
+    )
+
+    expect(screen.getAllByText('Claude Code')).toHaveLength(1)
+    expect(screen.getByText('Claude Code').closest('button')).toHaveTextContent('5')
+  })
+
   it('其它技能只在 byEditor 实际有值时渲染，0 不渲染', () => {
     const { container } = render(
       <Sidebar
@@ -189,7 +208,7 @@ describe('Sidebar 工作区导航', () => {
 
     fireEvent.click(screen.getByText('Claude Code'))
     fireEvent.click(screen.getByText('技能库'))
-    expect(onEditor).toHaveBeenCalledWith('Claude Code')
+    expect(onEditor).toHaveBeenCalledWith('claude-code')
     expect(onEditor).toHaveBeenCalledWith(null)
   })
 

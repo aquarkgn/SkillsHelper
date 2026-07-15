@@ -25,8 +25,8 @@ function mkSkill(partial: Partial<SkillItem>): SkillItem {
 type RenderSkillsOptions = Partial<{
   editorFilter: string | null
   onEditorFilter: (key: string | null) => void
-  tierFilter: 'tier-1' | 'tier-2' | 'tier-3' | null
-  onTier: (tier: 'tier-1' | 'tier-2' | 'tier-3' | null) => void
+  tierFilter: 'official' | 'other' | null
+  onTier: (tier: 'official' | 'other' | null) => void
   kindFilter: string | null
   onKind: (kind: string | null) => void
   query: string
@@ -113,10 +113,21 @@ describe('SkillsView 官方图标', () => {
     expect(screen.getByText('release')).toBeInTheDocument()
   })
 
+  it('详情上下文卡片不显示技能层级标签', () => {
+    renderSkills([
+      mkSkill({ id: 'custom-skill', tier: 'tier-2', source: 'my-skills', editor: 'my-skills' }),
+    ])
+
+    const contextPanel = screen.getByText('当前条目').closest('section')
+    expect(contextPanel).not.toHaveTextContent('自定义技能')
+    expect(contextPanel).not.toHaveTextContent('其它技能')
+  })
+
   it('范围筛选把其它技能作为技能库的一部分展示', () => {
     renderSkills(
       [
         mkSkill({ id: 'tool-skill', name: 'tool-skill', tier: 'tier-1' }),
+        mkSkill({ id: 'custom-skill', name: 'custom-skill', tier: 'tier-2', source: 'my-skills', editor: 'my-skills' }),
         mkSkill({
           id: 'other-skill',
           name: 'other-skill',
@@ -125,12 +136,13 @@ describe('SkillsView 官方图标', () => {
           editor: 'other-skills',
         }),
       ],
-      { tierFilter: 'tier-3' },
+      { tierFilter: 'other' },
     )
 
     expect(screen.getAllByText('other-skill').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('custom-skill').length).toBeGreaterThan(0)
     expect(screen.queryByText('tool-skill')).toBeNull()
-    expect(screen.getByRole('button', { name: /其它技能\s*1/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /其它技能\s*2/ })).toBeInTheDocument()
   })
 
   it('搜索区来源和类型筛选会回传受控值', () => {
@@ -145,10 +157,10 @@ describe('SkillsView 官方图标', () => {
       { onEditorFilter, onKind },
     )
 
-    fireEvent.change(screen.getByLabelText('来源'), { target: { value: 'Claude Code' } })
+    fireEvent.change(screen.getByLabelText('来源'), { target: { value: 'claude-code' } })
     fireEvent.change(screen.getByLabelText('类型'), { target: { value: 'mcp' } })
 
-    expect(onEditorFilter).toHaveBeenCalledWith('Claude Code')
+    expect(onEditorFilter).toHaveBeenCalledWith('claude-code')
     expect(onKind).toHaveBeenCalledWith('mcp')
   })
 
@@ -207,7 +219,7 @@ describe('SkillsView 官方图标', () => {
         ]}
         editorFilter="my-skills"
         onEditorFilter={onEditorFilter}
-        tierFilter="tier-2"
+        tierFilter="other"
         onTier={onTier}
         query="custom"
         onQuery={onQuery}
@@ -311,7 +323,7 @@ describe('SkillsView 官方图标', () => {
     expect(listItems[0]).toHaveAttribute('data-skill-id', 'sites')
   })
 
-  it('点击范围按钮回传 tier-3，用于首页其它技能快捷入口', () => {
+  it('点击范围按钮回传 other，用于首页其它技能快捷入口', () => {
     const onTier = vi.fn()
 
     renderSkills(
@@ -323,6 +335,6 @@ describe('SkillsView 官方图标', () => {
     )
 
     fireEvent.click(screen.getByRole('button', { name: /其它技能\s*1/ }))
-    expect(onTier).toHaveBeenCalledWith('tier-3')
+    expect(onTier).toHaveBeenCalledWith('other')
   })
 })

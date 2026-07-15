@@ -39,6 +39,8 @@ export interface SkillItem {
   brand?: string
   dirName?: string
   editor?: string
+  /** 服务端归一后的来源筛选键；editor/source 保留原始扫描来源。 */
+  editorKey?: string
   product?: string
   triggers?: string[]
   tags?: string[]

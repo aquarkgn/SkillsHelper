@@ -98,6 +98,7 @@ test('server exposes health, list, detail, stats, and reload state without raw i
   const items = JSON.parse(list.body);
   assert.equal(items.length, 1);
   assert.equal(items[0].name, "quote's skill");
+  assert.equal(items[0].editorKey, 'Hermes', '列表接口应返回规范来源筛选键');
   assert.equal(items[0].raw, undefined, 'list endpoint must not expose raw content');
   assert.equal(items[0].iconUrl, '/api/icons/hermes?size=64');
   assert.equal(items[0].iconFallback, undefined, '品牌无官方图标时不再注入 emoji 伪装兜底');

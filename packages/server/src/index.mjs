@@ -243,6 +243,7 @@ export async function startServer({ port = 11520 } = {}) {
 
     return irCache.map(item => {
       const base = stripRaw(item);
+      base.editorKey = normalizedEditorKey(base);
       
       // 确保有 tier 字段
       if (!base.tier || base.tier === 'tool') {
@@ -297,6 +298,7 @@ export async function startServer({ port = 11520 } = {}) {
     }
     // 返回副本，避免下面的 i18n 填充污染 irById 缓存
     const result = { ...item };
+    result.editorKey = normalizedEditorKey(result);
     // 填充缓存命中的 i18n（无网络，毫秒级）——与 /api/skills 列表口径一致
     const zh = {};
     if (result.description) {
@@ -923,7 +925,7 @@ function buildStats(items) {
   const byKind = {};
   for (const it of items) {
     bySource[it.source] = (bySource[it.source] || 0) + 1;
-    const editor = it.editor || it.source || '(none)';
+    const editor = normalizedEditorKey(it);
     byEditor[editor] = (byEditor[editor] || 0) + 1;
     byKind[it.kind] = (byKind[it.kind] || 0) + 1;
     const cat = it.category || '(none)';
@@ -940,6 +942,12 @@ function buildStats(items) {
     byBrand,
     labels: LABELS,
   };
+}
+
+/** Claude 的多个扫描来源在技能库导航中归为同一 Claude Code 入口。 */
+function normalizedEditorKey(item) {
+  const key = item.editorKey || item.editor || item.source || '(none)';
+  return /claude|anthropic/i.test(key) ? 'claude-code' : key;
 }
 
 // ─────────────────────────────── placeholder UI ──────────────────────────

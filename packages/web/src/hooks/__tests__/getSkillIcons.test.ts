@@ -101,7 +101,7 @@ describe('getSkillIcons', () => {
 
       expect(result.isTier2).toBe(true)
       expect(result.tierIcon).toBe('📁') // Directory icon
-      expect(result.tierLabel).toBe('自定义技能')
+      expect(result.tierLabel).toBe('其它技能')
       expect(result.displayLabel).toBe('📁 auth-flow')
       expect(result.tierSort).toBe(2)
     })
@@ -235,7 +235,7 @@ describe('getSkillIcons', () => {
       expect(tiers).toContainEqual({
         tier: 'directory',
         icon: '📁',
-        label: '自定义技能',
+        label: '其它技能',
       })
       expect(tiers).toContainEqual({
         tier: 'other',

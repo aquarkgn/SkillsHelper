@@ -91,6 +91,8 @@ export function SkillDetail({ item, variant = 'full' }: SkillDetailProps) {
   const fetchedRawFor = useRef<string | null>(null)
   // 切换技能时取消未完成的翻译请求，避免旧译文覆盖新技能状态、旧请求占用连接池
   const translateAbortRef = useRef<AbortController | null>(null)
+  const sourceLabel = editorLabel(itemEditorKey(item))
+  const showSource = sourceLabel !== '自定义技能' && sourceLabel !== '其它技能'
 
   // 拉取原文 raw + 按需翻译 description / name
   useEffect(() => {
@@ -263,8 +265,12 @@ export function SkillDetail({ item, variant = 'full' }: SkillDetailProps) {
           <dl className="mt-4 grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-body-sm">
             <dt className="text-muted-foreground">类型</dt>
             <dd>{kindLabel(item.kind)}</dd>
-            <dt className="text-muted-foreground">来源</dt>
-            <dd>{editorLabel(itemEditorKey(item))}</dd>
+            {showSource && (
+              <>
+                <dt className="text-muted-foreground">来源</dt>
+                <dd>{sourceLabel}</dd>
+              </>
+            )}
             <dt className="text-muted-foreground">路径</dt>
             <dd className="break-all font-mono text-caption">{item.paths?.abs}</dd>
           </dl>

@@ -50,11 +50,19 @@ const RULES: Rule[] = [
 ]
 
 const FALLBACK: Omit<EditorMeta, 'label'> = { color: '#6B7280', icon: Boxes }
-export const PINNED_SKILL_SOURCES = ['my-skills', 'Claude Code'] as const
+export const PINNED_SKILL_SOURCES = ['my-skills', 'claude-code'] as const
 
 const LABELS: Record<string, string> = {
   'my-skills': '自定义技能',
   'other-skills': '其它技能',
+  'claude-code': 'Claude Code',
+}
+
+/** Claude 的技能、Agent 与插件在技能库中属于同一来源。 */
+export function normalizeEditorKey(key?: string | null): string {
+  const value = key?.trim()
+  if (!value) return '(none)'
+  return /claude|anthropic/i.test(value) ? 'claude-code' : value
 }
 
 /** 是否为「无归属」桶（C6）——调用方据此过滤或标注「未分类」。 */
@@ -64,7 +72,7 @@ export function isNoneEditor(key: string): boolean {
 
 /** 单条目的 editor 归属 key，与 server buildStats 口径一致（it.editor || it.source || '(none)'）。 */
 export function itemEditorKey(it: SkillItem): string {
-  return it.editor || it.source || '(none)'
+  return normalizeEditorKey(it.editorKey || it.editor || it.source)
 }
 
 /** 把原始 editor key 转为展示用 label（(none) → 未分类）。 */

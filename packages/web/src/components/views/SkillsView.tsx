@@ -28,13 +28,12 @@ import { getSkillIcons } from '@/hooks/getSkillIcons'
 import { OfficialBrandIcon } from '@/components/ui/OfficialBrandIcon'
 import type { SkillItem } from '@/types'
 
-type TierFilter = 'tier-1' | 'tier-2' | 'tier-3'
+type TierFilter = 'official' | 'other'
 
 const TIER_OPTIONS: Array<{ key: TierFilter | null; label: string }> = [
   { key: null, label: '全部' },
-  { key: 'tier-1', label: '官方工具' },
-  { key: 'tier-2', label: '自定义技能' },
-  { key: 'tier-3', label: '其它技能' },
+  { key: 'official', label: '官方工具' },
+  { key: 'other', label: '其它技能' },
 ]
 
 function SkillIcon({ item, size = 20 }: { item: SkillItem; size?: number }) {
@@ -110,19 +109,19 @@ function PluginCapabilityBadges({ item, compact = false }: { item: SkillItem; co
 }
 
 function tierKeyOf(item: SkillItem): TierFilter {
-  if (item.tierId) return item.tierId
+  if (item.tierId === 'tier-1') return 'official'
+  if (item.tierId === 'tier-2' || item.tierId === 'tier-3') return 'other'
   switch (item.tier) {
     case 'tool':
     case 'tier-1':
-      return 'tier-1'
+      return 'official'
     case 'directory':
     case 'tier-2':
-      return 'tier-2'
     case 'other':
     case 'tier-3':
-      return 'tier-3'
+      return 'other'
     default:
-      return 'tier-3'
+      return 'other'
   }
 }
 
@@ -156,9 +155,10 @@ function titleForSort(item: SkillItem): string {
 }
 
 function SkillContextPanel({ item }: { item: SkillItem }) {
-  const icons = getSkillIcons(item)
   const categories = categoriesOf(item)
   const tags = item.tags ?? []
+  const sourceLabel = editorLabel(itemEditorKey(item))
+  const showSource = sourceLabel !== '自定义技能' && sourceLabel !== '其它技能'
   const actionButtonClass = 'h-9 justify-start px-2.5'
 
   return (
@@ -172,7 +172,6 @@ function SkillContextPanel({ item }: { item: SkillItem }) {
               <h3 className="truncate text-body font-semibold text-foreground">
                 {item.title || item.name}
               </h3>
-              <p className="mt-1 text-caption text-muted-foreground">{icons.tierLabel}</p>
             </div>
           </div>
         </div>
@@ -180,8 +179,12 @@ function SkillContextPanel({ item }: { item: SkillItem }) {
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-2 text-body-sm">
           <dt className="text-muted-foreground">类型</dt>
           <dd>{kindLabel(item.kind)}</dd>
-          <dt className="text-muted-foreground">来源</dt>
-          <dd className="min-w-0 truncate">{editorLabel(itemEditorKey(item))}</dd>
+          {showSource && (
+            <>
+              <dt className="text-muted-foreground">来源</dt>
+              <dd className="min-w-0 truncate">{sourceLabel}</dd>
+            </>
+          )}
           <dt className="text-muted-foreground">更新</dt>
           <dd className="font-mono text-caption">{formatUpdatedAt(item.updatedAt)}</dd>
           <dt className="text-muted-foreground">路径</dt>
@@ -548,12 +551,12 @@ export function SkillsView({
                         <span
                           className={cn(
                             'rounded-sm px-1.5 py-0.5 text-caption font-medium',
-                            icons.isTier1 && 'bg-primary-soft text-primary',
-                            icons.isTier2 && 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300',
-                            icons.isTier3 && 'bg-muted text-muted-foreground',
+                            icons.isTier1
+                              ? 'bg-primary-soft text-primary'
+                              : 'bg-muted text-muted-foreground',
                           )}
                         >
-                          {icons.tierLabel}
+                          {icons.isTier1 ? '官方工具' : '其它技能'}
                         </span>
                         {shouldShowSourceBadge(it) && (
                           <span className="rounded-sm bg-muted px-1.5 py-0.5 text-caption text-muted-foreground">

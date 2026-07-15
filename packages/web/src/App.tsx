@@ -10,7 +10,7 @@ import { useLiveReload } from '@/hooks/useLiveReload'
 import { fetchSkills, fetchStats, reload } from '@/lib/api'
 import type { SkillItem, Stats } from '@/types'
 
-type TierFilter = 'tier-1' | 'tier-2' | 'tier-3'
+type TierFilter = 'official' | 'other'
 
 export type View = 'home' | 'skills' | 'settings' | 'cli' | 'editor'
 
@@ -127,7 +127,7 @@ export function reducer(state: UIState, action: Action): UIState {
         module: 'skills',
         view: 'skills',
         editorFilter: null,
-        tierFilter: 'tier-3',
+        tierFilter: 'other',
         kindFilter: null,
         selectedId: null,
         selectedCommandBrand: null,

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getEditorMeta, isNoneEditor, editorLabel } from '@/lib/editors'
+import { getEditorMeta, isNoneEditor, editorLabel, normalizeEditorKey } from '@/lib/editors'
 
 describe('editors 映射（D2 主轴 = editor）', () => {
   it('按关键字归一着色（Claude/Codex/Hermes/Cursor）', () => {
@@ -30,5 +30,11 @@ describe('editors 映射（D2 主轴 = editor）', () => {
     expect(isNoneEditor('(none)')).toBe(true)
     expect(isNoneEditor('')).toBe(true)
     expect(isNoneEditor('Claude Code')).toBe(false)
+  })
+
+  it('Claude 多来源归一为同一个 Claude Code 筛选键', () => {
+    for (const source of ['Claude', 'Claude Code', 'claude-agents', 'claude-plugin', 'Anthropic']) {
+      expect(normalizeEditorKey(source)).toBe('claude-code')
+    }
   })
 })

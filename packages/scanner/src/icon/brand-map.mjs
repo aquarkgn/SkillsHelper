@@ -124,6 +124,23 @@ export const BRAND_APP_MAP = {
     fingerprints: ['notion.com', 'notion.so'],
     emoji: '📓',
   },
+  // 扫描规则 R0 的其余编辑器：只使用本机官方 .app 图标。尚无稳定、
+  // 可核验官方图片地址时显式禁用远程回退，前端显示中性占位而非自绘图标。
+  codeium: { bundleIds: ['com.exafunction.windsurf'], appNames: ['Windsurf'], aliases: ['codeium-windsurf'], officialIconPages: ['https://codeium.com/'], officialIconUrls: [], remoteIconCache: false },
+  windsurf: { bundleIds: ['com.exafunction.windsurf'], appNames: ['Windsurf'], officialIconPages: ['https://windsurf.com/'], officialIconUrls: [], remoteIconCache: false },
+  continue: { bundleIds: [], appNames: ['Continue'], officialIconPages: ['https://www.continue.dev/'], officialIconUrls: [], remoteIconCache: false },
+  tauri: { bundleIds: [], appNames: ['Tauri'], officialIconPages: ['https://tauri.app/'], officialIconUrls: [], remoteIconCache: false },
+  qoder: { bundleIds: [], appNames: ['Qoder'], officialIconPages: ['https://qoder.com/'], officialIconUrls: [], remoteIconCache: false },
+  vim: { bundleIds: [], appNames: ['MacVim'], aliases: ['macvim'], officialIconPages: ['https://www.vim.org/'], officialIconUrls: [], remoteIconCache: false },
+  neovim: { bundleIds: [], appNames: ['Neovide'], aliases: ['nvim'], officialIconPages: ['https://neovim.io/'], officialIconUrls: [], remoteIconCache: false },
+  emacs: { bundleIds: [], appNames: ['Emacs'], officialIconPages: ['https://www.gnu.org/software/emacs/'], officialIconUrls: [], remoteIconCache: false },
+  sublime: { bundleIds: ['com.sublimetext.4'], appNames: ['Sublime Text'], aliases: ['sublime-text'], officialIconPages: ['https://www.sublimetext.com/'], officialIconUrls: [], remoteIconCache: false },
+  jetbrains: { bundleIds: [], appNames: ['IntelliJ IDEA', 'PyCharm', 'WebStorm', 'GoLand', 'RubyMine', 'CLion'], officialIconPages: ['https://www.jetbrains.com/'], officialIconUrls: [], remoteIconCache: false },
+  nova: { bundleIds: ['com.panic.Nova'], appNames: ['Nova'], officialIconPages: ['https://nova.app/'], officialIconUrls: [], remoteIconCache: false },
+  zed: { bundleIds: ['dev.zed.Zed'], appNames: ['Zed'], officialIconPages: ['https://zed.dev/'], officialIconUrls: [], remoteIconCache: false },
+  copilot: { bundleIds: ['com.github.copilot'], appNames: ['GitHub Copilot'], aliases: ['github-copilot'], officialIconPages: ['https://github.com/features/copilot'], officialIconUrls: [], remoteIconCache: false },
+  replit: { bundleIds: [], appNames: ['Replit'], officialIconPages: ['https://replit.com/'], officialIconUrls: [], remoteIconCache: false },
+  glot: { bundleIds: [], appNames: ['Glot'], aliases: ['glot.io'], officialIconPages: ['https://glot.io/'], officialIconUrls: [], remoteIconCache: false },
   // Trae 字节跳动 AI IDE。trae-cn 本机装了 Trae CN.app，走本地 .app 图标提取。
   'trae-cn': {
     bundleIds: ['cn.trae.app'],
