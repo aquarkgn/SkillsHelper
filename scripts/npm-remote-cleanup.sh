@@ -56,7 +56,11 @@ for pkg in "${OLD_PACKAGES[@]}"; do
   fi
 
   echo "deprecate $pkg: $MESSAGE"
-  npm deprecate "$pkg" "$MESSAGE"
+  if ! npm deprecate "$pkg" "$MESSAGE"; then
+    # 旧包可能已被废弃；该维护动作失败不能阻断新包的正式发布。
+    echo "警告：$pkg 废弃状态未更新，继续处理其余旧包。" >&2
+    continue
+  fi
 
   if $UNPUBLISH; then
     echo "尝试 unpublish $pkg --force"
