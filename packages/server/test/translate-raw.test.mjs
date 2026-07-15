@@ -111,3 +111,25 @@ test('translate-raw: 不存在的 id 返回 404', async () => {
     await app.close();
   }
 });
+
+test('translate: 未配置的国内供应商明确返回失败，不把原文伪装为译文', async () => {
+  const previous = process.env.SKILLHELPER_TRANSLATION_PROVIDER;
+  process.env.SKILLHELPER_TRANSLATION_PROVIDER = 'aliyun';
+  const { app, port } = await startServer({ port: 0 });
+  try {
+    const res = await fetch(`http://127.0.0.1:${port}/api/translate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: 'Translate this sentence.' }),
+    });
+    const body = await res.json();
+    assert.equal(body.ok, false);
+    assert.equal(body.status, 'failed');
+    assert.equal(body.provider, 'aliyun');
+    assert.match(body.error, /尚未配置/);
+  } finally {
+    if (previous === undefined) delete process.env.SKILLHELPER_TRANSLATION_PROVIDER;
+    else process.env.SKILLHELPER_TRANSLATION_PROVIDER = previous;
+    await app.close();
+  }
+});

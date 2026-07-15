@@ -27,7 +27,7 @@ interface SkillDetailProps {
 }
 
 type RawStatus = 'loading' | 'ready' | 'error'
-type TranslateStatus = 'idle' | 'loading' | 'ready' | 'error'
+type TranslateStatus = 'idle' | 'loading' | 'ready' | 'partial' | 'error'
 type TabMode = 'zh' | 'raw'
 
 function PluginDetails({ item }: { item: SkillItem }) {
@@ -177,7 +177,7 @@ export function SkillDetail({ item, variant = 'full' }: SkillDetailProps) {
     let alive = true
     setTranslateStatus('loading')
     setTranslateProgress(null)
-    fetchTranslatedRaw(item.id, {
+    fetchTranslatedRaw(item.id, raw, {
       signal: ac.signal,
       onProgress: (p) => {
         if (alive) setTranslateProgress(p)
@@ -186,7 +186,7 @@ export function SkillDetail({ item, variant = 'full' }: SkillDetailProps) {
       .then((res) => {
         if (!alive) return
         setSegments(res.segments || [])
-        setTranslateStatus('ready')
+        setTranslateStatus(res.ok ? 'ready' : res.partial ? 'partial' : 'error')
         setTranslateProgress(null)
         fetchedRawFor.current = item.id
       })
@@ -221,7 +221,7 @@ export function SkillDetail({ item, variant = 'full' }: SkillDetailProps) {
     }
     // tabMode === 'zh'
     const useTranslated =
-      translateStatus === 'ready' && translatedText.trim().length > 0
+      (translateStatus === 'ready' || translateStatus === 'partial') && translatedText.trim().length > 0
     return (
       <>
         {translateStatus === 'loading' && (
@@ -232,7 +232,10 @@ export function SkillDetail({ item, variant = 'full' }: SkillDetailProps) {
           </p>
         )}
         {translateStatus === 'error' && (
-          <p className="mb-2 text-caption text-destructive">翻译失败，显示原文</p>
+          <p className="mb-2 text-caption text-destructive">翻译服务不可用，显示原文。请检查网络或在设置中配置翻译服务。</p>
+        )}
+        {translateStatus === 'partial' && (
+          <p className="mb-2 text-caption text-destructive">部分段落未翻译，以下内容保留原文。</p>
         )}
         <div
           className="markdown-body"

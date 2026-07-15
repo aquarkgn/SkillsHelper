@@ -57,17 +57,28 @@ function readPackageVersion() {
  * 翻译文本 —— 中文短路 + md5 缓存 + Google 翻译，失败降级原文本。
  * @param {string} text - 要翻译的文本
  * @param {string} targetLang - 目标语言 (默认: 'zh-CN')
- * @returns {Promise<string>} 翻译结果
+ * @returns {Promise<{result:string,status:'source'|'cached'|'translated'|'unchanged'|'failed'|'timeout',provider:string,error?:string}>} 翻译结果与状态
  */
 async function translateText(text, targetLang = 'zh-CN') {
-  if (!text || !text.trim()) return '';
+  const provider = process.env.SKILLHELPER_TRANSLATION_PROVIDER || 'google';
+  if (!text || !text.trim()) return { result: '', status: 'source', provider };
 
   // 1. 语言判定：已是中文则直接返回，省一次外网请求
-  if (isChinese(text)) return text;
+  if (isChinese(text)) return { result: text, status: 'source', provider };
 
   // 2. 查缓存（命中即返回，跨技能共享）
-  const cached = getCached(text);
-  if (cached) return cached.result;
+  const cached = getCached(text, { to: targetLang, provider });
+  if (cached) return { result: cached.result, status: 'cached', provider };
+
+  // 国内供应商必须走官方签名 API，未配置时明确失败，绝不悄悄降级到 Google。
+  if (provider !== 'google') {
+    return {
+      result: text,
+      status: 'failed',
+      provider,
+      error: `翻译供应商 ${provider} 尚未配置`,
+    };
+  }
 
   // 3. 调 Google 翻译（免费），结果写缓存
   // 加 8s 超时：google-translate-api-x 默认无超时，Google 偶发慢/超时会让请求
@@ -84,11 +95,19 @@ async function translateText(text, targetLang = 'zh-CN') {
     // google-translate-api-x 偶发不返回 from.language.code（部分文本 Google 无法判定源语言），
     // 用本地 detectLanguage 兜底，避免 from 字段落盘为 'unknown'。
     const from = result.from?.language?.code || detectLanguage(text);
-    setCached(text, translated, from);
-    return translated;
+    if (translated === text) {
+      return { result: text, status: 'unchanged', provider };
+    }
+    setCached(text, translated, from, { to: targetLang, provider });
+    return { result: translated, status: 'translated', provider };
   } catch (e) {
     console.warn(`[translate] error: ${e.message}`);
-    return text; // 降级返回原文本
+    return {
+      result: text,
+      status: e.message === 'translate timeout' ? 'timeout' : 'failed',
+      provider,
+      error: e.message,
+    };
   }
 }
 
@@ -317,7 +336,9 @@ export async function startServer({ port = 11520 } = {}) {
       !isChinese(result.description)
     ) {
       const translated = await translateText(result.description, 'zh-CN');
-      if (translated && translated !== result.description) zh.description = translated;
+      if (translated.status === 'translated' || translated.status === 'cached') {
+        zh.description = translated.result;
+      }
     }
     if (Object.keys(zh).length) {
       result.i18n = { zh, translatedAt: new Date().toISOString() };
@@ -527,7 +548,14 @@ export async function startServer({ port = 11520 } = {}) {
     if (text) {
       try {
         const translated = await translateText(text, targetLang);
-        return { ok: true, result: translated, targetLang };
+        return {
+          ok: translated.status === 'translated' || translated.status === 'cached' || translated.status === 'source',
+          result: translated.result,
+          targetLang,
+          status: translated.status,
+          provider: translated.provider,
+          error: translated.error,
+        };
       } catch (e) {
         reply.code(500);
         return { ok: false, error: e.message };
@@ -619,10 +647,16 @@ export async function startServer({ port = 11520 } = {}) {
           const seg = segments[idx];
           const key = crypto.createHash('md5').update(seg.text, 'utf8').digest('hex');
           if (seg.type === 'code') {
-            results[idx] = { md5: key, text: seg.text, translated: seg.text, skipped: 'code' };
+            results[idx] = { md5: key, text: seg.text, translated: seg.text, skipped: 'code', status: 'source' };
           } else {
             const translated = await translateText(seg.text, 'zh-CN');
-            results[idx] = { md5: key, text: seg.text, translated };
+            results[idx] = {
+              md5: key,
+              text: seg.text,
+              translated: translated.result,
+              status: translated.status,
+              error: translated.error,
+            };
           }
           writeSegment(idx);
         }
@@ -635,12 +669,20 @@ export async function startServer({ port = 11520 } = {}) {
           if (!results[i]) {
             const seg = segments[i];
             const key = crypto.createHash('md5').update(seg.text, 'utf8').digest('hex');
-            results[i] = { md5: key, text: seg.text, translated: seg.text, skipped: 'timeout' };
+            results[i] = { md5: key, text: seg.text, translated: seg.text, skipped: 'timeout', status: 'timeout' };
             writeSegment(i);
           }
         }
         if (!reply.raw.writableEnded) {
-          reply.raw.write(JSON.stringify({ type: 'done', ok: true, segments: results }) + '\n');
+          const hasTranslationFailure = results.some((segment) =>
+            segment.status === 'failed' || segment.status === 'timeout' || segment.status === 'unchanged',
+          );
+          reply.raw.write(JSON.stringify({
+            type: 'done',
+            ok: !hasTranslationFailure,
+            partial: hasTranslationFailure,
+            segments: results,
+          }) + '\n');
           reply.raw.end();
         }
       }

@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -60,6 +61,29 @@ test('translate-cache: 文本变化后 md5 不同，自动失效', () => {
   // 文本变化（文件更新），新 md5 未命中
   assert.equal(getCached('new content'), null);
   assert.equal(getCached('old content').result, '旧译文');
+});
+
+test('translate-cache: 供应商不同不复用译文', () => {
+  _resetForTest();
+  makeTempHome();
+  setCached('provider text', 'Google 译文', 'en', { provider: 'google' });
+  assert.equal(getCached('provider text', { provider: 'google' }).result, 'Google 译文');
+  assert.equal(getCached('provider text', { provider: 'aliyun' }), null);
+});
+
+test('translate-cache: v1 缓存按原文迁移后仍可读取', () => {
+  _resetForTest();
+  makeTempHome();
+  const legacyKey = crypto.createHash('md5').update('legacy text', 'utf8').digest('hex');
+  fs.mkdirSync(path.dirname(translateCacheFile()), { recursive: true });
+  fs.writeFileSync(translateCacheFile(), JSON.stringify({
+    version: 1,
+    entries: {
+      [legacyKey]: { text: 'legacy text', result: '旧译文', from: 'en', to: 'zh-CN' },
+    },
+  }));
+  const cached = getCached('legacy text');
+  assert.equal(cached.result, '旧译文');
 });
 
 test('translate-cache: LRU 超限时淘汰最旧条目', () => {

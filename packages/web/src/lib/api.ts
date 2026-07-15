@@ -87,10 +87,14 @@ export interface TranslateSegment {
   translated: string
   /** 跳过原因（'code' 表示代码块未翻译） */
   skipped?: string
+  /** 翻译状态；failed/timeout/unchanged 时 translated 为原文，不能当作中文译文展示。 */
+  status?: 'source' | 'cached' | 'translated' | 'unchanged' | 'failed' | 'timeout'
+  error?: string
 }
 
 export interface TranslateRawResult {
   ok: boolean
+  partial?: boolean
   segments: TranslateSegment[]
 }
 
@@ -104,14 +108,24 @@ export interface TranslateProgress {
 type TranslateStreamMsg =
   | { type: 'start'; total: number }
   | { type: 'segment'; index: number; done: number; total: number; segment: TranslateSegment }
-  | { type: 'done'; ok: boolean; segments: TranslateSegment[] }
+  | { type: 'done'; ok: boolean; partial?: boolean; segments: TranslateSegment[] }
   | { type: 'error'; error: string }
 
-// 模块级缓存：fetchTranslatedRaw 结果按 skill id 缓存。
+// 模块级缓存：fetchTranslatedRaw 结果按技能 ID 与正文指纹缓存。
 // 组件卸载重挂载时不丢失，避免重新打开技能时重复网络请求。
 // 后端已有 md5 段落缓存（毫秒级），但前端缓存可省去网络往返。
-// 页面刷新（重新加载 JS）时清空，技能内容更新由后端 md5 缓存保证。
+// 页面刷新（重新加载 JS）时清空；正文变化时新指纹会自动失效旧浏览器缓存。
 const translatedRawCache = new Map<string, TranslateRawResult>()
+
+/** 仅用于浏览器加速缓存失效，不用于安全用途。 */
+function contentFingerprint(text: string): string {
+  let hash = 2166136261
+  for (let i = 0; i < text.length; i += 1) {
+    hash ^= text.charCodeAt(i)
+    hash = Math.imul(hash, 16777619)
+  }
+  return (hash >>> 0).toString(16)
+}
 
 /**
  * 拉取技能正文的段落级译文（流式 NDJSON，支持实时进度与取消）。
@@ -125,24 +139,27 @@ const translatedRawCache = new Map<string, TranslateRawResult>()
  * （navigator.onLine === false）命中缓存直接返回，不发起网络请求。
  *
  * @param id  技能 id
+ * @param sourceText 当前正文，用于生成浏览器缓存失效指纹
  * @param opts.signal      AbortSignal，切换技能时 abort 取消请求
  * @param opts.onProgress  进度回调（done/total）
  */
 export async function fetchTranslatedRaw(
   id: string,
+  sourceText: string,
   opts?: { signal?: AbortSignal; onProgress?: (p: TranslateProgress) => void },
 ): Promise<TranslateRawResult> {
+  const cacheKey = `${id}:${contentFingerprint(sourceText)}`
   // 1. 内存缓存
-  const cached = translatedRawCache.get(id)
+  const cached = translatedRawCache.get(cacheKey)
   if (cached) {
     opts?.onProgress?.({ done: cached.segments.length, total: cached.segments.length })
     return cached
   }
 
   // 2. IndexedDB 持久化缓存（页面刷新后仍可用）
-  const persisted = await idbGet<TranslateRawResult>(id)
+  const persisted = await idbGet<TranslateRawResult>(cacheKey)
   if (persisted) {
-    translatedRawCache.set(id, persisted)
+    translatedRawCache.set(cacheKey, persisted)
     opts?.onProgress?.({ done: persisted.segments.length, total: persisted.segments.length })
     return persisted
   }
@@ -196,10 +213,18 @@ export async function fetchTranslatedRaw(
     }
   }
 
-  const result: TranslateRawResult = { ok: true, segments }
-  translatedRawCache.set(id, result)
+  const result: TranslateRawResult = {
+    ok: !segments.some((segment) =>
+      segment.status === 'failed' || segment.status === 'timeout' || segment.status === 'unchanged',
+    ),
+    partial: segments.some((segment) =>
+      segment.status === 'failed' || segment.status === 'timeout' || segment.status === 'unchanged',
+    ),
+    segments,
+  }
+  translatedRawCache.set(cacheKey, result)
   // 异步写入 IndexedDB（不阻塞返回）
-  void idbSet(id, result)
+  void idbSet(cacheKey, result)
   return result
 }
 
@@ -207,6 +232,13 @@ export async function fetchTranslatedRaw(
 export function translateText(
   text: string,
   targetLang = 'zh-CN',
-): Promise<{ ok: boolean; result: string; targetLang: string; error?: string }> {
+): Promise<{
+  ok: boolean
+  result: string
+  targetLang: string
+  status: 'source' | 'cached' | 'translated' | 'unchanged' | 'failed' | 'timeout'
+  provider: string
+  error?: string
+}> {
   return postTolerant('/translate', { text, targetLang })
 }

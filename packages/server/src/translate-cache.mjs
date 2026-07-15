@@ -6,9 +6,11 @@
 // purge 命令删除整个 SKILLHELPER_HOME 目录，本缓存文件随之清理。
 
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import { translateCacheFile, ensureHomeDir, readJson, writeJson } from '../../../bin/lib/paths.mjs';
 
-const CACHE_VERSION = 1;
+const CACHE_VERSION = 2;
 const FLUSH_DELAY = 500; // 防抖落盘，避免高频写
 
 let memoryCache = new Map();
@@ -16,21 +18,47 @@ let dirty = false;
 let flushTimer = null;
 let loaded = false;
 
-function md5(text) {
-  return crypto.createHash('md5').update(text, 'utf8').digest('hex');
+function cacheKey(text, { to = 'zh-CN', provider = 'google' } = {}) {
+  return crypto
+    .createHash('sha256')
+    .update(`${provider}\u0000${to}\u0000${text}`, 'utf8')
+    .digest('hex');
 }
 
 // LRU 上限：避免 translate-cache.json 无限膨胀。动态读取环境变量（测试用小值）。
 function getMaxEntries() {
-  return parseInt(process.env.SKILLHELPER_TRANSLATE_CACHE_MAX || '5000', 10);
+  return parseInt(process.env.SKILLHELPER_TRANSLATE_CACHE_MAX || '50000', 10);
+}
+
+function backupFile() {
+  const file = translateCacheFile();
+  return path.join(path.dirname(file), 'translate-cache.backup.json');
+}
+
+function readCacheData() {
+  const primary = readJson(translateCacheFile(), null);
+  if (primary?.entries) return primary;
+  const backup = readJson(backupFile(), null);
+  if (backup?.entries) {
+    console.warn('[translate-cache] 主缓存不可读，已从备份恢复');
+    return backup;
+  }
+  return null;
 }
 
 function load() {
   if (loaded) return;
   loaded = true;
-  const data = readJson(translateCacheFile(), null);
-  if (data && data.version === CACHE_VERSION && data.entries) {
-    memoryCache = new Map(Object.entries(data.entries));
+  const data = readCacheData();
+  if (data && data.entries) {
+    memoryCache = new Map();
+    for (const [key, entry] of Object.entries(data.entries)) {
+      // v1 以 md5(text) 为键；保留其译文并迁移到包含供应商与目标语言的新键。
+      const migratedKey = entry?.text
+        ? cacheKey(entry.text, { to: entry.to || 'zh-CN', provider: entry.provider || 'google' })
+        : key;
+      memoryCache.set(migratedKey, entry);
+    }
     // 加载时若超限，按 LRU 淘汰最旧条目
     evictIfNeeded();
   }
@@ -52,9 +80,9 @@ function evictIfNeeded() {
  * @param {string} text - 原文
  * @returns {{from:string,to:string,result:string,translatedAt:string}|null} 缓存条目或 null
  */
-export function getCached(text) {
+export function getCached(text, options) {
   load();
-  const key = md5(text);
+  const key = cacheKey(text, options);
   const entry = memoryCache.get(key);
   if (entry) {
     // LRU: 命中时移到末尾（最近使用）
@@ -70,14 +98,16 @@ export function getCached(text) {
  * @param {string} result - 译文
  * @param {string} from - 源语言代码（如 'en'）
  */
-export function setCached(text, result, from) {
+export function setCached(text, result, from, options) {
   load();
-  const key = md5(text);
+  const { to = 'zh-CN', provider = 'google' } = options || {};
+  const key = cacheKey(text, { to, provider });
   // LRU: 命中时先 delete 再 set，移到末尾（最近使用）
   if (memoryCache.has(key)) memoryCache.delete(key);
   memoryCache.set(key, {
     from: from || 'unknown',
-    to: 'zh-CN',
+    to,
+    provider,
     text,
     result,
     translatedAt: new Date().toISOString(),
@@ -103,6 +133,10 @@ export function flush() {
   ensureHomeDir();
   const data = { version: CACHE_VERSION, entries: Object.fromEntries(memoryCache) };
   try {
+    const current = translateCacheFile();
+    if (fs.existsSync(current)) {
+      fs.copyFileSync(current, backupFile());
+    }
     writeJson(translateCacheFile(), data);
     dirty = false;
   } catch (e) {
