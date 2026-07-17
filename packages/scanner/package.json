@@ -1,0 +1,15 @@
+{
+  "name": "@skillhelper/scanner",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./types": "./src/types.d.ts"
+  },
+  "dependencies": {
+    "yaml": "^2.6.0",
+    "fast-glob": "^3.3.2"
+  }
+}

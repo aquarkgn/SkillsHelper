@@ -1,4 +1,7 @@
-packages: []
+packages:
+  - packages/scanner
+  - packages/server
+  - packages/site
 
 onlyBuiltDependencies:
   - '@tailwindcss/oxide'

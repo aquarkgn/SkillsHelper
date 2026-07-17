@@ -1,0 +1,1167 @@
+// @skillhelper/server — Fastify HTTP API + placeholder UI.
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { fileURLToPath } from 'node:url';
+import { spawn } from 'node:child_process';
+import Fastify from 'fastify';
+import chokidar from 'chokidar';
+import { LABELS } from './labels.mjs';
+import { flush as flushTranslateCache } from './translate-cache.mjs';
+import { translateText } from './translation-text.mjs';
+import { BRAND_REGISTRY, normalizeBrandKey, resolveIconRef as resolveRegistryIconRef, resolveSourceBrand } from '../../scanner/src/icon/brand-registry.mjs';
+
+const PHASE = 'P6';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const PKGS_ROOT = path.resolve(__dirname, '..', '..');
+const PACKAGE_JSON = path.resolve(PKGS_ROOT, '..', 'package.json');
+const VERSION = readPackageVersion();
+const WEB_DIST = path.join(PKGS_ROOT, 'web', 'dist');
+const WEB_PUBLIC = path.join(PKGS_ROOT, 'web', 'public');
+const TRANSLATION_CONCURRENCY = 2;
+const TRANSLATION_RETRY_DELAY = 5 * 60 * 1000;
+const ROOT_STATIC_FILES = [
+  'favicon.ico',
+  'favicon.svg',
+  'favicon-16x16.png',
+  'favicon-32x32.png',
+  'favicon-192x192.png',
+  'favicon-512x512.png',
+  'brand-icon.png',
+  'brand-logo.png',
+  'icons/hermes-32.png',
+  'icons/hermes-128.png',
+  'icons/hermes-192.png',
+  'icons/hermes-512.png',
+  'site.webmanifest',
+  'robots.txt',
+];
+
+async function importScanner() {
+  const { scan, getWatchTargets } = await import(path.join(PKGS_ROOT, 'scanner/src/index.mjs'));
+  return { scan, getWatchTargets };
+}
+
+function readPackageVersion() {
+  try {
+    return JSON.parse(fs.readFileSync(PACKAGE_JSON, 'utf8')).version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+}
+
+function cacheOptions() {
+  return { to: 'zh-CN', provider: process.env.SKILLHELPER_TRANSLATION_PROVIDER || 'google' };
+}
+
+function isTranslationEnabled() {
+  // 前端中文展示默认开启，服务端也默认补译；只有显式设为 0 才关闭外部翻译。
+  return process.env.SKILLHELPER_TRANSLATE !== '0';
+}
+
+function editorBrandFrom(value) { return resolveSourceBrand({ editor: value, source: value }) ?? undefined; }
+
+function normalizedTier(item) {
+  if (item.tierId === 'tier-1' || item.tier === 'tier-1' || item.tier === 'tool') return 'tier-1';
+  if (item.tierId === 'tier-2' || item.tier === 'tier-2' || item.tier === 'directory') return 'tier-2';
+  return 'tier-3';
+}
+
+export { translateText } from './translation-text.mjs';
+
+export async function startServer({ port = 11520 } = {}) {
+  const app = Fastify({
+    logger: { level: process.env.LOG_LEVEL || 'warn' },
+  });
+
+  const { scan, getWatchTargets } = await importScanner();
+  const { getIconForBrand, resolveIconRef } = await import(path.join(PKGS_ROOT, 'scanner/src/icon/icon-extractor.mjs'));
+
+  // In-memory IR. HTTP handlers only read this snapshot; reload/watch swaps it atomically.
+  let irCache = await scan();
+  let irById = new Map(irCache.map(it => [it.id, it]));
+  let reloadState = {
+    scanning: false,
+    pending: false,
+    lastReloadAt: new Date().toISOString(),
+    lastError: '',
+    items: irCache.length,
+    reason: 'boot',
+  };
+  let reloadTimer = null;
+  let watcher = null;
+  const translationQueue = [];
+  const queuedTranslationKeys = new Set();
+  const translationFailures = new Map();
+  let activeTranslations = 0;
+  let translationRevision = 0;
+
+  function translationKey(id, field, text) {
+    return crypto.createHash('sha256').update(`${id}\u0000${field}\u0000${text}`, 'utf8').digest('hex');
+  }
+
+  function translationQueueState() {
+    return {
+      revision: translationRevision,
+      pending: translationQueue.length + activeTranslations,
+      failed: translationFailures.size,
+    };
+  }
+
+  function cachedZh(item) {
+    const source = item.i18n || {};
+    const zh = { ...(source.zh || {}) };
+    if (source.name_zh && !zh.name) zh.name = source.name_zh;
+    if (source.description_zh && !zh.description) zh.description = source.description_zh;
+    const options = cacheOptions();
+    if (item.description && !zh.description) {
+      const cached = getCached(item.description, options);
+      if (cached) zh.description = cached.result;
+    }
+    const name = item.title || item.name;
+    if (name && !zh.name) {
+      const cached = getCached(name, options);
+      if (cached && cached.result !== name) zh.name = cached.result;
+    }
+    return zh;
+  }
+
+  function fieldTranslationState(id, field, text, hasTranslation) {
+    if (!text || isChinese(text) || hasTranslation) return 'ready';
+    const failure = translationFailures.get(translationKey(id, field, text));
+    if (failure && failure.retryAt > Date.now()) return 'failed';
+    return isTranslationEnabled() ? 'pending' : 'idle';
+  }
+
+  function enqueueTranslation(id, field, text) {
+    if (!isTranslationEnabled() || !text || isChinese(text)) return;
+    const key = translationKey(id, field, text);
+    const failure = translationFailures.get(key);
+    if (queuedTranslationKeys.has(key) || (failure && failure.retryAt > Date.now())) return;
+    queuedTranslationKeys.add(key);
+    translationQueue.push({ id, field, text, key });
+    void drainTranslationQueue();
+  }
+
+  async function drainTranslationQueue() {
+    while (activeTranslations < TRANSLATION_CONCURRENCY && translationQueue.length > 0) {
+      const job = translationQueue.shift();
+      if (!job) return;
+      activeTranslations++;
+      void (async () => {
+        try {
+          const translated = await translateText(job.text, 'zh-CN');
+          if (translated.status === 'translated' || translated.status === 'cached' || translated.status === 'source') {
+            translationFailures.delete(job.key);
+            translationRevision++;
+          } else {
+            translationFailures.set(job.key, {
+              retryAt: Date.now() + TRANSLATION_RETRY_DELAY,
+              status: translated.status,
+            });
+          }
+        } finally {
+          queuedTranslationKeys.delete(job.key);
+          activeTranslations--;
+          void drainTranslationQueue();
+        }
+      })();
+    }
+  }
+
+  function attachTranslations(base) {
+    const zh = cachedZh(base);
+    if (Object.keys(zh).length) {
+      base.i18n = { zh, translatedAt: new Date().toISOString() };
+    }
+    const name = base.title || base.name;
+    const nameState = fieldTranslationState(base.id, 'name', name, Boolean(zh.name));
+    const descriptionState = fieldTranslationState(base.id, 'description', base.description, Boolean(zh.description));
+    base.translation = { name: nameState, description: descriptionState };
+    if (nameState === 'pending') enqueueTranslation(base.id, 'name', name);
+    if (descriptionState === 'pending') enqueueTranslation(base.id, 'description', base.description);
+  }
+
+  async function runReload(reason = 'manual') {
+    if (reloadState.scanning) {
+      reloadState.pending = true;
+      return { ok: true, queued: true, ...reloadState };
+    }
+
+    reloadState = { ...reloadState, scanning: true, pending: false, reason, lastError: '' };
+    try {
+      const next = await scan();
+      const shouldRunAgain = reloadState.pending;
+      irCache = next;
+      irById = new Map(irCache.map(it => [it.id, it]));
+      reloadState = {
+        scanning: false,
+        pending: shouldRunAgain,
+        lastReloadAt: new Date().toISOString(),
+        lastError: '',
+        items: irCache.length,
+        reason,
+      };
+    } catch (e) {
+      const shouldRunAgain = reloadState.pending;
+      reloadState = {
+        ...reloadState,
+        scanning: false,
+        pending: shouldRunAgain,
+        lastReloadAt: new Date().toISOString(),
+        lastError: e.message,
+        items: irCache.length,
+        reason,
+      };
+    }
+
+    if (reloadState.pending) setTimeout(() => runReload('pending'), 0);
+    return { ok: !reloadState.lastError, ...reloadState };
+  }
+
+  function scheduleReload(reason) {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+      runReload(reason).catch(e => app.log.warn({ err: e }, 'reload failed'));
+    }, 800);
+  }
+
+  async function setupWatcher() {
+    const targets = await getWatchTargets();
+    if (!targets.length) return;
+    watcher = chokidar.watch(targets, {
+      ignoreInitial: true,
+      persistent: true,
+      depth: 8,
+      usePolling: true,
+      interval: 1500,
+      binaryInterval: 3000,
+      awaitWriteFinish: {
+        stabilityThreshold: 250,
+        pollInterval: 100,
+      },
+      ignored: [
+        '**/.git/**',
+        '**/node_modules/**',
+        '**/dist/**',
+        '**/.DS_Store',
+      ],
+    });
+    watcher.on('all', (event, changedPath) => {
+      scheduleReload(`${event}:${changedPath}`);
+    });
+    watcher.on('error', err => {
+      reloadState = { ...reloadState, lastError: `watch: ${err.message}`, items: irCache.length };
+      app.log.warn({ err }, 'watcher error');
+    });
+    app.addHook('onClose', async () => {
+      clearTimeout(reloadTimer);
+      if (watcher) await watcher.close();
+      flushTranslateCache(); // 落盘翻译缓存，跨重启复用
+    });
+  }
+
+  async function attachIconRef(base, size = 64) {
+    if (safePluginLogoPath(base)) {
+      base.iconUrl = `/api/plugin-icons/${encodeURIComponent(base.id)}`;
+      return base;
+    }
+
+    // 品牌图标只使用所属编辑器品牌；base.brand 是技能内容主题，不能让
+    // Airtable/OpenAI 等主题图标覆盖 Hermes/Codex 的来源图标。
+    base.sourceBrand = resolveSourceBrand({
+      sourceBrand: base.sourceBrand,
+      editorBrand: base.editorBrand,
+      editor: base.editor,
+      source: base.source,
+    });
+    if (!base.contentBrand) base.contentBrand = base.brand;
+    const fallback = resolveIconRef({ sourceBrand: base.sourceBrand });
+    const installedIcon = fallback.kind === 'asset' && base.sourceBrand
+      ? await getIconForBrand(base.sourceBrand, size)
+      : null;
+    base.iconRef = installedIcon
+      ? {
+          kind: 'installed-app',
+          brandId: fallback.brandId,
+          src: `/api/icons/${encodeURIComponent(fallback.brandId)}?size=${size}`,
+          fallback,
+        }
+      : fallback;
+    // 兼容一个发布版本的旧字段；不再返回 emoji，也不再拼接远程图标 URL。
+    if (base.iconRef.kind === 'asset' && !base.iconUrl) base.iconUrl = base.iconRef.src;
+    return base;
+  }
+
+  const hasSpa = fs.existsSync(path.join(WEB_DIST, 'index.html'));
+  const assetsDir = path.join(WEB_DIST, 'assets');
+
+  // 请求日志（诊断连接占用/慢请求）：记 /api 请求的方法、URL、状态码、耗时。
+  // 仅在 LOG_LEVEL=debug 时输出，避免默认运行时刷屏（logger level 由 LOG_LEVEL 控制）。
+  app.addHook('onRequest', async (req) => {
+    req.__t0 = Date.now();
+  });
+  app.addHook('onResponse', async (req, reply) => {
+    if (!req.url || !req.url.startsWith('/api')) return;
+    const ms = Date.now() - (req.__t0 || Date.now());
+    app.log.debug({ method: req.method, url: req.url, status: reply.statusCode, ms }, 'api request');
+  });
+
+  // ─────────────────────────── routes ─────────────────────────────────────
+
+  app.get('/api/health', async () => ({
+    ok: true,
+    port,
+    items: irCache.length,
+    version: VERSION,
+    phase: PHASE,
+  }));
+
+  app.get('/api/skills', async () => {
+    // strip `raw` — detail view fetches it separately
+    // v4.0: 补上 tier 和 editorBrand（如果不存在）
+
+    return Promise.all(irCache.map(async item => {
+      const base = stripRaw(item);
+      base.editorKey = normalizedEditorKey(base);
+
+      // tierId/editorBrand 是来源身份；brand 是技能内容主题，二者不能互相覆盖。
+      base.tier = normalizedTier(base);
+      base.tierId = base.tier;
+      if (!base.editorBrand && base.tier === 'tier-1') {
+        base.editorBrand = editorBrandFrom(base.editor || base.source);
+      }
+
+      await attachIconRef(base, 64);
+
+      // 确保有 pathHash 字段
+      if (!base.pathHash && base.paths?.abs) {
+        const normalized = path.resolve(base.paths.abs);
+        base.pathHash = crypto.createHash('md5').update(normalized).digest('hex');
+      } else if (!base.pathHash && base.id) {
+        base.pathHash = base.id;
+      }
+
+      attachTranslations(base);
+
+      return base;
+    }));
+  });
+
+  app.get('/api/skills/:id', async (req, reply) => {
+    const item = irById.get(req.params.id);
+    if (!item) {
+      reply.code(404);
+      return { error: 'not found' };
+    }
+    // 返回副本，避免下面的 i18n 填充污染 irById 缓存
+    const result = { ...item };
+    result.editorKey = normalizedEditorKey(result);
+    result.tier = normalizedTier(result);
+    result.tierId = result.tier;
+    if (!result.editorBrand && result.tier === 'tier-1') {
+      result.editorBrand = editorBrandFrom(result.editor || result.source);
+    }
+    const zh = cachedZh(result);
+    // 翻译启用时主动补译详情 description（缓存未命中）
+    if (
+      isTranslationEnabled() &&
+      result.description &&
+      !zh.description &&
+      !isChinese(result.description)
+    ) {
+      const translated = await translateText(result.description, 'zh-CN');
+      if (translated.status === 'translated' || translated.status === 'cached') {
+        zh.description = translated.result;
+      }
+    }
+    if (Object.keys(zh).length) {
+      result.i18n = { zh, translatedAt: new Date().toISOString() };
+    }
+    await attachIconRef(result, 64);
+    return result;
+  });
+
+  app.get('/api/stats', async () => buildStats(irCache));
+
+  app.get('/api/other-skills', async (req, reply) => {
+    try {
+      const { scanSkills } = await import('../../../packages/scanner/src/adapters/skill-adapter.mjs');
+      const { resolveIconRef } = await import('../../../packages/scanner/src/icon/icon-extractor.mjs');
+
+      // Parse query parameters
+      const roots = req.query.roots
+        ? req.query.roots.split(',').map(s => s.trim()).filter(Boolean)
+        : [];
+      const fileGlob = req.query.fileGlob || '**/SKILL.md';
+      const source = req.query.source || 'other-skills';
+      const stage = req.query.stage === 'mini' ? 'mini' : 'full';
+      const useSpotlight = req.query.useSpotlight === '1' || req.query.useSpotlight === 'true';
+      const maxFiles = Math.min(parseInt(req.query.maxFiles || '100', 10), 5000);
+      const maxFileBytes = Math.min(parseInt(req.query.maxFileBytes || '1048576', 10), 10 * 1024 * 1024);
+
+      // Validate roots
+      if (!roots.length) {
+        reply.code(400);
+        return {
+          ok: false,
+          error: 'missing query parameter: roots (comma-separated paths)',
+        };
+      }
+
+      // Scan skills
+      const { items, stats } = await scanSkills({
+        source,
+        roots,
+        fileGlob,
+        stage,
+        useSpotlight,
+        limits: { maxFiles, maxFileBytes },
+      });
+
+      // Transform items to the required format. 'mini' stage returns lightweight
+      // rows (fast first paint, R7.1); 'full' includes the frontmatter block.
+      const skills = items.map(item => {
+        const sourceBrand = resolveSourceBrand({ editorBrand: item.editorBrand, editor: item.editor, source: item.source });
+        const iconRef = resolveIconRef({ sourceBrand });
+        const base = {
+          id: item.id,
+          name: item.name,
+          description: item.description,
+          category: item.category,
+          kind: item.kind,
+          brand: item.brand,
+          sourceBrand,
+          contentBrand: item.brand,
+          path: item.paths?.abs,
+          iconRef,
+        };
+        if (stage === 'mini') return base;
+        return {
+          ...base,
+          tags: item.tags,
+          frontmatter: {
+            title: item.title,
+            triggers: item.triggers,
+            links: item.links,
+            product: item.product,
+            editor: item.editor,
+            source: item.source,
+            updatedAt: item.updatedAt,
+            parseError: item.parseError,
+          },
+        };
+      });
+
+      return {
+        ok: true,
+        skills,
+        stats: {
+          ...stats,
+          scanned: items.length,
+          source,
+          fileGlob,
+        },
+      };
+    } catch (e) {
+      reply.code(500);
+      return {
+        ok: false,
+        error: e.message,
+      };
+    }
+  });
+
+  // 本机应用图标仅用于精确白名单 Bundle ID/品牌的增强接口；固定资产不经过此路由。
+  const noIconBrands = new Set();
+  app.get('/api/icons/:brand', async (req, reply) => {
+    try {
+      const brand = decodeURIComponent(req.params.brand || '');
+      if (!normalizeBrandKey(brand)) {
+        reply.code(404);
+        return { ok: false, fallback: true, reason: 'unknown-brand' };
+      }
+      const size = Math.min(Math.max(parseInt(req.query.size || '64', 10) || 64, 32), 128);
+      const cacheKey = `${brand}:${size}`;
+      if (noIconBrands.has(cacheKey)) {
+        reply.code(404);
+        return {
+          ok: false,
+          fallback: true,
+          brand,
+          reason: 'installed-app-icon-not-found',
+        };
+      }
+      const { getIconForBrand, contentTypeForIconPath } = await import('../../../packages/scanner/src/icon/icon-extractor.mjs');
+      const iconPath = await getIconForBrand(brand, size);
+      if (!iconPath || !fs.existsSync(iconPath)) {
+        noIconBrands.add(cacheKey);
+        reply.code(404);
+        return {
+          ok: false,
+          fallback: true,
+          brand,
+          reason: 'installed-app-icon-not-found',
+        };
+      }
+      reply.type(contentTypeForIconPath(iconPath));
+      reply.header('cache-control', 'public, max-age=300, must-revalidate');
+      return fs.createReadStream(iconPath);
+    } catch (e) {
+      reply.code(500);
+      return { ok: false, error: e.message };
+    }
+  });
+
+  app.get('/api/plugin-icons/:id', async (req, reply) => {
+    const id = decodeURIComponent(req.params.id || '');
+    const item = irById.get(id);
+    const iconPath = safePluginLogoPath(item);
+    if (!iconPath) {
+      reply.code(404);
+      return { ok: false, error: 'plugin icon not found' };
+    }
+
+    reply.type(contentTypeFor(iconPath));
+    reply.header('cache-control', 'public, max-age=300, must-revalidate');
+    return fs.createReadStream(iconPath);
+  });
+
+  app.get('/api/reload-state', async () => ({
+    ok: !reloadState.lastError,
+    ...reloadState,
+    translation: translationQueueState(),
+  }));
+
+  app.post('/api/reload', async () => runReload('manual'));
+
+  app.post('/api/copy', async (req, reply) => {
+    const { id, what } = req.body || {};
+    const item = irById.get(id);
+    if (!item) {
+      reply.code(404);
+      return { ok: false, error: 'not found' };
+    }
+    const text = pickCopyText(item, what);
+    if (text == null) {
+      reply.code(400);
+      return { ok: false, error: `invalid 'what': ${what}` };
+    }
+    try {
+      await pbcopy(text);
+      return { ok: true, bytes: Buffer.byteLength(text), what };
+    } catch (e) {
+      reply.code(500);
+      return { ok: false, error: e.message };
+    }
+  });
+
+  app.post('/api/open', async (req, reply) => {
+    const { id, with: openWith = 'default' } = req.body || {};
+    const item = irById.get(id);
+    if (!item) {
+      reply.code(404);
+      return { ok: false, error: 'not found' };
+    }
+    const abs = item.paths?.abs;
+    if (!abs) {
+      reply.code(400);
+      return { ok: false, error: 'item has no path' };
+    }
+    try {
+      await openPath(abs, openWith);
+      return { ok: true, opened: abs, with: openWith };
+    } catch (e) {
+      reply.code(500);
+      return { ok: false, error: e.message };
+    }
+  });
+
+  app.post('/api/translate', async (req, reply) => {
+    const { text, targetLang = 'zh-CN', id } = req.body || {};
+
+    // 新模式：直接翻译文本（前端使用）
+    if (text) {
+      try {
+        const translated = await translateText(text, targetLang);
+        return {
+          ok: translated.status === 'translated' || translated.status === 'cached' || translated.status === 'source',
+          result: translated.result,
+          targetLang,
+          status: translated.status,
+          provider: translated.provider,
+          error: translated.error,
+        };
+      } catch (e) {
+        reply.code(500);
+        return { ok: false, error: e.message };
+      }
+    }
+
+    // 旧模式：翻译技能对象（保持向后兼容）
+    if (id) {
+      const item = irById.get(id);
+      if (!item) {
+        reply.code(404);
+        return { error: 'not found' };
+      }
+
+      const { translateSkill } = await import('./translator.mjs');
+      try {
+        const translated = await translateSkill(item, 'zh-CN');
+        return translated;
+      } catch (e) {
+        reply.code(500);
+        return { error: e.message };
+      }
+    }
+
+    reply.code(400);
+    return { ok: false, error: 'missing text or id parameter' };
+  });
+
+  // 正文段落级翻译：切分 raw 为段落 + 代码块，代码块整体跳过，
+  // 文本段走 translateText（中文短路 + md5 缓存 + Google）。
+  // 并发翻译（并发 5），避免长正文串行翻译耗时过久。
+  // 前端用于「中文/原文」tab 切换时拉取译文。
+  // 流式 NDJSON 响应：每翻译完一段就发一行，前端实时显示 X/Y 段进度，
+  // 避免长正文翻译时长时间无反馈。整体超时 12s，超时未翻译的段填充原文。
+  app.post('/api/translate-raw', async (req, reply) => {
+    const { id } = req.body || {};
+    const item = irById.get(id);
+    if (!item) {
+      reply.code(404);
+      return { ok: false, error: 'not found' };
+    }
+    const raw = item.raw || '';
+    if (!raw.trim()) return { ok: true, segments: [] };
+
+    const segments = splitSegments(raw);
+    const CONCURRENCY = 16; // 并发 16（原 8），提升长正文翻译速度
+    const results = new Array(segments.length);
+    let cursor = 0;
+    let done = 0;
+    const deadline = Date.now() + 12000;
+
+    // hijack 后手动管理响应：NDJSON 流（每行一个 JSON 消息）
+    reply.hijack();
+    reply.raw.writeHead(200, {
+      'content-type': 'application/x-ndjson; charset=utf-8',
+      'cache-control': 'no-cache, no-transform',
+      'x-accel-buffering': 'no',
+    });
+    reply.raw.write(JSON.stringify({ type: 'start', total: segments.length }) + '\n');
+
+    // 监听客户端断开（前端 AbortController.abort）：切换技能时前端取消请求，
+    // 后端 worker 应及时停止翻译，避免浪费 Google 翻译配额。
+    // 用 reply.raw 的 'close' 事件 + writableEnded 判断：'close' 在正常结束时
+    // 也触发，但此时 writableEnded=true，不算 abort。只有响应未结束就关闭
+    // （客户端断开）才标记 aborted。req.raw 的 'close' 在 POST body 读完时
+    // 就触发，不能用于判断客户端断开。
+    let aborted = false;
+    reply.raw.on('close', () => {
+      if (!reply.raw.writableEnded) aborted = true;
+    });
+
+    const writeSegment = (idx) => {
+      done++;
+      if (aborted || reply.raw.writableEnded) return;
+      reply.raw.write(JSON.stringify({
+        type: 'segment',
+        index: idx,
+        done,
+        total: segments.length,
+        segment: results[idx],
+      }) + '\n');
+    };
+
+    try {
+      const worker = async () => {
+        while (cursor < segments.length) {
+          if (aborted || Date.now() > deadline) break;
+          const idx = cursor++;
+          const seg = segments[idx];
+          const key = crypto.createHash('md5').update(seg.text, 'utf8').digest('hex');
+          if (seg.type === 'code') {
+            results[idx] = { md5: key, text: seg.text, translated: seg.text, skipped: 'code', status: 'source' };
+          } else {
+            const translated = await translateText(seg.text, 'zh-CN');
+            results[idx] = {
+              md5: key,
+              text: seg.text,
+              translated: translated.result,
+              status: translated.status,
+              error: translated.error,
+            };
+          }
+          writeSegment(idx);
+        }
+      };
+      await Promise.all(new Array(CONCURRENCY).fill(0).map(() => worker()));
+      // 客户端断开时不再写后续消息（连接已不可用），但仍落盘已翻译缓存
+      if (!aborted) {
+        // 超时未翻译的段，填充原文
+        for (let i = 0; i < segments.length; i++) {
+          if (!results[i]) {
+            const seg = segments[i];
+            const key = crypto.createHash('md5').update(seg.text, 'utf8').digest('hex');
+            results[i] = { md5: key, text: seg.text, translated: seg.text, skipped: 'timeout', status: 'timeout' };
+            writeSegment(i);
+          }
+        }
+        if (!reply.raw.writableEnded) {
+          const hasTranslationFailure = results.some((segment) =>
+            segment.status === 'failed' || segment.status === 'timeout' || segment.status === 'unchanged',
+          );
+          reply.raw.write(JSON.stringify({
+            type: 'done',
+            ok: !hasTranslationFailure,
+            partial: hasTranslationFailure,
+            segments: results,
+          }) + '\n');
+          reply.raw.end();
+        }
+      }
+      flushTranslateCache();
+    } catch (e) {
+      if (!reply.raw.writableEnded) {
+        reply.raw.write(JSON.stringify({ type: 'error', error: e.message }) + '\n');
+        reply.raw.end();
+      }
+    }
+  });
+
+  app.get('/assets/*', async (req, reply) => {
+    if (!hasSpa) {
+      reply.code(404);
+      return { error: 'web assets not built' };
+    }
+    const rel = decodeURIComponent(req.params['*'] || '');
+    const abs = path.resolve(assetsDir, rel);
+    if (!abs.startsWith(assetsDir + path.sep) || !fs.existsSync(abs) || !fs.statSync(abs).isFile()) {
+      reply.code(404);
+      return { error: 'asset not found' };
+    }
+    reply.type(contentTypeFor(abs));
+    return fs.createReadStream(abs);
+  });
+
+  // 根路径静态资源必须在 SPA fallback 前注册，否则浏览器会拿到 HTML 而不是图标。
+  for (const file of ROOT_STATIC_FILES) {
+    app.get(`/${file}`, async (req, reply) => serveRootStatic(file, reply));
+  }
+
+  // Serve built Vue SPA if present; fallback to P2 placeholder when the user
+  // has not run `npm run build:web` yet.
+  app.get('/', async (req, reply) => {
+    if (hasSpa) {
+      reply.type('text/html; charset=utf-8');
+      reply.header('cache-control', 'no-cache, no-store, must-revalidate');
+      return fs.readFileSync(path.join(WEB_DIST, 'index.html'), 'utf8');
+    }
+    reply.type('text/html; charset=utf-8');
+    return placeholderHtml({ port, items: irCache });
+  });
+
+  // SPA fallback for deep links (P3+). Keep /api/* above this route.
+  app.get('/*', async (req, reply) => {
+    if (hasSpa) {
+      reply.type('text/html; charset=utf-8');
+      reply.header('cache-control', 'no-cache, no-store, must-revalidate');
+      return fs.readFileSync(path.join(WEB_DIST, 'index.html'), 'utf8');
+    }
+    reply.code(404);
+    return { error: 'not found' };
+  });
+
+  await setupWatcher();
+
+  await app.listen({ port, host: '127.0.0.1' });
+  // port=0 时系统分配端口，需从 server.address() 取实际端口（测试用）
+  const actualPort = app.server.address().port;
+  return { app, port: actualPort };
+}
+
+// ─────────────────────────────── helpers ─────────────────────────────────
+
+function findRootStaticFile(file) {
+  for (const base of [WEB_DIST, WEB_PUBLIC]) {
+    const abs = path.join(base, file);
+    if (fs.existsSync(abs) && fs.statSync(abs).isFile()) return abs;
+  }
+  return null;
+}
+
+async function serveRootStatic(file, reply) {
+  const abs = findRootStaticFile(file);
+  if (!abs) {
+    reply.code(404);
+    return { error: 'static file not found' };
+  }
+  reply.type(contentTypeFor(abs));
+  if (file.endsWith('.webmanifest') || file === 'robots.txt') {
+    reply.header('cache-control', 'no-cache, no-store, must-revalidate');
+  } else if (/^favicon|\.png$|\.svg$|\.ico$|\.webp$|\.jpg$/.test(file)) {
+    // 图标/品牌资源：5 分钟缓存 + must-revalidate，避免 24h 缓存导致换图标不生效
+    reply.header('cache-control', 'public, max-age=300, must-revalidate');
+  } else {
+    reply.header('cache-control', 'public, max-age=86400');
+  }
+  return fs.createReadStream(abs);
+}
+
+function stripRaw({ raw, ...rest }) {
+  return rest;
+}
+
+// 把 markdown 正文切分为段落 + 代码块序列。
+// - 围栏代码块（``` / ~~~）整体保留为 'code' 类型，不翻译。
+// - 文本部分按双换行切分为段落，每段独立翻译、独立 md5 缓存。
+// 设计目标：改一段只重译那段；代码 / 命令 / 路径不被误译。
+// export 便于单元测试（translate-raw.test.mjs）。
+export function splitSegments(text) {
+  const segments = [];
+  const lines = text.split('\n');
+  let textBuf = [];
+  let codeBuf = [];
+  let inCode = false;
+
+  const flushText = () => {
+    if (!textBuf.length) return;
+    const block = textBuf.join('\n');
+    for (const p of block.split(/\n\n+/)) {
+      if (p.trim()) segments.push({ type: 'text', text: p });
+    }
+    textBuf = [];
+  };
+  const flushCode = () => {
+    if (!codeBuf.length) return;
+    segments.push({ type: 'code', text: codeBuf.join('\n') });
+    codeBuf = [];
+  };
+
+  for (const line of lines) {
+    if (/^\s*(```+|~~~+)/.test(line)) {
+      if (inCode) {
+        codeBuf.push(line);
+        flushCode();
+        inCode = false;
+      } else {
+        flushText();
+        inCode = true;
+        codeBuf.push(line);
+      }
+    } else if (inCode) {
+      codeBuf.push(line);
+    } else {
+      textBuf.push(line);
+    }
+  }
+  if (inCode) flushCode(); else flushText();
+  return segments;
+}
+
+function contentTypeFor(abs) {
+  const lower = abs.toLowerCase();
+  if (lower.endsWith('.html')) return 'text/html; charset=utf-8';
+  if (lower.endsWith('.js')) return 'text/javascript; charset=utf-8';
+  if (lower.endsWith('.css')) return 'text/css; charset=utf-8';
+  if (lower.endsWith('.json')) return 'application/json; charset=utf-8';
+  if (lower.endsWith('.webmanifest')) return 'application/manifest+json; charset=utf-8';
+  if (lower.endsWith('.txt')) return 'text/plain; charset=utf-8';
+  if (lower.endsWith('.svg')) return 'image/svg+xml';
+  if (lower.endsWith('.png')) return 'image/png';
+  if (lower.endsWith('.ico')) return 'image/x-icon';
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.woff2')) return 'font/woff2';
+  return 'application/octet-stream';
+}
+
+function safePluginLogoPath(item) {
+  const logoPath = item?.plugin?.logoPath;
+  const pluginDir = item?.paths?.abs;
+  if (!item?.id || !logoPath || !pluginDir) return null;
+
+  const resolvedLogo = path.resolve(logoPath);
+  const resolvedPluginDir = path.resolve(pluginDir);
+  if (!resolvedLogo.startsWith(resolvedPluginDir + path.sep)) return null;
+  if (!/\.(svg|png|ico|jpe?g|gif|webp)$/i.test(resolvedLogo)) return null;
+
+  try {
+    const logoReal = fs.realpathSync(resolvedLogo);
+    const pluginReal = fs.realpathSync(resolvedPluginDir);
+    if (!logoReal.startsWith(pluginReal + path.sep)) return null;
+    const stat = fs.statSync(logoReal);
+    if (!stat.isFile()) return null;
+    return logoReal;
+  } catch {
+    return null;
+  }
+}
+
+function pickCopyText(item, what) {
+  switch (what) {
+    case 'path': return item.paths?.abs ?? null;
+    case 'dir':  return item.paths?.abs ? path.dirname(item.paths.abs) : null;
+    case 'rel':  return item.paths?.rel ?? item.paths?.abs ?? null;
+    case 'name': return item.name ?? null;
+    case 'raw':  return item.raw ?? '';
+    case 'prompt': return buildInvocationPrompt(item);
+    default:     return null;
+  }
+}
+
+function buildInvocationPrompt(item) {
+  const name = item.name || item.title || 'unknown';
+  const abs = item.paths?.abs || '';
+  // v4.0 tier 扫描器把来源标签放在 item.brand（source 现在是内部扫描来源如 'tier1-editor'），
+  // 因此优先按 brand 判断，回退到 source 以兼容旧 IR。
+  const brand = item.brand || '';
+  const source = item.source || '';
+  if (brand === 'hermes' || source === 'hermes') {
+    return `Use Hermes skill ${name}: skill_view(name='${escapeSingle(name)}')`;
+  }
+  if (brand === 'claude' || source === 'claude-code') {
+    return `Use Claude Code skill ${name}. Local path: ${abs}`;
+  }
+  if (brand === 'codex' || source === 'codex') {
+    return `Use Codex instructions from ${abs}`;
+  }
+  if (brand === 'cursor' || source === 'cursor') {
+    return `Use Cursor rule ${name}. Local path: ${abs}`;
+  }
+  if (item.kind === 'mcp') {
+    return `Use MCP server/tool ${name}. Config source: ${abs}`;
+  }
+  if (item.kind === 'runbook') {
+    return `Use runbook ${name}. Local path: ${abs}`;
+  }
+  return `Use ${item.kind || 'skill'} ${name}. Local path: ${abs}`;
+}
+
+function escapeSingle(s) {
+  return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function pbcopy(text) {
+  return new Promise((resolve, reject) => {
+    const platform = process.platform;
+    let cmd, args;
+    if (platform === 'darwin') {
+      cmd = 'pbcopy'; args = [];
+    } else if (platform === 'linux') {
+      // best-effort; user installs xclip/wl-copy themselves
+      cmd = 'xclip'; args = ['-selection', 'clipboard'];
+    } else if (platform === 'win32') {
+      cmd = 'clip'; args = [];
+    } else {
+      return reject(new Error(`clipboard not supported on ${platform}`));
+    }
+    const child = spawn(cmd, args, { stdio: ['pipe', 'ignore', 'pipe'] });
+    let stderr = '';
+    child.stderr.on('data', d => { stderr += d.toString(); });
+    child.on('error', reject);
+    child.on('close', code => {
+      if (code === 0) resolve();
+      else reject(new Error(`${cmd} exit ${code}: ${stderr.trim()}`));
+    });
+    child.stdin.end(text);
+  });
+}
+
+function openPath(absPath, openWith) {
+  return new Promise((resolve, reject) => {
+    let cmd, args;
+    if (openWith === 'cursor') {
+      cmd = 'cursor'; args = [absPath];
+    } else if (openWith === 'finder') {
+      // macOS only — reveal in Finder
+      cmd = 'open'; args = ['-R', absPath];
+    } else {
+      // 'default' — let OS pick
+      const p = process.platform;
+      if (p === 'darwin')      { cmd = 'open';     args = [absPath]; }
+      else if (p === 'win32')  { cmd = 'cmd';      args = ['/c', 'start', '', absPath]; }
+      else                     { cmd = 'xdg-open'; args = [absPath]; }
+    }
+    const child = spawn(cmd, args, { stdio: 'ignore', detached: true });
+    child.on('error', reject);
+    // detach + don't wait — opening apps shouldn't block the request
+    child.unref();
+    // resolve next tick — if the binary doesn't exist, 'error' fires before that
+    setTimeout(resolve, 50);
+  });
+}
+
+function buildStats(items) {
+  const bySource = {};
+  const byEditor = {};
+  const byCategory = {};
+  const byBrand = {};
+  const byKind = {};
+  const brandIcons = {};
+  for (const entry of Object.values(BRAND_REGISTRY)) {
+    const sidebarKey = entry.id === 'claude'
+      ? 'anthropic-claude'
+      : entry.id === 'codex'
+        ? 'chatgpt-codex'
+        : entry.id;
+    brandIcons[sidebarKey] = resolveRegistryIconRef({ sourceBrand: entry.id });
+  }
+  for (const it of items) {
+    bySource[it.source] = (bySource[it.source] || 0) + 1;
+    const editor = normalizedEditorKey(it);
+    byEditor[editor] = (byEditor[editor] || 0) + 1;
+    byKind[it.kind] = (byKind[it.kind] || 0) + 1;
+    const cat = it.category || '(none)';
+    byCategory[cat] = (byCategory[cat] || 0) + 1;
+    const brand = it.brand || '(none)';
+    byBrand[brand] = (byBrand[brand] || 0) + 1;
+  }
+  return {
+    total: items.length,
+    bySource,
+    byEditor,
+    byKind,
+    byCategory,
+    byBrand,
+    brandIcons,
+    labels: LABELS,
+  };
+}
+
+/** Claude 的多个扫描来源在技能库导航中归为同一 Claude Code 入口。 */
+function normalizedEditorKey(item) {
+  const key = item.editorKey || item.editor || item.source || '(none)';
+  return /claude|anthropic/i.test(key) ? 'claude-code' : key;
+}
+
+// ─────────────────────────────── placeholder UI ──────────────────────────
+//
+// P2 placeholder is more than a sign — it lists the first 50 skills and
+// wires the copy / open buttons. Goal: even before P3 (Vue), we want to
+// click around and confirm the API actually works against real skills.
+
+function placeholderHtml({ port, items }) {
+  const sample = items.slice(0, 50);
+  const total = items.length;
+  const rows = sample.map(it => {
+    const desc = (it.description || '').replace(/[<>&]/g, c => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])).slice(0, 140);
+    const brand = it.brand ? `<span class="brand">${escape(it.brand)}</span>` : '';
+    const cat = it.category ? `<span class="cat">${escape(it.category)}</span>` : '';
+    return `
+      <div class="row" data-id="${it.id}">
+        <div class="head">
+          <span class="src src-${it.source}">${it.source}</span>
+          ${cat}
+          ${brand}
+          <strong>${escape(it.name)}</strong>
+        </div>
+        <div class="desc">${desc || '<em class="muted">（无描述）</em>'}</div>
+        <div class="path"><code>${escape(it.paths?.abs || '')}</code></div>
+        <div class="actions">
+          <button data-act="copy-path">Copy path</button>
+          <button data-act="copy-name">Copy name</button>
+          <button data-act="copy-raw">Copy raw</button>
+          <button data-act="open-cursor">Open in Cursor</button>
+          <button data-act="open-finder">Reveal</button>
+        </div>
+      </div>`;
+  }).join('\n');
+
+  return `<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>呼哈哈-技能助手 · P2</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+         max-width: 1080px; margin: 32px auto; padding: 0 24px; color: #222;
+         line-height: 1.55; }
+  h1 { margin: 0 0 4px; }
+  .meta { color: #888; font-size: 13px; margin-bottom: 24px; }
+  .meta a { color: #06f; }
+  .row { padding: 14px 16px; border: 1px solid #e5e5e5; border-radius: 8px;
+         margin-bottom: 10px; background: #fafafa; }
+  .head { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 4px; }
+  .head strong { font-size: 15px; }
+  .src { font-size: 11px; padding: 1px 8px; border-radius: 10px; color: #fff;
+         font-weight: 600; letter-spacing: .3px; }
+  .src-hermes { background: #4a5fc7; }
+  .src-claude-code { background: #c98a3f; }
+  .cat { font-size: 11px; padding: 1px 6px; background: #eef0ff; color: #335; border-radius: 4px; }
+  .brand { font-size: 11px; padding: 1px 6px; background: #efe; color: #353; border-radius: 4px; }
+  .desc { font-size: 13px; color: #444; }
+  .path code { font-size: 11px; color: #888; background: transparent; padding: 0; }
+  .actions { margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap; }
+  .actions button { font-size: 12px; padding: 4px 10px; border: 1px solid #ddd;
+                    background: #fff; border-radius: 5px; cursor: pointer; }
+  .actions button:hover { background: #eef; border-color: #99c; }
+  .actions button.flash { background: #cfc; border-color: #393; }
+  .actions button.err { background: #fcc; border-color: #c33; }
+  .muted { color: #aaa; }
+</style>
+</head>
+<body>
+  <h1>呼哈哈-技能助手 <span style="font-size:13px;color:#888">P2</span></h1>
+  <div class="meta">
+    本地聚合中枢 · ${total} 条 skill 已加载 · 显示前 ${sample.length} 条 ·
+    <a href="/api/skills">/api/skills</a> ·
+    <a href="/api/stats">/api/stats</a> ·
+    <a href="/api/health">/api/health</a><br>
+    <span class="muted">P3 接 Vue SPA。当前页是占位 — 但复制/打开按钮已经能用。</span>
+  </div>
+  <div id="list">${rows}</div>
+
+<script>
+async function api(path, body) {
+  const res = await fetch(path, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+}
+
+document.getElementById('list').addEventListener('click', async ev => {
+  const btn = ev.target.closest('button[data-act]');
+  if (!btn) return;
+  const row = btn.closest('.row');
+  const id = row.dataset.id;
+  const act = btn.dataset.act;
+  const orig = btn.textContent;
+  btn.disabled = true;
+  try {
+    let r;
+    if (act.startsWith('copy-')) {
+      r = await api('/api/copy', { id, what: act.slice(5) });
+    } else if (act === 'open-cursor') {
+      r = await api('/api/open', { id, with: 'cursor' });
+    } else if (act === 'open-finder') {
+      r = await api('/api/open', { id, with: 'finder' });
+    }
+    btn.classList.add(r && r.ok ? 'flash' : 'err');
+    btn.textContent = r && r.ok ? '✓ ' + orig : '✗ ' + (r && r.error || 'fail');
+  } catch (e) {
+    btn.classList.add('err');
+    btn.textContent = '✗ ' + e.message;
+  }
+  setTimeout(() => {
+    btn.classList.remove('flash', 'err');
+    btn.textContent = orig;
+    btn.disabled = false;
+  }, 1200);
+});
+</script>
+</body>
+</html>`;
+}
+
+function escape(s) {
+  return String(s == null ? '' : s).replace(/[<>&"']/g, c => ({
+    '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&#39;',
+  }[c]));
+}

@@ -1,0 +1,17 @@
+{
+  "name": "@skillhelper/server",
+  "version": "0.1.1",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.mjs",
+  "exports": {
+    ".": "./src/index.mjs"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "chokidar": "^4.0.3",
+    "google-translate-api-x": "^10.7.1",
+    "undici": "^7.16.0",
+    "@skillhelper/scanner": "workspace:*"
+  }
+}
