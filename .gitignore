@@ -1,40 +1,25 @@
 node_modules/
-/dist/
-packages/web/dist/
-packages/site/dist/
+dist/
+release/
 .DS_Store
 *.log
-.vite/
+.env
+.env.local
+*.tsbuildinfo
+.npmrc
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+/.claude
+/.codex
+/.gemini
+/.cc-switch
+/.idea
+/.vscode
+vitest-report.json
+nul
 
-#idea 相关文件
-.hermes/*
-!.hermes/plans/
-.hermes/plans/*
-!.hermes/plans/README.md
-!.hermes/plans/skillhelper-promotion/
-!.hermes/plans/skillhelper-promotion/**
-
-# SkillHelper 推广视频在本工作区管理，但大文件默认不提交。
-.hermes/plans/skillhelper-promotion/videos/**/*.mp4
-.hermes/plans/skillhelper-promotion/videos/**/*.mov
-.hermes/plans/skillhelper-promotion/videos/**/*.m4v
-.hermes/plans/skillhelper-promotion/videos/**/*.avi
-.hermes/plans/skillhelper-promotion/videos/**/*.mkv
-.hermes/plans/skillhelper-promotion/videos/**/*.webm
-.hermes/plans/skillhelper-promotion/videos/**/*.wav
-.hermes/plans/skillhelper-promotion/videos/**/*.mp3
-.hermes/plans/skillhelper-promotion/videos/**/*.aac
-.hermes/plans/skillhelper-promotion/videos/**/*.flac
-.hermes/plans/skillhelper-promotion/videos/**/*.prproj
-.hermes/plans/skillhelper-promotion/videos/**/*.drp
-.hermes/plans/skillhelper-promotion/videos/**/*.fcpxml
-.hermes/plans/skillhelper-promotion/videos/**/.scratch/
-!.hermes/plans/skillhelper-promotion/videos/**/README.md
-!.hermes/plans/skillhelper-promotion/videos/**/.gitkeep
-
-# 用户运行时数据现在落 ~/.config/skillshelper/，仓内不再有 data/ 目录。
-# 留这一条防有人手动放：
-data/
-!packages/web/src/data/
-!packages/web/src/data/commands.json
-.gstack/
+# Flatpak build artifacts
+flatpak/cc-switch.deb
+flatpak-build/
+flatpak-repo/
