@@ -2,6 +2,8 @@
 // 它直接复用 SkillHelper 的扫描与翻译模块，不启动 Fastify，也不暴露 HTTP 端口。
 
 import fs from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { format } from 'node:util';
 import os from 'node:os';
 import path from 'node:path';
 import { scanTier1EditorSkills } from '../packages/scanner/src/adapters/tier1-editor-skills.mjs';
@@ -24,6 +26,19 @@ function findExecutable(name) {
     }
   }
   return null;
+}
+
+export function inspectChatGptPairingExtensions(directory) {
+  try {
+    const entries = fs.readdirSync(directory, { withFileTypes: true })
+      .filter((entry) => entry.isFile());
+    const editorNames = [...new Set(entries.map((entry) => entry.name
+      .replace(/-[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i, '')
+      .trim()).filter(Boolean))].sort();
+    return { count: entries.length, editorNames };
+  } catch {
+    return { count: 0, editorNames: [] };
+  }
 }
 
 function catalogueItem(item, kind = item.kind) {
@@ -96,12 +111,16 @@ async function scanCatalog() {
 
   const chatgptDir = path.join(home, 'Library', 'Application Support', 'com.openai.chat');
   if (fs.existsSync(chatgptDir)) {
+    const pairing = inspectChatGptPairingExtensions(path.join(chatgptDir, 'app_pairing_extensions'));
+    const pairingDescription = pairing.count > 0
+      ? `已发现 ${pairing.count} 条编辑器配对记录（${pairing.editorNames.join('、')}）；当前不将其映射为 Skills、MCP 或插件。`
+      : '已发现桌面端本地目录；Skills、MCP、插件与 CLI 格式待适配器确认。';
     items.push({
       id: 'chatgpt:desktop',
       app: 'chatgpt',
       kind: 'app',
       name: 'ChatGPT Desktop',
-      description: '已发现桌面端本地目录；Skills、MCP、插件与 CLI 格式待适配器确认。',
+      description: pairingDescription,
       path: chatgptDir,
       source: 'chatgpt-desktop',
       status: 'pending_format',
@@ -116,19 +135,36 @@ async function scanCatalog() {
 }
 
 async function main() {
-  const request = JSON.parse(process.argv[2] || '{}');
-  if (request.operation === 'scan') return scanCatalog();
-  if (request.operation === 'translate') {
-    if (typeof request.text !== 'string') throw new Error('翻译文本必须是字符串');
-    if (request.text.length > 6000) throw new Error('单次翻译文本不能超过 6000 个字符');
-    return translateText(request.text, 'zh-CN');
-  }
-  throw new Error('未知的桌面核心操作');
+  return runDesktopCoreCli(process.argv.slice(2));
 }
 
-main()
-  .then((result) => process.stdout.write(`${JSON.stringify({ ok: true, result })}\n`))
-  .catch((error) => {
-    process.stdout.write(`${JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) })}\n`);
-    process.exitCode = 1;
-  });
+export async function runDesktopCoreCli(args) {
+  const originalError = console.error;
+  const originalWarn = console.warn;
+  const writeDiagnostic = (...values) => process.stderr.write(`${format(...values)}\n`);
+  console.error = writeDiagnostic;
+  console.warn = writeDiagnostic;
+
+  try {
+    const request = JSON.parse(args[0] || '{}');
+    if (request.operation === 'scan') return scanCatalog();
+    if (request.operation === 'translate') {
+      if (typeof request.text !== 'string') throw new Error('翻译文本必须是字符串');
+      if (request.text.length > 6000) throw new Error('单次翻译文本不能超过 6000 个字符');
+      return translateText(request.text, 'zh-CN');
+    }
+    throw new Error('未知的桌面核心操作');
+  } finally {
+    console.error = originalError;
+    console.warn = originalWarn;
+  }
+}
+
+if (process.env.SKILLHELPER_DESKTOP_SIDECAR !== '1' && process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  main()
+    .then((result) => process.stdout.write(`${JSON.stringify({ ok: true, result })}\n`))
+    .catch((error) => {
+      process.stdout.write(`${JSON.stringify({ ok: false, error: error instanceof Error ? error.message : String(error) })}\n`);
+      process.exitCode = 1;
+    });
+}

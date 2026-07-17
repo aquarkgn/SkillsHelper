@@ -7,6 +7,20 @@
   ],
   "permissions": [
     "core:default",
-    "core:window:allow-start-dragging"
+    "core:window:allow-start-dragging",
+    {
+      "identifier": "shell:allow-execute",
+      "allow": [
+        {
+          "name": "binaries/skillhelper-core",
+          "sidecar": true,
+          "args": [
+            {
+              "validator": ".*"
+            }
+          ]
+        }
+      ]
+    }
   ]
 }
