@@ -12,5 +12,5 @@ fn main() {
         }
     }
 
-    cc_switch_lib::run();
+    skillhelper_desktop_lib::run();
 }
