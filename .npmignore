@@ -1,9 +1,0 @@
-node_modules/
-**/node_modules/
-**/.vite/
-**/.cache/
-**/coverage/
-coverage/
-*.log
-*.tgz
-packages/web/dist/.vite/
